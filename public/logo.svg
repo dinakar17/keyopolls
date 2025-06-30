@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="413.19 415.07 275.9 274.24">
+	<defs>
+		<linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+			<stop offset="0%" stop-color="#1E40AF"/>
+			<stop offset="50%" stop-color="#3B82F6"/>
+			<stop offset="100%" stop-color="#1D4ED8"/>
+		</linearGradient>
+		<linearGradient id="accentGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+			<stop offset="0%" stop-color="#2563EB"/>
+			<stop offset="50%" stop-color="#60A5FA"/>
+			<stop offset="100%" stop-color="#1E40AF"/>
+		</linearGradient>
+		<linearGradient id="accentGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+			<stop offset="0%" stop-color="#3B82F6"/>
+			<stop offset="50%" stop-color="#60A5FA"/>
+			<stop offset="100%" stop-color="#2563EB"/>
+		</linearGradient>
+		<filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+			<feGaussianBlur in="SourceAlpha" stdDeviation="5"/>
+			<feOffset dx="2" dy="2" result="offsetblur"/>
+			<feComponentTransfer>
+				<feFuncA type="linear" slope="0.3"/>
+			</feComponentTransfer>
+			<feMerge>
+				<feMergeNode/>
+				<feMergeNode in="SourceGraphic"/>
+			</feMerge>
+		</filter>
+		<filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+			<feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+			<feMerge>
+				<feMergeNode in="coloredBlur"/>
+				<feMergeNode in="SourceGraphic"/>
+			</feMerge>
+		</filter>
+	</defs>
+	<g filter="url(#softShadow)">
+		<path fill="url(#mainGradient)" filter="url(#glow)" d="M551.157 415.59C579.979 415.179 608.842 415.502 637.668 415.491C654.141 415.484 671.09 414.485 687.501 415.591C676.821 427.056 665.406 437.916 654.357 449.034L591.69 511.818C578.694 524.727 563.725 538.62 551.737 552.182C564.5 553.069 577.498 552.677 590.3 552.704L656.523 552.732C667.025 552.73 678.015 552.037 688.462 552.837C689.708 569.938 688.718 587.682 688.733 604.869Q689.047 647.008 688.903 689.147C676.654 678.966 665.77 666.214 654.513 654.918L582.6 583.195C572.906 573.671 563.374 562.615 552.589 554.362C551.193 599.26 553.327 644.288 552.25 689.193L413.294 689.311L466.924 636.066C477.032 626.056 487.982 616.263 497.308 605.537C488.423 601.277 480.336 595.458 471.924 590.346C463.769 586.008 455.957 580.647 448.115 575.756C436.513 568.517 424.766 561.44 413.439 553.776L413.191 552.97C422.322 542.458 433.201 532.802 443.099 522.946L500.24 466.048Q516.778 449.727 533.148 433.238C538.968 427.386 544.715 420.71 551.157 415.59Z"/>
+		<path fill="url(#accentGradient1)" d="M413.439 553.776C437.778 554.61 462.313 553.989 486.672 553.977C507.858 553.966 529.187 554.84 550.27 552.967L550.134 553.798L548.857 554.629C540.51 563.636 531.559 572.154 522.794 580.752C514.345 589.04 505.999 597.508 497.308 605.537C488.423 601.277 480.336 595.458 471.924 590.346C463.769 586.008 455.957 580.647 448.115 575.756C436.513 568.517 424.766 561.44 413.439 553.776Z"/>
+		<path fill="url(#accentGradient2)" d="M471.924 590.346C484.441 584.353 539.843 555.958 548.857 554.629C540.51 563.636 531.559 572.154 522.794 580.752C514.345 589.04 505.999 597.508 497.308 605.537C488.423 601.277 480.336 595.458 471.924 590.346Z"/>
+	</g>
+</svg>

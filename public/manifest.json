@@ -1,0 +1,29 @@
+{
+  "name": "Connect",
+  "short_name": "Connect",
+  "description": "The iPhone moment of social media is here. Connect connects everything most importantly real humans to real humans - all while rewarding you for content that other platforms simply can't.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#272839",
+  "theme_color": "#272839",
+  "icons": [
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "logo.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "192x192",
+      "src": "logo.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "logo.png",
+      "type": "image/png"
+    }
+  ]
+}
