@@ -18,12 +18,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Connect - Connecting real humans in the age of AI',
+  title: 'Keyo - Where opinions matter',
   description:
-    'Connect brings together authentic relationships beyond algorithms. Join the platform where real human connections matter while earning money for your content.',
+    'Join Keyo, the platform where every opinion counts. Create polls, participate in discussions, earn aura, and connect with a community that values authentic perspectives. Express yourself freely with pseudonymous profiles.',
   keywords:
-    'human connections, authentic relationships, social platform, content monetization, real people, AI-free networking, genuine community, social media alternative, human-first platform, content creators',
-  applicationName: 'Connect',
+    'polls, voting, opinions, community, discussions, aura system, pseudonymous, authentic conversations, multiple choice polls, ranking polls, opinion platform, social polling, community engagement, real perspectives',
+  applicationName: 'Keyo',
   authors: [{ name: 'Dinakar Chennupati' }],
   creator: 'Dinakar',
   publisher: 'Dinakar',
@@ -34,37 +34,37 @@ export const metadata: Metadata = {
   },
   // PWA manifest
   manifest: '/manifest.json',
-  metadataBase: new URL('https://connect.keyo.in'),
+  metadataBase: new URL('https://keyo.in'),
 
   // Social Media
   openGraph: {
     type: 'website',
     locale: 'en_IN',
-    url: 'https://connect.keyo.in',
-    title: 'Connect - Connecting real humans in the age of AI',
+    url: 'https://keyo.in',
+    title: 'Keyo - Where opinions matter',
     description:
-      "The iPhone moment of social media is here. Connect connects everything most importantly real humans to real humans - all while rewarding you for content that other platforms simply can't.",
-    siteName: 'Connect',
+      'Create diverse polls, earn aura by participating, engage in rich discussions, and express yourself safely with pseudonymous profiles. Join the community where every opinion counts.',
+    siteName: 'Keyo',
     images: [
       {
-        url: 'https://connect.keyo.in/og-image.png', // Use full URL
+        url: 'https://keyo.in/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Connect - Connecting real humans in the age of AI',
+        alt: 'Keyo - Where opinions matter',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Connect - Connecting real humans in the age of AI',
+    title: 'Keyo - Where opinions matter',
     description:
-      "The iPhone moment of social media is here. Connect connects everything most importantly real humans to real humans - all while rewarding you for content that other platforms simply can't.",
+      'Create diverse polls, earn aura by participating, engage in rich discussions, and express yourself safely with pseudonymous profiles. Join the community where every opinion counts.',
     images: [
       {
-        url: 'https://connect.keyo.in/og-image.png', // Use full URL and consistent image
+        url: 'https://keyo.in/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Connect - Connecting real humans in the age of AI', // Fixed alt text
+        alt: 'Keyo - Where opinions matter',
       },
     ],
     creator: '@DinakarChennup1',
@@ -91,7 +91,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: 'https://connect.keyo.in',
+    canonical: 'https://keyo.in',
   },
 };
 
