@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-import { ChevronRight, Crown, Search, Shield, Star, Users, X } from 'lucide-react';
+import { ChevronRight, Crown, Plus, Search, Shield, Star, Users, X } from 'lucide-react';
 
 import { useKeyopollsCommunitiesApiGeneralListCommunities } from '@/api/communities-general/communities-general';
 import { CommunityDetails } from '@/api/schemas';
@@ -168,6 +168,11 @@ const Communities = () => {
     setSearchPage(1);
   };
 
+  // Handle create community button click
+  const handleCreateCommunity = () => {
+    router.push('/create-community');
+  };
+
   // Infinite scroll callbacks
   const lastMyCommunityRef = useCallback(
     (node: HTMLElement | null) => {
@@ -326,7 +331,18 @@ const Communities = () => {
         {/* Header */}
         <div className="border-border bg-background/80 sticky top-0 z-10 border-b backdrop-blur-sm">
           <div className="p-4">
-            <h1 className="text-text mb-4 text-xl font-bold">Communities</h1>
+            <div className="mb-4 flex items-center justify-between">
+              <h1 className="text-text text-xl font-bold">Communities</h1>
+
+              {/* Create Community Button */}
+              <button
+                onClick={handleCreateCommunity}
+                className="bg-primary text-background hover:bg-primary/90 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              >
+                <Plus size={16} />
+                Create
+              </button>
+            </div>
 
             {/* Search Bar */}
             <div className="relative">
