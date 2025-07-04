@@ -237,14 +237,14 @@ const Comment: React.FC<CommentProps> = ({
             ) : comment.author_info.avatar ? (
               <Image
                 src={comment.author_info.avatar}
-                alt={comment.author_info.display_name}
+                alt={comment.author_info.username}
                 className="h-8 w-8 rounded-full object-cover"
                 width={20}
                 height={20}
               />
             ) : (
               <div className="bg-primary text-background flex h-5 w-5 items-center justify-center rounded-full text-sm font-semibold">
-                {comment.author_info.display_name[0].toUpperCase()}
+                {comment.author_info.username[0].toUpperCase()}
               </div>
             )}
           </div>
