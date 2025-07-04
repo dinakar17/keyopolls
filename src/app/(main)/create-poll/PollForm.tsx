@@ -19,8 +19,6 @@ import {
 } from '@/components/ui/drawer';
 import { PollFormData } from '@/types';
 
-// components/polls/PollForm.tsx
-
 interface PollFormProps {
   form: UseFormReturn<PollFormData>;
   communityDetails: CommunityDetails | null;
@@ -76,7 +74,7 @@ export default function PollForm({
   const watchedHasCorrectAnswer = form.watch('has_correct_answer');
 
   // Check if community supports correct answers (education category)
-  const isEducationCommunity = communityDetails?.community_type === 'education';
+  const isEducationCommunity = communityDetails?.category.slug === 'education';
 
   // Auto-resize text areas
   const autoResize = (textareaRef: React.RefObject<HTMLTextAreaElement | null>) => {
@@ -501,7 +499,7 @@ export default function PollForm({
         <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-text text-sm font-medium">Correct Answer</h3>
+              <h3 className="text-text text-sm font-medium">Correct Answer (Optional)</h3>
               <p className="text-text-muted text-xs">
                 Set the correct answer for educational purposes
               </p>

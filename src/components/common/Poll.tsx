@@ -122,6 +122,20 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
     setMediaViewerOpen(true);
   };
 
+  // Handle community navigation
+  const handleCommunityClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Preserve current category in sessionStorage before navigating
+    const currentCategory = searchParams.get('category');
+    if (currentCategory && typeof window !== 'undefined') {
+      sessionStorage.setItem('polls_active_category', currentCategory);
+    }
+
+    // Navigate to community page
+    router.push(`/communities/${currentPoll.community_name}`);
+  };
+
   // Handle poll click navigation
   const handlePollClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -129,7 +143,8 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
       target.closest('button') ||
       target.closest('a') ||
       target.closest('[data-media-item]') ||
-      target.closest('[data-interactive]')
+      target.closest('[data-interactive]') ||
+      target.closest('[data-community-link]')
     ) {
       return;
     }
@@ -240,11 +255,17 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
           {/* Community Info */}
           <div className="mb-1 flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <div className="text-background relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 font-medium transition-opacity hover:opacity-80">
+              {/* Community Avatar - Clickable */}
+              <div
+                className="text-background relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 font-medium transition-all hover:scale-105 hover:opacity-80"
+                onClick={handleCommunityClick}
+                data-community-link="true"
+                title={`Go to ${currentPoll.community_name} community`}
+              >
                 {currentPoll.community_avatar ? (
                   <Image
                     src={currentPoll.community_avatar}
-                    alt="Community"
+                    alt={`${currentPoll.community_name} community`}
                     className="h-full w-full rounded-full object-cover"
                     width={20}
                     height={20}
@@ -255,9 +276,17 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
                   </span>
                 )}
               </div>
-              <h3 className="text-text cursor-pointer truncate text-sm font-semibold hover:underline">
+
+              {/* Community Name - Clickable */}
+              <h3
+                className="text-text hover:text-primary cursor-pointer truncate text-sm font-semibold transition-colors hover:underline"
+                onClick={handleCommunityClick}
+                data-community-link="true"
+                title={`Go to ${currentPoll.community_name} community`}
+              >
                 {currentPoll.community_name}
               </h3>
+
               <span className="text-text-muted text-xs">
                 · {formatDate(currentPoll.created_at)}
               </span>

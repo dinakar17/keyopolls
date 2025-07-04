@@ -21,6 +21,7 @@ import ShareButton from '@/components/common/ShareButton';
 import toast from '@/components/ui/toast';
 import { useCommentsUIStore } from '@/stores/useCommentsUIStore';
 import { useProfileStore } from '@/stores/useProfileStore';
+import { getTimeRemaining } from '@/utils';
 
 import PollHeader from './PollHeader';
 import StickyPollPreview from './StickyPollPreview';
@@ -432,6 +433,9 @@ const PollDisplayPage = () => {
                   className="text-text hover:text-primary text-left font-semibold transition-colors"
                 >
                   {poll.community_name}
+                  <span className="text-text-secondary ml-1">
+                    . {getTimeRemaining(poll.expires_at)}
+                  </span>
                 </button>
                 <button
                   onClick={() => router.push(`/profiles/${poll.author_username}`)}

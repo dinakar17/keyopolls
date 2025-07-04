@@ -37,6 +37,7 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { toast } from '@/components/ui/toast';
+import { useCommunityStore } from '@/stores/useCommunityStore';
 import { useProfileStore } from '@/stores/useProfileStore';
 
 type SortFilter = 'newest' | 'oldest' | 'most_votes' | 'trending';
@@ -70,6 +71,8 @@ const CommunityPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [communityId, setCommunityId] = useState<number | null>(null);
+
+  const { setCommunityDetails } = useCommunityStore();
 
   // Filter loading state
   const [isFiltering, setIsFiltering] = useState(false);
@@ -514,6 +517,15 @@ const CommunityPage = () => {
     </div>
   );
 
+  const handleCreatePoll = () => {
+    if (!isMember) {
+      toast.error('You must be a member of this community to create polls.');
+      return;
+    }
+    setCommunityDetails(community);
+    router.push('/create-poll');
+  };
+
   return (
     <div className="bg-background min-h-screen">
       {/* Banner */}
@@ -692,7 +704,10 @@ const CommunityPage = () => {
                     : 'Join the community to participate in polls and discussions.'}
                 </p>
                 {isMember && permissions?.can_post && (
-                  <button className="bg-primary text-background rounded-md px-6 py-2 text-sm font-medium transition-opacity hover:opacity-90">
+                  <button
+                    className="bg-primary text-background rounded-md px-6 py-2 text-sm font-medium transition-opacity hover:opacity-90"
+                    onClick={handleCreatePoll}
+                  >
                     Create First Poll
                   </button>
                 )}
@@ -741,7 +756,9 @@ const CommunityPage = () => {
       </div>
 
       {/* Floating Create Poll Button (for members) */}
-      {isMember && permissions?.can_post && <CreateButton path="/polls/create-poll" />}
+      {isMember && permissions?.can_post && (
+        <CreateButton path="/create-poll" onClick={handleCreatePoll} />
+      )}
 
       {/* Leave Community Modal */}
       {showLeaveModal && <LeaveModal />}

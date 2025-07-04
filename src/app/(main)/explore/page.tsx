@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { ArrowLeft, Clock, MessageCircle, Search, Star, TrendingUp, Users, X } from 'lucide-react';
+import { ArrowLeft, Clock, MessageCircle, Search, Star, TrendingUp, X } from 'lucide-react';
 
 import { useKeyopollsPollsApiGeneralListPolls } from '@/api/polls/polls';
 import { CommentSearchResultOut, PollDetails } from '@/api/schemas';
@@ -806,25 +806,7 @@ const Explore: React.FC = () => {
   const { data: trendingData, isLoading: trendingLoading } = useKeyopollsPollsApiGeneralListPolls(
     {
       sort: 'trending',
-      page_size: 8,
-      status: ['active'],
-    },
-    {
-      request: {
-        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-      },
-      query: {
-        enabled: !searchQuery.trim() && searchState === 'default',
-        refetchOnWindowFocus: false,
-      },
-    }
-  );
-
-  // Fetch popular polls
-  const { data: popularData, isLoading: popularLoading } = useKeyopollsPollsApiGeneralListPolls(
-    {
-      sort: 'most_popular',
-      page_size: 8,
+      page_size: 12,
       status: ['active'],
     },
     {
@@ -919,7 +901,7 @@ const Explore: React.FC = () => {
 
             {trendingLoading ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {Array.from({ length: 4 }).map((_, index) => (
+                {Array.from({ length: 6 }).map((_, index) => (
                   <div
                     key={index}
                     className="border-border bg-surface animate-pulse rounded-lg border p-3"
@@ -932,36 +914,7 @@ const Explore: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {trendingData?.data?.items?.slice(0, 8).map((poll) => (
-                  <TrendingPollCard key={poll.id} poll={poll} />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Popular Polls Section */}
-          <section>
-            <h2 className="text-text mb-4 flex items-center gap-2 text-xl font-bold">
-              <Users size={20} />
-              Popular Polls
-            </h2>
-
-            {popularLoading ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="border-border bg-surface animate-pulse rounded-lg border p-3"
-                  >
-                    <div className="bg-surface-elevated mb-2 h-3 w-3/4 rounded"></div>
-                    <div className="bg-surface-elevated mb-2 h-3 w-1/2 rounded"></div>
-                    <div className="bg-surface-elevated h-2 w-1/4 rounded"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {popularData?.data?.items?.slice(0, 8).map((poll) => (
+                {trendingData?.data?.items?.slice(0, 12).map((poll) => (
                   <TrendingPollCard key={poll.id} poll={poll} />
                 ))}
               </div>

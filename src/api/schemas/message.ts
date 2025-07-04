@@ -6,6 +6,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * Schema for a simple message response
+ */
 export interface Message {
   message: string;
 }

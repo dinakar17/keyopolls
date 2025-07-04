@@ -11,7 +11,7 @@ import { useKeyopollsCommunitiesApiGeneralListCommunities } from '@/api/communit
 import { CommunityDetails } from '@/api/schemas';
 import BottomNavigation from '@/components/common/BottomNavigation';
 import { useProfileStore } from '@/stores/useProfileStore';
-import { formatDate, formatNumber } from '@/utils';
+import { formatNumber } from '@/utils';
 
 const Communities = () => {
   const router = useRouter();
@@ -287,7 +287,7 @@ const Communities = () => {
 
         {/* Community Info */}
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <h3 className="text-text truncate font-semibold">{community.name}</h3>
 
             {/* Community type indicator */}
@@ -295,16 +295,11 @@ const Communities = () => {
               {community.community_type}
             </span>
           </div>
-
-          <p className="text-text-secondary mb-1 line-clamp-1 text-sm">{community.description}</p>
-
-          <div className="text-text-muted flex items-center gap-3 text-xs">
+          <div className="text-text-muted mb-1 flex items-center gap-3 text-xs">
             <span>{formatNumber(community.member_count)} members</span>
-            <span>·</span>
-            <span>{formatNumber(community.poll_count)} polls</span>
-            <span>·</span>
-            <span>{formatDate(community.created_at)}</span>
           </div>
+
+          <p className="text-text-secondary mb-1 line-clamp-2 text-xs">{community.description}</p>
         </div>
 
         {/* Arrow */}

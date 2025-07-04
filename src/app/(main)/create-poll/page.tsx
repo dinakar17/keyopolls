@@ -16,8 +16,6 @@ import { PollFormData, pollCreateSchema } from '@/types';
 import CommunitySelectionOverlay from './CommunitySelectionOverlay';
 import PollForm from './PollForm';
 
-// components/polls/CreatePoll.tsx
-
 const STORAGE_KEY = 'createPollFormData';
 
 export default function CreatePoll() {

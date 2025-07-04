@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 
-import { Camera, Minus, Plus, Users, X } from 'lucide-react';
+import { ArrowLeft, Camera, Minus, Plus, Users, X } from 'lucide-react';
 
 import { useKeyopollsCommunitiesApiGeneralGetCommunity } from '@/api/communities-general/communities-general';
 import { useKeyopollsCommunitiesApiOperationsUpdateCommunity } from '@/api/communities/communities';
@@ -60,6 +60,8 @@ const EditCommunity = () => {
       setBannerPreview(community.banner || null);
     }
   }, [community]);
+
+  console.log('Community data:', community);
 
   // Auto-resize textarea function
   const autoResize = (element: HTMLTextAreaElement) => {
@@ -199,9 +201,18 @@ const EditCommunity = () => {
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
           toast.success('Community updated successfully');
-          router.push(`/communities/${community.name}`);
+          const updatedCommunity = response.data;
+          // Update local state with new community data
+          setDescription(updatedCommunity.description || '');
+          setRules(
+            updatedCommunity.rules && updatedCommunity.rules.length > 0
+              ? updatedCommunity.rules
+              : ['']
+          );
+          setAvatarPreview(updatedCommunity.avatar || null);
+          setBannerPreview(updatedCommunity.banner || null);
         },
         onError: (error) => {
           console.error('Error updating community:', error);
@@ -259,10 +270,20 @@ const EditCommunity = () => {
         <div className="bg-surface border-border rounded-2xl border shadow-sm">
           {/* Header */}
           <div className="border-border border-b px-8 py-6">
-            <h1 className="text-text text-2xl font-semibold">Edit Community</h1>
-            <p className="text-text-secondary mt-1 text-sm">
-              Update your community information and settings
-            </p>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                className="text-text-secondary hover:text-text hover:bg-surface-elevated flex items-center justify-center rounded-lg p-2 transition-colors"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div>
+                <h1 className="text-text text-2xl font-semibold">Edit Community</h1>
+                <p className="text-text-secondary mt-1 text-sm">
+                  Update your community information and settings
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Form */}

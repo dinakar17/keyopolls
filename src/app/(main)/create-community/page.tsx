@@ -27,8 +27,7 @@ const communitySchema = z.object({
     .string()
     .min(3, 'Community name must be at least 3 characters')
     .max(25, 'Community name cannot exceed 25 characters')
-    .regex(/^[a-z0-9_]+$/, 'Name can only contain lowercase letters, numbers, and underscores')
-    .refine((name) => name.endsWith('polls'), 'Community name must end with "polls"'),
+    .regex(/^[a-z0-9_]+$/, 'Name can only contain lowercase letters, numbers, and underscores'),
   description: z
     .string()
     .min(10, 'Description must be at least 10 characters')
@@ -84,6 +83,7 @@ const CommunityCreateForm = () => {
       },
       mutation: {
         onSuccess: (response) => {
+          toast.success('Congratulations! Your community has been created successfully.');
           router.push(`/communities/${response.data.name}`);
         },
         onError: (error) => {
@@ -292,15 +292,11 @@ const CommunityCreateForm = () => {
                 id="name"
                 type="text"
                 placeholder="community_name"
-                className="border-border bg-background text-text placeholder:text-text-muted focus:border-primary focus:ring-primary w-full rounded-md border px-3 py-2 pr-12 focus:ring-1 focus:outline-none"
+                className="border-border bg-background text-text placeholder:text-text-muted focus:border-primary focus:ring-primary w-full rounded-md border px-3 py-2 focus:ring-1 focus:outline-none"
               />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <span className="text-text-muted text-sm">polls</span>
-              </div>
             </div>
             <p className="text-text-muted text-xs">
-              3-25 characters, lowercase letters, numbers, and underscores only. Must end with
-              "polls"
+              3-25 characters, lowercase letters, numbers, and underscores only.
             </p>
             {errors.name && <p className="text-error text-sm">{errors.name.message}</p>}
           </div>

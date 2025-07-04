@@ -9,6 +9,7 @@
 export type CommunityMembershipSchemaAction =
   (typeof CommunityMembershipSchemaAction)[keyof typeof CommunityMembershipSchemaAction];
 
+ 
 export const CommunityMembershipSchemaAction = {
   join: 'join',
   leave: 'leave',

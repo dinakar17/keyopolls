@@ -2,11 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { Edit } from 'lucide-react';
 
-const CreateButton = ({ path = '/create-poll' }) => {
+interface CreateButtonProps {
+  path?: string;
+  onClick?: () => void;
+}
+
+const CreateButton = ({ path = '/create-poll', onClick }: CreateButtonProps) => {
+  const router = useRouter();
+
   // State for button visibility
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -35,6 +42,13 @@ const CreateButton = ({ path = '/create-poll' }) => {
     };
   }, [lastScrollY]);
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
+    router.push(path);
+  };
+
   return (
     <div
       className={`fixed right-4 bottom-20 z-50 transition-all duration-300 ease-in-out ${
@@ -43,11 +57,12 @@ const CreateButton = ({ path = '/create-poll' }) => {
           : 'pointer-events-none translate-y-10 transform opacity-0'
       }`}
     >
-      <Link href={path}>
-        <button className="bg-primary text-background flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:scale-105 hover:opacity-90 active:scale-95">
-          <Edit size={18} strokeWidth={2.5} />
-        </button>
-      </Link>
+      <button
+        onClick={handleClick}
+        className="bg-primary text-background flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:scale-105 hover:opacity-90 active:scale-95"
+      >
+        <Edit size={18} strokeWidth={2.5} />
+      </button>
     </div>
   );
 };

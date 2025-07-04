@@ -18,11 +18,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Keyo - Where opinions matter',
+  title: 'Keyo - Daily interaction, micro-learning, and opinion expression',
   description:
-    'Join Keyo, the platform where every opinion counts. Create polls, participate in discussions, earn aura, and connect with a community that values authentic perspectives. Express yourself freely with pseudonymous profiles.',
+    'Transform your daily routine with Keyo - the platform for active learning through interactive polls, quick quizzes, and meaningful opinion expression. Build habits, gain knowledge, and engage with a community that values authentic perspectives through daily interactions.',
   keywords:
-    'polls, voting, opinions, community, discussions, aura system, pseudonymous, authentic conversations, multiple choice polls, ranking polls, opinion platform, social polling, community engagement, real perspectives',
+    'daily interaction, micro-learning, opinion expression, interactive polls, quick quizzes, habit building, active learning, community engagement, daily habits, knowledge building, authentic perspectives, pseudonymous profiles, aura system, opinion platform, learning community, daily engagement',
   applicationName: 'Keyo',
   authors: [{ name: 'Dinakar Chennupati' }],
   creator: 'Dinakar',
@@ -41,30 +41,30 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_IN',
     url: 'https://keyo.in',
-    title: 'Keyo - Where opinions matter',
+    title: 'Keyo - Daily interaction, micro-learning, and opinion expression',
     description:
-      'Create diverse polls, earn aura by participating, engage in rich discussions, and express yourself safely with pseudonymous profiles. Join the community where every opinion counts.',
+      'Transform your daily routine with active learning through interactive polls, quick quizzes, and meaningful opinion expression. Build knowledge-building habits while engaging with a community that values authentic perspectives.',
     siteName: 'Keyo',
     images: [
       {
         url: 'https://keyo.in/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Keyo - Where opinions matter',
+        alt: 'Keyo - Daily interaction, micro-learning, and opinion expression',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Keyo - Where opinions matter',
+    title: 'Keyo - Daily interaction, micro-learning, and opinion expression',
     description:
-      'Create diverse polls, earn aura by participating, engage in rich discussions, and express yourself safely with pseudonymous profiles. Join the community where every opinion counts.',
+      'Transform your daily routine with active learning through interactive polls, quick quizzes, and meaningful opinion expression. Build knowledge-building habits while engaging with a community that values authentic perspectives.',
     images: [
       {
         url: 'https://keyo.in/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Keyo - Where opinions matter',
+        alt: 'Keyo - Daily interaction, micro-learning, and opinion expression',
       },
     ],
     creator: '@DinakarChennup1',

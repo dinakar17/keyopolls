@@ -146,6 +146,37 @@ export const formatSimple = (num: number | string | null | undefined): string =>
   return Math.floor(absNum).toString();
 };
 
+/**
+ * Calculates and formats the time remaining until expiration
+ * @param {string | null} expiresAt - ISO date string or null
+ * @returns {string} Formatted time remaining string
+ */
+export const getTimeRemaining = (expiresAt: string | null | undefined): string => {
+  if (!expiresAt) {
+    return 'No expiration';
+  }
+
+  const now = new Date();
+  const expirationDate = new Date(expiresAt);
+  const timeDiff = expirationDate.getTime() - now.getTime();
+
+  if (timeDiff <= 0) {
+    return 'Expired';
+  }
+
+  const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (days > 0) {
+    return `${days}d ${hours}h left`;
+  } else if (hours > 0) {
+    return `${hours}h ${minutes}m left`;
+  } else {
+    return `${minutes}m left`;
+  }
+};
+
 // Examples of usage:
 /*
 // Basic usage

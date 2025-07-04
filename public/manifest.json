@@ -1,29 +1,96 @@
 {
-  "name": "Connect",
-  "short_name": "Connect",
-  "description": "The iPhone moment of social media is here. Connect connects everything most importantly real humans to real humans - all while rewarding you for content that other platforms simply can't.",
+  "name": "Keyo - Daily interaction, micro-learning, and opinion expression",
+  "short_name": "Keyo",
+  "description": "Transform your daily routine with Keyo - the platform for active learning through interactive polls, quick quizzes, and meaningful opinion expression. Build habits, gain knowledge, and engage with a community that values authentic perspectives through daily interactions.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#272839",
   "theme_color": "#272839",
+  "orientation": "portrait",
+  "categories": ["education", "lifestyle", "productivity", "social"],
+  "lang": "en-IN",
+  "scope": "/",
   "icons": [
     {
       "purpose": "maskable",
       "sizes": "512x512",
-      "src": "logo.png",
+      "src": "icon-512-maskable.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "192x192",
-      "src": "logo.png",
+      "src": "icon-192.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "512x512",
-      "src": "logo.png",
+      "src": "icon-512.png",
       "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "180x180",
+      "src": "icon-180.png",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Daily interactive polls and quizzes"
+    },
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1200x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Micro-learning and opinion expression platform"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Daily Quiz",
+      "short_name": "Quiz",
+      "description": "Take today's interactive quiz",
+      "url": "/daily-quiz",
+      "icons": [
+        {
+          "src": "icon-quiz.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Create Poll",
+      "short_name": "Create",
+      "description": "Express your opinion with a poll",
+      "url": "/create-poll",
+      "icons": [
+        {
+          "src": "icon-create.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Learning Hub",
+      "short_name": "Learn",
+      "description": "Explore micro-learning content",
+      "url": "/learn",
+      "icons": [
+        {
+          "src": "icon-learn.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
