@@ -37,16 +37,7 @@ export default function CreatePoll() {
   const [rulesDrawerOpen, setRulesDrawerOpen] = useState(false);
   const [durationDrawerOpen, setDurationDrawerOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [durationDays, setDurationDays] = useState(() => {
-    const savedData = loadFormData();
-    if (savedData.expires_at) {
-      const expiresAt = new Date(savedData.expires_at);
-      const now = new Date();
-      const diffDays = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return Math.max(1, Math.min(7, diffDays));
-    }
-    return 1;
-  });
+  const [durationDays, setDurationDays] = useState(1);
   const [optionImages, setOptionImages] = useState<{
     [key: number]: { file: File; preview: string };
   }>({});
@@ -93,7 +84,7 @@ export default function CreatePoll() {
       allow_multiple_votes: savedData.allow_multiple_votes || false,
       max_choices: savedData.max_choices || 4,
       requires_aura: savedData.requires_aura || 0,
-      expires_at: savedData.expires_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      expires_at: '', // No default value
       has_correct_answer: savedData.has_correct_answer || false,
       correct_text_answer: savedData.correct_text_answer || '',
       correct_ranking_order: savedData.correct_ranking_order || [],

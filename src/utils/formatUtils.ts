@@ -161,7 +161,7 @@ export const getTimeRemaining = (expiresAt: string | null | undefined): string =
   const timeDiff = expirationDate.getTime() - now.getTime();
 
   if (timeDiff <= 0) {
-    return 'Expired';
+    return 'Closed';
   }
 
   const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));

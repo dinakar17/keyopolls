@@ -183,6 +183,7 @@ export * from './pollDataSchema';
 export * from './pollDeleteSchema';
 export * from './pollDeleteSchemaMessage';
 export * from './pollDetails';
+export * from './pollDetailsAuthorAvatar';
 export * from './pollDetailsCommunityAvatar';
 export * from './pollDetailsCorrectAnswerStats';
 export * from './pollDetailsExpiresAt';

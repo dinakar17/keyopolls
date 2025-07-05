@@ -8,8 +8,10 @@ import { useRouter } from 'next/navigation';
 import { ChevronRight, Crown, Plus, Search, Shield, Star, Users, X } from 'lucide-react';
 
 import { useKeyopollsCommunitiesApiGeneralListCommunities } from '@/api/communities-general/communities-general';
+import { useKeyopollsCommunitiesApiOperationsToggleCommunityMembership } from '@/api/communities/communities';
 import { CommunityDetails } from '@/api/schemas';
 import BottomNavigation from '@/components/common/BottomNavigation';
+import { toast } from '@/components/ui/toast';
 import { useProfileStore } from '@/stores/useProfileStore';
 import { formatNumber } from '@/utils';
 
@@ -28,6 +30,7 @@ const Communities = () => {
   const [hasNextMyCommunities, setHasNextMyCommunities] = useState(true);
   const [hasNextAllCommunities, setHasNextAllCommunities] = useState(true);
   const [hasNextSearchResults, setHasNextSearchResults] = useState(true);
+  const [joiningCommunities, setJoiningCommunities] = useState<Set<number>>(new Set());
 
   // Refs for infinite scrolling
   const myCommunitiesObserver = useRef<IntersectionObserver | null>(null);
@@ -36,6 +39,16 @@ const Communities = () => {
 
   // Determine if we're in search mode
   const isSearchMode = searchQuery.trim().length > 0;
+
+  // Toggle membership mutation
+  const { mutate: toggleMembership } =
+    useKeyopollsCommunitiesApiOperationsToggleCommunityMembership({
+      request: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    });
 
   // Fetch my communities (authenticated users only)
   const { data: myCommunitiesData, isLoading: myCommunitiesLoading } =
@@ -59,24 +72,27 @@ const Communities = () => {
     );
 
   // Fetch all/discoverable communities
-  const { data: allCommunitiesData, isLoading: allCommunitiesLoading } =
-    useKeyopollsCommunitiesApiGeneralListCommunities(
-      {
-        page: allCommunitiesPage,
-        page_size: 20,
-        sort_by: 'member_count',
-        order: 'desc',
+  const {
+    data: allCommunitiesData,
+    isLoading: allCommunitiesLoading,
+    refetch,
+  } = useKeyopollsCommunitiesApiGeneralListCommunities(
+    {
+      page: allCommunitiesPage,
+      page_size: 20,
+      sort_by: 'member_count',
+      order: 'desc',
+    },
+    {
+      request: {
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       },
-      {
-        request: {
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-        },
-        query: {
-          enabled: !isSearchMode,
-          refetchOnWindowFocus: false,
-        },
-      }
-    );
+      query: {
+        enabled: !isSearchMode,
+        refetchOnWindowFocus: false,
+      },
+    }
+  );
 
   // Fetch search results
   const { data: searchData, isLoading: searchLoading } =
@@ -173,6 +189,44 @@ const Communities = () => {
     router.push('/create-community');
   };
 
+  // Handle join community
+  const handleJoinCommunity = (community: CommunityDetails, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!isAuthenticated()) {
+      toast.error('Please sign in to join communities');
+      return;
+    }
+
+    if (!community.user_permissions?.can_join) {
+      toast.error('You cannot join this community');
+      return;
+    }
+
+    setJoiningCommunities((prev) => new Set(prev).add(community.id));
+
+    toggleMembership(
+      {
+        communityId: community.id,
+        data: { action: 'join' },
+      },
+      {
+        onSuccess: (response) => {
+          toast.success(response.data.message);
+          refetch();
+        },
+        onError: (error) => {
+          toast.error(error.response?.data?.message || 'Failed to join community');
+          setJoiningCommunities((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(community.id);
+            return newSet;
+          });
+        },
+      }
+    );
+  };
+
   // Infinite scroll callbacks
   const lastMyCommunityRef = useCallback(
     (node: HTMLElement | null) => {
@@ -221,10 +275,12 @@ const Communities = () => {
     community,
     isLast,
     lastElementRef,
+    showJoinButton = false,
   }: {
     community: CommunityDetails;
     isLast?: boolean;
     lastElementRef?: (node: HTMLElement | null) => void;
+    showJoinButton?: boolean;
   }) => {
     const handleClick = () => {
       router.push(`/communities/${community.name}`);
@@ -253,6 +309,14 @@ const Communities = () => {
           return 'text-success';
       }
     };
+
+    const shouldShowTypeLabel = (type: string) => {
+      return type === 'private' || type === 'restricted';
+    };
+
+    const isJoined = community.membership_details?.is_active;
+    const canJoin = community.user_permissions?.can_join;
+    const isJoining = joiningCommunities.has(community.id);
 
     return (
       <div
@@ -290,10 +354,12 @@ const Communities = () => {
           <div className="flex items-center gap-2">
             <h3 className="text-text truncate font-semibold">{community.name}</h3>
 
-            {/* Community type indicator */}
-            <span className={`text-xs font-medium ${getTypeColor(community.community_type)}`}>
-              {community.community_type}
-            </span>
+            {/* Community type indicator - only show for private/restricted */}
+            {shouldShowTypeLabel(community.community_type) && (
+              <span className={`text-xs font-medium ${getTypeColor(community.community_type)}`}>
+                {community.community_type}
+              </span>
+            )}
           </div>
           <div className="text-text-muted mb-1 flex items-center gap-3 text-xs">
             <span>{formatNumber(community.member_count)} members</span>
@@ -302,8 +368,22 @@ const Communities = () => {
           <p className="text-text-secondary mb-1 line-clamp-2 text-xs">{community.description}</p>
         </div>
 
-        {/* Arrow */}
-        <ChevronRight size={16} className="text-text-muted flex-shrink-0" />
+        {/* Join Button or Arrow */}
+        {showJoinButton && !isJoined && canJoin ? (
+          <button
+            onClick={(e) => handleJoinCommunity(community, e)}
+            disabled={isJoining}
+            className="bg-primary text-background hover:bg-primary/90 disabled:bg-primary/50 flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed"
+          >
+            {isJoining ? 'Joining...' : 'Join'}
+          </button>
+        ) : showJoinButton && isJoined ? (
+          <div className="border-success/20 bg-success/10 text-success flex-shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium">
+            Joined
+          </div>
+        ) : (
+          <ChevronRight size={16} className="text-text-muted flex-shrink-0" />
+        )}
       </div>
     );
   };
@@ -382,6 +462,7 @@ const Communities = () => {
                       community={community}
                       isLast={index === searchResults.length - 1}
                       lastElementRef={lastSearchResultRef}
+                      showJoinButton={true}
                     />
                   ))}
 
@@ -478,6 +559,7 @@ const Communities = () => {
                           community={community}
                           isLast={index === filteredArray.length - 1}
                           lastElementRef={lastAllCommunityRef}
+                          showJoinButton={true}
                         />
                       ))}
 

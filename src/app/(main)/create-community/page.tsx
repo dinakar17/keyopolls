@@ -43,6 +43,7 @@ const communitySchema = z.object({
     )
     .min(1, 'At least 1 topic is required')
     .max(3, 'Maximum 3 topics allowed'),
+  avatar: z.any().refine((file) => file !== null, 'Community avatar is required'),
 });
 
 type CommunityFormData = z.infer<typeof communitySchema>;
@@ -122,6 +123,7 @@ const CommunityCreateForm = () => {
     defaultValues: {
       community_type: 'public',
       tag_names: [],
+      avatar: null,
     },
   });
 
@@ -131,24 +133,36 @@ const CommunityCreateForm = () => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('root', { message: 'Avatar file size must be less than 5MB' });
+        setError('avatar', { message: 'Avatar file size must be less than 5MB' });
         return;
       }
 
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        setError('root', { message: 'Only JPEG, PNG, and WebP images are allowed' });
+        setError('avatar', { message: 'Only JPEG, PNG, and WebP images are allowed' });
         return;
       }
 
       setAvatarFile(file);
-      clearErrors('root');
+      setValue('avatar', file);
+      clearErrors('avatar');
+      trigger('avatar');
 
       const reader = new FileReader();
       reader.onload = (e) => {
         setAvatarPreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const removeAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setValue('avatar', null);
+    trigger('avatar');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -241,12 +255,16 @@ const CommunityCreateForm = () => {
             </div>
           )}
 
-          {/* Avatar Upload */}
+          {/* Avatar Upload - Now Required */}
           <div className="space-y-3">
-            <label className="text-text block text-sm font-medium">Community Avatar</label>
+            <label className="text-text block text-sm font-medium">
+              Community Avatar <span className="text-error">*</span>
+            </label>
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="border-border bg-surface flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border">
+                <div
+                  className={`border-border bg-surface flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border ${errors.avatar ? 'border-error' : ''}`}
+                >
                   {avatarPreview ? (
                     <Image
                       src={avatarPreview}
@@ -259,6 +277,15 @@ const CommunityCreateForm = () => {
                     <Camera className="text-text-muted h-6 w-6" />
                   )}
                 </div>
+                {avatarPreview && (
+                  <button
+                    type="button"
+                    onClick={removeAvatar}
+                    className="bg-error text-background absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs transition-colors hover:bg-red-600"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <button
@@ -267,7 +294,7 @@ const CommunityCreateForm = () => {
                   className="border-border bg-surface text-text hover:bg-surface-elevated inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium transition-colors"
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  Choose Image
+                  {avatarPreview ? 'Change Image' : 'Choose Image'}
                 </button>
                 <p className="text-text-muted text-xs">PNG, JPG, WebP (max 5MB)</p>
               </div>
@@ -279,12 +306,13 @@ const CommunityCreateForm = () => {
               onChange={handleAvatarChange}
               className="hidden"
             />
+            {errors.avatar && <p className="text-error text-sm">{String(errors.avatar.message)}</p>}
           </div>
 
           {/* Community Name */}
           <div className="space-y-2">
             <label htmlFor="name" className="text-text block text-sm font-medium">
-              Community Name
+              Community Name <span className="text-error">*</span>
             </label>
             <div className="relative">
               <input
@@ -304,7 +332,7 @@ const CommunityCreateForm = () => {
           {/* Description */}
           <div className="space-y-2">
             <label htmlFor="description" className="text-text block text-sm font-medium">
-              Description
+              Description <span className="text-error">*</span>
             </label>
             <textarea
               {...register('description')}
@@ -314,7 +342,7 @@ const CommunityCreateForm = () => {
               className="border-border bg-background text-text placeholder:text-text-muted focus:border-primary focus:ring-primary w-full resize-none rounded-md border px-3 py-2 focus:ring-1 focus:outline-none"
             />
             <div className="text-text-muted flex justify-between text-xs">
-              <span>{errors.description?.message || ''}</span>
+              <span className="text-error">{errors.description?.message || ''}</span>
               <span>{watchedFields.description?.length || 0}/300</span>
             </div>
           </div>
@@ -372,14 +400,16 @@ const CommunityCreateForm = () => {
             </Drawer>
           </div>
 
-          {/* Category Selection */}
+          {/* Category Selection - Now Required */}
           <div className="space-y-3">
-            <label className="text-text block text-sm font-medium">Category</label>
+            <label className="text-text block text-sm font-medium">
+              Category <span className="text-error">*</span>
+            </label>
             <Drawer open={categoryDrawerOpen} onOpenChange={setCategoryDrawerOpen}>
               <DrawerTrigger asChild>
                 <button
                   type="button"
-                  className="border-border bg-background hover:bg-surface-elevated focus:border-primary focus:ring-primary flex w-full items-center justify-between rounded-md border px-3 py-2 text-left transition-colors focus:ring-1 focus:outline-none"
+                  className={`border-border bg-background hover:bg-surface-elevated focus:border-primary focus:ring-primary flex w-full items-center justify-between rounded-md border px-3 py-2 text-left transition-colors focus:ring-1 focus:outline-none ${errors.category_id ? 'border-error' : ''}`}
                 >
                   {selectedCategory ? (
                     <div className="flex items-center gap-3">
@@ -407,7 +437,11 @@ const CommunityCreateForm = () => {
                       key={category.id}
                       type="button"
                       onClick={() => selectCategory(category)}
-                      className="border-border hover:bg-surface-elevated w-full rounded-md border p-3 text-left transition-colors"
+                      className={`border-border hover:bg-surface-elevated w-full rounded-md border p-3 text-left transition-colors ${
+                        selectedCategory?.id === category.id
+                          ? 'border-primary ring-primary ring-1'
+                          : ''
+                      }`}
                     >
                       <div className="flex items-start gap-3">
                         <div
@@ -433,7 +467,9 @@ const CommunityCreateForm = () => {
 
           {/* Topics */}
           <div className="space-y-3">
-            <label className="text-text block text-sm font-medium">Topics (1-3 required)</label>
+            <label className="text-text block text-sm font-medium">
+              Topics <span className="text-error">*</span> (1-3 required)
+            </label>
             <p className="text-text-secondary text-sm">
               Add topics to help people find your community
             </p>

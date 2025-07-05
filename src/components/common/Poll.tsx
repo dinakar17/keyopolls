@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import {
   ArrowDown,
@@ -44,6 +44,7 @@ interface PollProps {
 
 const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, onDelete }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { accessToken } = useProfileStore();
 
@@ -61,6 +62,9 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
 
   // Use updated poll data if available, otherwise use prop data
   const currentPoll = pollData || poll;
+
+  // Check if we should show user info instead of community info
+  const shouldShowUserInfo = pathname.includes('/profiles') || pathname.includes('/communities');
 
   // Get images from options
   const pollImages =
@@ -122,8 +126,8 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
     setMediaViewerOpen(true);
   };
 
-  // Handle community navigation
-  const handleCommunityClick = (e: React.MouseEvent) => {
+  // Handle community/user navigation
+  const handleHeaderClick = (e: React.MouseEvent) => {
     e.stopPropagation();
 
     // Preserve current category in sessionStorage before navigating
@@ -132,8 +136,12 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
       sessionStorage.setItem('polls_active_category', currentCategory);
     }
 
-    // Navigate to community page
-    router.push(`/communities/${currentPoll.community_name}`);
+    // Navigate based on context
+    if (shouldShowUserInfo) {
+      router.push(`/profiles/${currentPoll.author_username}`);
+    } else {
+      router.push(`/communities/${currentPoll.community_name}`);
+    }
   };
 
   // Handle poll click navigation
@@ -144,7 +152,7 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
       target.closest('a') ||
       target.closest('[data-media-item]') ||
       target.closest('[data-interactive]') ||
-      target.closest('[data-community-link]')
+      target.closest('[data-header-link]')
     ) {
       return;
     }
@@ -243,6 +251,29 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
     return preview || 'This poll';
   };
 
+  // Get display info based on context
+  const getDisplayInfo = () => {
+    if (shouldShowUserInfo) {
+      return {
+        avatar: currentPoll.author_avatar,
+        name: currentPoll.author_username,
+        displayName: currentPoll.author_username,
+        title: `Go to ${currentPoll.author_username}'s profile`,
+        fallbackLetter: currentPoll.author_username?.charAt(0).toUpperCase() || 'U',
+      };
+    } else {
+      return {
+        avatar: currentPoll.community_avatar,
+        name: currentPoll.community_name,
+        displayName: currentPoll.community_name,
+        title: `Go to ${currentPoll.community_name} community`,
+        fallbackLetter: currentPoll.community_name?.charAt(0).toUpperCase() || 'C',
+      };
+    }
+  };
+
+  const displayInfo = getDisplayInfo();
+
   return (
     <>
       <article
@@ -252,39 +283,37 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
         onClick={handlePollClick}
       >
         <div className="min-w-0 flex-1">
-          {/* Community Info */}
+          {/* Community/User Info */}
           <div className="mb-1 flex items-start justify-between">
             <div className="flex items-center gap-2">
-              {/* Community Avatar - Clickable */}
+              {/* Avatar - Clickable */}
               <div
                 className="text-background relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 font-medium transition-all hover:scale-105 hover:opacity-80"
-                onClick={handleCommunityClick}
-                data-community-link="true"
-                title={`Go to ${currentPoll.community_name} community`}
+                onClick={handleHeaderClick}
+                data-header-link="true"
+                title={displayInfo.title}
               >
-                {currentPoll.community_avatar ? (
+                {displayInfo.avatar ? (
                   <Image
-                    src={currentPoll.community_avatar}
-                    alt={`${currentPoll.community_name} community`}
+                    src={displayInfo.avatar}
+                    alt={displayInfo.displayName}
                     className="h-full w-full rounded-full object-cover"
                     width={20}
                     height={20}
                   />
                 ) : (
-                  <span className="text-sm">
-                    {currentPoll.community_name.charAt(0).toUpperCase()}
-                  </span>
+                  <span className="text-sm">{displayInfo.fallbackLetter}</span>
                 )}
               </div>
 
-              {/* Community Name - Clickable */}
+              {/* Name - Clickable */}
               <h3
                 className="text-text hover:text-primary cursor-pointer truncate text-sm font-semibold transition-colors hover:underline"
-                onClick={handleCommunityClick}
-                data-community-link="true"
-                title={`Go to ${currentPoll.community_name} community`}
+                onClick={handleHeaderClick}
+                data-header-link="true"
+                title={displayInfo.title}
               >
-                {currentPoll.community_name}
+                {displayInfo.displayName}
               </h3>
 
               <span className="text-text-muted text-xs">

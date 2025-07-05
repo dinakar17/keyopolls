@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { MultipleChoiceStatsSchema } from './multipleChoiceStatsSchema';
+import type { PollDetailsAuthorAvatar } from './pollDetailsAuthorAvatar';
 import type { PollDetailsCommunityAvatar } from './pollDetailsCommunityAvatar';
 import type { PollDetailsCorrectAnswerStats } from './pollDetailsCorrectAnswerStats';
 import type { PollDetailsExpiresAt } from './pollDetailsExpiresAt';
@@ -29,6 +30,7 @@ export interface PollDetails {
   status: string;
   author_username: string;
   author_display_name: string;
+  author_avatar?: PollDetailsAuthorAvatar;
   author_aura: number;
   community_id: number;
   community_name: string;

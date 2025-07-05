@@ -382,58 +382,58 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
 
             {/* Modal Content */}
             <div className="space-y-4 p-4">
-              {/* Point 1: Multiple Poll Types */}
+              {/* Point 1: Opinion-First & Micro Learning Platform */}
               <div className="flex items-start space-x-3">
                 <div className="bg-primary/10 flex-shrink-0 rounded-full p-2">
                   <Vote size={16} className="text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-text text-sm font-medium">Multiple Poll Types</h3>
+                  <h3 className="text-text text-sm font-medium">Opinion-First Micro Learning</h3>
                   <p className="text-text-secondary text-xs">
-                    Create single choice, multiple choice, ranking polls, and more types to capture
-                    every opinion.
+                    Share your thoughts on diverse topics while learning something new every day.
+                    Every opinion counts and teaches.
                   </p>
                 </div>
               </div>
 
-              {/* Point 2: Aura System */}
+              {/* Point 2: Aura System & Daily Streaks */}
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0 rounded-full bg-yellow-500/10 p-2">
                   <Zap size={16} className="text-yellow-600" />
                 </div>
                 <div>
-                  <h3 className="text-text text-sm font-medium">Earn Aura by Participating</h3>
+                  <h3 className="text-text text-sm font-medium">Build Daily Learning Streaks</h3>
                   <p className="text-text-secondary text-xs">
-                    Build your reputation by creating polls and engaging in discussions. Your aura
-                    shows your contribution.
+                    Earn Aura points and maintain daily streaks by participating in polls and
+                    discussions. Turn curiosity into a habit.
                   </p>
                 </div>
               </div>
 
-              {/* Point 3: Community Discussions */}
+              {/* Point 3: Zero Promotional Content */}
               <div className="flex items-start space-x-3">
-                <div className="bg-secondary/10 flex-shrink-0 rounded-full p-2">
-                  <MessageCircle size={16} className="text-secondary" />
+                <div className="bg-success/10 flex-shrink-0 rounded-full p-2">
+                  <Shield size={16} className="text-success" />
                 </div>
                 <div>
-                  <h3 className="text-text text-sm font-medium">Rich Discussions</h3>
+                  <h3 className="text-text text-sm font-medium">Zero Promotional Polls</h3>
                   <p className="text-text-secondary text-xs">
-                    Every poll sparks conversation. Comment, debate, and discover different
-                    perspectives.
+                    Our AI moderation ensures absolutely no ads or promotional content. Only genuine
+                    opinions and meaningful discussions.
                   </p>
                 </div>
               </div>
 
-              {/* Point 4: Pseudonymous but Authentic */}
+              {/* Point 4: Quality Over Quantity */}
               <div className="flex items-start space-x-3">
                 <div className="bg-info/10 flex-shrink-0 rounded-full p-2">
-                  <Shield size={16} className="text-info" />
+                  <MessageCircle size={16} className="text-info" />
                 </div>
                 <div>
-                  <h3 className="text-text text-sm font-medium">Pseudonymous & Safe</h3>
+                  <h3 className="text-text text-sm font-medium">Quality-First Discussions</h3>
                   <p className="text-text-secondary text-xs">
-                    Express yourself freely with pseudonymous profiles while maintaining authentic
-                    discussions.
+                    Only 3 polls per community per day to prevent spam and engagement farming. Every
+                    poll matters.
                   </p>
                 </div>
               </div>

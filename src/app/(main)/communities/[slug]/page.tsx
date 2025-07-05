@@ -1,34 +1,31 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 
 import {
-  Archive,
-  BarChart3,
-  CheckCircle,
+  ArrowLeft,
   ChevronDown,
   ChevronUp,
-  Clock,
   Crown,
   Globe,
   Lock,
+  LogOut,
+  MoreVertical,
+  Search,
   Settings,
+  Share,
   Shield,
-  TrendingUp,
   Users,
   X,
 } from 'lucide-react';
 
 import { useKeyopollsCommunitiesApiGeneralGetCommunity } from '@/api/communities-general/communities-general';
 import { useKeyopollsCommunitiesApiOperationsToggleCommunityMembership } from '@/api/communities/communities';
-import { useKeyopollsPollsApiGeneralListPolls } from '@/api/polls/polls';
-import { PollDetails } from '@/api/schemas';
 import BottomNavigation from '@/components/common/BottomNavigation';
 import CreateButton from '@/components/common/CreateButton';
-import Poll from '@/components/common/Poll';
 import {
   Drawer,
   DrawerContent,
@@ -40,66 +37,65 @@ import { toast } from '@/components/ui/toast';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import { useProfileStore } from '@/stores/useProfileStore';
 
-type SortFilter = 'newest' | 'oldest' | 'most_votes' | 'trending';
-type StatusFilter = 'active' | 'closed' | 'all';
-type PollTypeFilter = 'all' | 'single' | 'multiple' | 'ranking';
-type VotedFilter = 'all' | 'voted' | 'not_voted';
-
-interface FilterOption {
-  value: string;
-  label: string;
-  icon?: React.ReactNode;
-}
+import CommunityContent from './CommunityContent';
 
 const CommunityPage = () => {
   const { accessToken } = useProfileStore();
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
+  const { setCommunityDetails } = useCommunityStore();
 
   // UI State
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showOptionsDrawer, setShowOptionsDrawer] = useState(false);
+  const [activeTab, setActiveTab] = useState<'posts' | 'leaderboard'>('posts');
 
-  // Filter State
-  const [sortFilter, setSortFilter] = useState<SortFilter>('newest');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
-  const [pollTypeFilter, setPollTypeFilter] = useState<PollTypeFilter>('all');
-  const [votedFilter, setVotedFilter] = useState<VotedFilter>('all');
+  // Simple Share Component
+  const SimpleShareButton = ({ communityName }: { communityName: string }) => {
+    const handleShare = async () => {
+      const shareData = {
+        title: `${communityName} Community`,
+        text: `Check out the ${communityName} community!`,
+        url: window.location.href,
+      };
 
-  // Polls State
-  const [polls, setPolls] = useState<PollDetails[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(true);
-  const [communityId, setCommunityId] = useState<number | null>(null);
-
-  const { setCommunityDetails } = useCommunityStore();
-
-  // Filter loading state
-  const [isFiltering, setIsFiltering] = useState(false);
-  const prevFiltersRef = useRef({ sortFilter, statusFilter, pollTypeFilter, votedFilter });
-
-  // Infinite scroll ref
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastPollElementRef = useCallback(
-    (node: HTMLElement | null) => {
-      if (pollsLoading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasNextPage) {
-          setCurrentPage((prevPage) => prevPage + 1);
+      try {
+        if (navigator.share && navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+        } else {
+          // Fallback to clipboard
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success('Community link copied to clipboard!');
         }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [hasNextPage]
-  );
+      } catch {
+        // Fallback to clipboard if sharing fails
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success('Community link copied to clipboard!');
+        } catch {
+          toast.error('Failed to share community link');
+        }
+      }
+    };
+
+    return (
+      <button
+        onClick={handleShare}
+        className="hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
+      >
+        <Share size={18} className="text-text-secondary" />
+        <span className="text-text font-medium">Share Community</span>
+      </button>
+    );
+  };
 
   // Fetch community data
   const {
     data: communityData,
     isLoading,
     error,
-    refetch, // after membership toggle
+    refetch,
   } = useKeyopollsCommunitiesApiGeneralGetCommunity(slug, {
     request: {
       headers: {
@@ -110,44 +106,6 @@ const CommunityPage = () => {
 
   const community = communityData?.data;
 
-  // Update community ID when community data loads
-  useEffect(() => {
-    if (community?.id) {
-      setCommunityId(community.id);
-    }
-  }, [community]);
-
-  // Fetch polls
-  const {
-    data: pollsData,
-    isLoading: pollsLoading,
-    error: pollsError,
-  } = useKeyopollsPollsApiGeneralListPolls(
-    {
-      community_id: communityId,
-      page: currentPage,
-      page_size: 20,
-      sort: sortFilter,
-      status: statusFilter === 'all' ? undefined : [statusFilter],
-      poll_type: pollTypeFilter === 'all' ? undefined : pollTypeFilter,
-      voted: votedFilter === 'all' ? undefined : votedFilter === 'voted',
-      include_expired: statusFilter === 'all',
-    },
-    {
-      request: {
-        headers: accessToken
-          ? {
-              Authorization: `Bearer ${accessToken}`,
-            }
-          : {},
-      },
-      query: {
-        enabled: !!communityId,
-        refetchOnWindowFocus: false,
-      },
-    }
-  );
-
   const { mutate: toggleMembership, isPending: isToggling } =
     useKeyopollsCommunitiesApiOperationsToggleCommunityMembership({
       request: {
@@ -157,41 +115,16 @@ const CommunityPage = () => {
       },
     });
 
-  // Handle filter changes
-  useEffect(() => {
-    const currentFilters = { sortFilter, statusFilter, pollTypeFilter, votedFilter };
-    const filtersChanged =
-      JSON.stringify(currentFilters) !== JSON.stringify(prevFiltersRef.current);
+  // Handle back button
+  const handleBackClick = () => {
+    router.back();
+  };
 
-    if (filtersChanged) {
-      setIsFiltering(true);
-      prevFiltersRef.current = currentFilters;
+  // Handle search click
+  const handleSearchClick = () => {
+    if (community?.name) {
+      router.push(`/explore?mode=search&community=${encodeURIComponent(community.name)}`);
     }
-
-    setCurrentPage(1);
-    setHasNextPage(true);
-  }, [sortFilter, statusFilter, pollTypeFilter, votedFilter, communityId]);
-
-  // Handle polls data
-  useEffect(() => {
-    if (pollsData?.data.items) {
-      if (currentPage === 1) {
-        setPolls(pollsData.data.items);
-        setIsFiltering(false);
-      } else {
-        setPolls((prevPolls) => {
-          const existingIds = new Set(prevPolls.map((poll) => poll.id));
-          const newPolls = pollsData.data.items.filter((poll) => !existingIds.has(poll.id));
-          return [...prevPolls, ...newPolls];
-        });
-      }
-      setHasNextPage(pollsData.data.has_next || false);
-    }
-  }, [pollsData, currentPage]);
-
-  // Handle poll deletion
-  const handlePollDelete = (pollId: number) => {
-    setPolls((prevPolls) => prevPolls.filter((poll) => poll.id !== pollId));
   };
 
   // Handle join community
@@ -206,13 +139,19 @@ const CommunityPage = () => {
       {
         onSuccess: (response) => {
           toast.success(response.data.message);
-          refetch(); // Refetch community data to update membership status
+          refetch();
         },
         onError: (error) => {
           toast.error(error.response?.data?.message || 'Failed to join community');
         },
       }
     );
+  };
+
+  // Handle leave community from drawer
+  const handleLeaveFromDrawer = () => {
+    setShowOptionsDrawer(false);
+    setShowLeaveModal(true);
   };
 
   // Handle leave community
@@ -228,7 +167,7 @@ const CommunityPage = () => {
         onSuccess: (response) => {
           toast.success(response.data.message);
           setShowLeaveModal(false);
-          refetch(); // Refetch community data to update membership status
+          refetch();
         },
         onError: (error) => {
           toast.error(error.response?.data?.message || 'Failed to leave community');
@@ -238,42 +177,42 @@ const CommunityPage = () => {
     );
   };
 
-  // Filter options
-  const sortOptions: FilterOption[] = [
-    { value: 'newest', label: 'Newest', icon: <Clock size={16} /> },
-    { value: 'oldest', label: 'Oldest', icon: <Archive size={16} /> },
-    { value: 'most_votes', label: 'Most Votes', icon: <BarChart3 size={16} /> },
-    { value: 'trending', label: 'Trending', icon: <TrendingUp size={16} /> },
-  ];
+  const handleCreatePoll = () => {
+    if (!community) return;
 
-  const statusOptions: FilterOption[] = [
-    { value: 'all', label: 'All Status' },
-    { value: 'active', label: 'Active', icon: <CheckCircle size={16} /> },
-    { value: 'closed', label: 'Closed', icon: <Lock size={16} /> },
-  ];
+    const membership = community.membership_details;
+    const isMember = membership?.is_active;
 
-  const pollTypeOptions: FilterOption[] = [
-    { value: 'all', label: 'All Types' },
-    { value: 'single', label: 'Single Choice' },
-    { value: 'multiple', label: 'Multiple Choice' },
-    { value: 'ranking', label: 'Ranking' },
-  ];
-
-  const votedOptions: FilterOption[] = [
-    { value: 'all', label: 'All Polls' },
-    { value: 'voted', label: 'Voted' },
-    { value: 'not_voted', label: 'Not Voted' },
-  ];
+    if (!isMember) {
+      toast.error('You must be a member of this community to create polls.');
+      return;
+    }
+    setCommunityDetails(community);
+    router.push('/create-poll');
+  };
 
   if (isLoading) {
     return (
       <div className="bg-background min-h-screen">
         <div className="animate-pulse">
-          {/* Banner Loading */}
-          <div className="bg-surface-elevated h-32"></div>
+          {/* Banner with Overlay Header Loading */}
+          <div className="relative h-32">
+            {/* Banner Loading */}
+            <div className="bg-surface-elevated absolute inset-0"></div>
+
+            {/* Header Overlay Loading */}
+            <div className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between px-4 py-3">
+              <div className="h-8 w-8 rounded-full bg-white/20"></div>
+              <div className="flex gap-2">
+                <div className="h-8 w-8 rounded-full bg-white/20"></div>
+                <div className="h-8 w-8 rounded-full bg-white/20"></div>
+              </div>
+            </div>
+          </div>
+
           {/* Avatar & Content Loading */}
-          <div className="px-4 pb-4">
-            <div className="bg-surface-elevated -mt-8 mb-4 h-16 w-16 rounded-full"></div>
+          <div className="px-4 pt-4 pb-4">
+            <div className="bg-surface-elevated -mt-12 mb-4 h-16 w-16 rounded-full"></div>
             <div className="bg-surface-elevated mb-2 h-6 w-3/4 rounded"></div>
             <div className="bg-surface-elevated mb-3 h-4 w-full rounded"></div>
             <div className="mb-4 flex gap-2">
@@ -288,11 +227,35 @@ const CommunityPage = () => {
 
   if (error || !community) {
     return (
-      <div className="bg-background flex min-h-screen items-center justify-center p-4">
-        <div className="text-center">
-          <div className="text-error mb-2 text-lg font-medium">Community not found</div>
-          <div className="text-text-secondary text-sm">
-            The community you're looking for doesn't exist or you don't have access to it.
+      <div className="bg-background flex min-h-screen flex-col">
+        {/* Banner with Overlay Header */}
+        <div className="relative h-32 bg-gradient-to-r from-gray-400 to-gray-600">
+          {/* Header Overlay */}
+          <div className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between px-4 py-3">
+            <button
+              onClick={handleBackClick}
+              className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20"
+            >
+              <ArrowLeft size={20} />
+            </button>
+
+            <div className="flex gap-2">
+              <button className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20">
+                <Search size={18} />
+              </button>
+              <button className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20">
+                <MoreVertical size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center p-4">
+          <div className="text-center">
+            <div className="text-error mb-2 text-lg font-medium">Community not found</div>
+            <div className="text-text-secondary text-sm">
+              The community you're looking for doesn't exist or you don't have access to it.
+            </div>
           </div>
         </div>
       </div>
@@ -336,35 +299,16 @@ const CommunityPage = () => {
     if (isMember) {
       if (isModerator) {
         return (
-          <div className="flex gap-2">
-            <button
-              className="bg-surface border-border text-text hover:bg-surface-elevated flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
-              onClick={() => router.push(`/communities/${community.name}/admin`)}
-            >
-              <Settings className="h-4 w-4" />
-              Manage
-            </button>
-            {!isCreator && (
-              <button
-                className="border-success/20 bg-success/10 text-success rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-                onClick={() => setShowLeaveModal(true)}
-                disabled={isToggling}
-              >
-                ✓ Member
-              </button>
-            )}
-          </div>
+          <button
+            className="bg-surface border-border text-text hover:bg-surface-elevated flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
+            onClick={() => router.push(`/communities/${community.name}/admin`)}
+          >
+            <Settings className="h-4 w-4" />
+            Manage
+          </button>
         );
       }
-      return (
-        <button
-          className="border-success/20 bg-success/10 text-success rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-          onClick={() => setShowLeaveModal(true)}
-          disabled={isToggling}
-        >
-          ✓ Member
-        </button>
-      );
+      return null;
     }
 
     if (permissions?.can_join) {
@@ -389,69 +333,6 @@ const CommunityPage = () => {
   const truncateDescription = (text: string, maxLength: number = 120) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
-  };
-
-  // Filter drawer component
-  const FilterDrawer = ({
-    options,
-    value,
-    onChange,
-    title,
-    showIcon = true,
-  }: {
-    options: FilterOption[];
-    value: string;
-    onChange: (value: string) => void;
-    title: string;
-    showIcon?: boolean;
-  }) => {
-    const selectedOption = options.find((opt) => opt.value === value);
-    const [open, setOpen] = useState(false);
-
-    const handleSelect = (optionValue: string) => {
-      onChange(optionValue);
-      setOpen(false);
-    };
-
-    return (
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger asChild>
-          <button className="border-border bg-surface text-text hover:border-border-subtle focus:border-primary focus:ring-primary flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus:ring-1 focus:outline-none">
-            {showIcon && selectedOption?.icon && (
-              <span className="flex-shrink-0">{selectedOption.icon}</span>
-            )}
-            <span>{selectedOption?.label}</span>
-            <ChevronDown className="text-text-muted h-3 w-3 flex-shrink-0" />
-          </button>
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{title}</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-6">
-            <div className="space-y-2">
-              {options.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handleSelect(option.value)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
-                    value === option.value
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-text hover:bg-surface-elevated'
-                  }`}
-                >
-                  {option.icon && <span className="flex-shrink-0">{option.icon}</span>}
-                  <span className="font-medium">{option.label}</span>
-                  {value === option.value && (
-                    <CheckCircle className="ml-auto h-4 w-4 flex-shrink-0" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
-    );
   };
 
   // Leave Community Modal
@@ -497,73 +378,92 @@ const CommunityPage = () => {
     </div>
   );
 
-  // Loading skeleton
-  const PollSkeleton = () => (
-    <div className="border-border-subtle animate-pulse border-b p-4">
-      <div className="flex space-x-3">
-        <div className="bg-surface-elevated h-10 w-10 flex-shrink-0 rounded-full"></div>
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="bg-surface-elevated h-3 w-24 rounded"></div>
-            <div className="bg-surface-elevated h-3 w-16 rounded"></div>
-          </div>
-          <div className="bg-surface-elevated mb-2 h-4 w-3/4 rounded"></div>
-          <div className="space-y-2">
-            <div className="bg-surface-elevated h-8 rounded"></div>
-            <div className="bg-surface-elevated h-8 rounded"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const handleCreatePoll = () => {
-    if (!isMember) {
-      toast.error('You must be a member of this community to create polls.');
-      return;
-    }
-    setCommunityDetails(community);
-    router.push('/create-poll');
-  };
-
   return (
     <div className="bg-background min-h-screen">
-      {/* Banner */}
-      {community.banner ? (
-        <div
-          className="bg-surface-elevated h-32 bg-cover bg-center"
-          style={{ backgroundImage: `url(${community.banner})` }}
-        />
-      ) : (
-        <div className="from-primary to-secondary h-32 bg-gradient-to-r" />
-      )}
+      {/* Banner with Overlay Header */}
+      <div className="relative h-32">
+        {/* Banner Background */}
+        {community.banner ? (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${community.banner})` }}
+          />
+        ) : (
+          <div className="from-primary to-secondary absolute inset-0 bg-gradient-to-r" />
+        )}
+
+        {/* Header Overlay */}
+        <div className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between px-4 py-3">
+          <button
+            onClick={handleBackClick}
+            className="rounded-full p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+          >
+            <ArrowLeft size={20} />
+          </button>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleSearchClick}
+              className="rounded-full p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            >
+              <Search size={18} />
+            </button>
+
+            <Drawer open={showOptionsDrawer} onOpenChange={setShowOptionsDrawer}>
+              <DrawerTrigger asChild>
+                <button className="rounded-full p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/20">
+                  <MoreVertical size={18} />
+                </button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>Community Options</DrawerTitle>
+                </DrawerHeader>
+                <div className="space-y-2 p-4">
+                  <SimpleShareButton communityName={community.name} />
+
+                  {isMember && !isCreator && (
+                    <button
+                      onClick={handleLeaveFromDrawer}
+                      className="text-error hover:bg-error/10 flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
+                    >
+                      <LogOut size={18} />
+                      <span className="font-medium">Leave Community</span>
+                    </button>
+                  )}
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </div>
+        </div>
+
+        {/* Avatar positioned to overlap banner */}
+        <div className="absolute -bottom-8 left-4 z-20">
+          {community.avatar ? (
+            <Image
+              src={community.avatar}
+              alt={community.name}
+              className="border-background h-16 w-16 rounded-full border-4 object-cover"
+              width={64}
+              height={64}
+            />
+          ) : (
+            <div className="border-background bg-surface-elevated flex h-16 w-16 items-center justify-center rounded-full border-4">
+              <Users className="text-text-muted h-6 w-6" />
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Community Header */}
       <div className="border-border-subtle border-b">
-        <div className="px-4 pb-4">
-          {/* Avatar */}
-          <div className="-mt-8 mb-4">
-            {community.avatar ? (
-              <Image
-                src={community.avatar}
-                alt={community.name}
-                className="border-background h-16 w-16 rounded-full border-4 object-cover"
-                width={64}
-                height={64}
-              />
-            ) : (
-              <div className="border-background bg-surface-elevated flex h-16 w-16 items-center justify-center rounded-full border-4">
-                <Users className="text-text-muted h-6 w-6" />
-              </div>
-            )}
-          </div>
-
+        <div className="px-4 pt-12 pb-4">
           {/* Name and Action Button */}
           <div className="mb-3 flex items-start justify-between">
             <div className="min-w-0 flex-1">
               <h1 className="text-text text-xl leading-tight font-bold">{community.name}</h1>
             </div>
-            <div className="ml-3 flex-shrink-0">{getActionButton()}</div>
+            {getActionButton() && <div className="ml-3 flex-shrink-0">{getActionButton()}</div>}
           </div>
 
           {/* Description */}
@@ -627,136 +527,41 @@ const CommunityPage = () => {
         </div>
       </div>
 
-      {/* Filters Section */}
-      <div className="border-border-subtle border-b px-4 py-3">
-        {/* Horizontal Scrollable Filters */}
-        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
-          <div className="flex-shrink-0">
-            <FilterDrawer
-              options={sortOptions}
-              value={sortFilter}
-              onChange={(value) => setSortFilter(value as SortFilter)}
-              title="Sort by"
-            />
-          </div>
-
-          <div className="flex-shrink-0">
-            <FilterDrawer
-              options={statusOptions}
-              value={statusFilter}
-              onChange={(value) => setStatusFilter(value as StatusFilter)}
-              title="Poll Status"
-              showIcon={false}
-            />
-          </div>
-
-          <div className="flex-shrink-0">
-            <FilterDrawer
-              options={pollTypeOptions}
-              value={pollTypeFilter}
-              onChange={(value) => setPollTypeFilter(value as PollTypeFilter)}
-              title="Poll Type"
-              showIcon={false}
-            />
-          </div>
-
-          {/* Only show voted filter for authenticated users */}
-          {accessToken && (
-            <div className="flex-shrink-0">
-              <FilterDrawer
-                options={votedOptions}
-                value={votedFilter}
-                onChange={(value) => setVotedFilter(value as VotedFilter)}
-                title="Voting Status"
-                showIcon={false}
-              />
-            </div>
-          )}
+      {/* Tabs */}
+      <div className="border-border-subtle border-b">
+        <div className="flex px-4">
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'posts'
+                ? 'text-primary border-primary border-b-2'
+                : 'text-text-muted hover:text-text'
+            }`}
+          >
+            Posts
+          </button>
+          <button
+            onClick={() => setActiveTab('leaderboard')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'leaderboard'
+                ? 'text-primary border-primary border-b-2'
+                : 'text-text-muted hover:text-text'
+            }`}
+          >
+            Leaderboard
+          </button>
         </div>
       </div>
 
-      {/* Polls Section */}
-      <div className="flex-1">
-        {/* Polls Content */}
-        <div className="min-h-[60vh]">
-          {/* Error State */}
-          {pollsError && !pollsLoading && (
-            <div className="p-6 text-center">
-              <p className="text-error text-sm">Error loading polls. Please try again.</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!pollsError &&
-            !pollsLoading &&
-            !isFiltering &&
-            polls.length === 0 &&
-            currentPage === 1 &&
-            pollsData && (
-              <div className="py-12 text-center">
-                <div className="text-text-muted mb-4">
-                  <BarChart3 className="mx-auto h-12 w-12" />
-                </div>
-                <h3 className="text-text mb-2 text-base font-medium">No polls found</h3>
-                <p className="text-text-secondary mx-auto mb-6 max-w-sm text-sm">
-                  {isMember
-                    ? 'Be the first to create a poll and start the conversation!'
-                    : 'Join the community to participate in polls and discussions.'}
-                </p>
-                {isMember && permissions?.can_post && (
-                  <button
-                    className="bg-primary text-background rounded-md px-6 py-2 text-sm font-medium transition-opacity hover:opacity-90"
-                    onClick={handleCreatePoll}
-                  >
-                    Create First Poll
-                  </button>
-                )}
-              </div>
-            )}
-
-          {/* Polls List */}
-          {polls.length > 0 && (
-            <div>
-              {polls.map((poll, index) => (
-                <Poll
-                  key={poll.id}
-                  poll={poll}
-                  isLastPoll={index === polls.length - 1}
-                  lastPollElementCallback={
-                    index === polls.length - 1 ? lastPollElementRef : undefined
-                  }
-                  onDelete={handlePollDelete}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Loading States */}
-          {pollsLoading && currentPage === 1 && polls.length === 0 && (
-            <div>
-              {Array.from({ length: 3 }).map((_, index) => (
-                <PollSkeleton key={index} />
-              ))}
-            </div>
-          )}
-
-          {pollsLoading && currentPage > 1 && (
-            <div className="py-4">
-              <PollSkeleton />
-            </div>
-          )}
-
-          {/* End of Results */}
-          {!hasNextPage && polls.length > 0 && (
-            <div className="text-text-muted py-8 text-center">
-              <p className="text-sm">You've seen all polls! 🎉</p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Content */}
+      <CommunityContent
+        community={community}
+        activeTab={activeTab}
+        onCreatePoll={handleCreatePoll}
+      />
 
       {/* Floating Create Poll Button (for members) */}
-      {isMember && permissions?.can_post && (
+      {isMember && permissions?.can_post && activeTab === 'posts' && (
         <CreateButton path="/create-poll" onClick={handleCreatePoll} />
       )}
 
