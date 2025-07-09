@@ -9,5 +9,6 @@ import type { CommunityCreateSchema } from './communityCreateSchema';
 
 export type KeyopollsCommunitiesApiOperationsCreateCommunityBody = {
   avatar?: Blob;
+  banner?: Blob;
   data: CommunityCreateSchema;
 };

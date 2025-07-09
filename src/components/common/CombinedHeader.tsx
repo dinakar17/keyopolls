@@ -68,8 +68,8 @@ const iconMap = {
 };
 
 interface CombinedHeaderProps {
-  activeCategory: string;
-  onCategoryChange: (categoryId: string) => void;
+  activeCategory?: string;
+  onCategoryChange?: (categoryId: string) => void;
 }
 
 const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCategoryChange }) => {
@@ -145,6 +145,7 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
 
   // Function to scroll to active category
   const scrollToActiveCategory = () => {
+    if (!activeCategory) return;
     const categoryElement = categoryRefs.current[activeCategory];
     if (categoryElement && categoriesScrollRef.current) {
       const container = categoriesScrollRef.current;
@@ -200,7 +201,7 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
     // Scroll to selected category
     scrollToActiveCategory();
     triggerHaptic();
-    onCategoryChange(categorySlug);
+    onCategoryChange?.(categorySlug);
   };
 
   // Handle opening sidebar
@@ -295,74 +296,77 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
           </div>
         </div>
 
-        {/* Categories Row */}
-        <div className="border-border-subtle border-b">
-          <div className="mx-auto max-w-2xl pl-4">
-            <div
-              ref={categoriesScrollRef}
-              className="scrollbar-hide flex items-center overflow-x-auto scroll-smooth py-3"
-              style={{
-                WebkitOverflowScrolling: 'touch',
-              }}
-            >
-              {/* Categories */}
-              <div className="flex items-center space-x-6">
-                {categories.map((category) => (
-                  <div
-                    key={category.slug}
-                    className="flex-shrink-0 cursor-pointer"
-                    ref={(el) => {
-                      if (el) categoryRefs.current[category.slug] = el;
-                    }}
-                  >
-                    <button
-                      onClick={() => handleCategoryChange(category.slug)}
-                      className={`relative flex items-center px-1 py-2 whitespace-nowrap transition-all duration-200 ${
-                        activeCategory === category.slug
-                          ? 'text-text'
-                          : 'text-text-muted hover:text-text'
-                      }`}
+        {/* Categories Row - Only show if categories are available */}
+        {categories.length > 0 && activeCategory && (
+          <div className="border-border-subtle border-b">
+            <div className="mx-auto max-w-2xl pl-4">
+              <div
+                ref={categoriesScrollRef}
+                className="scrollbar-hide flex items-center overflow-x-auto scroll-smooth py-3"
+                style={{
+                  WebkitOverflowScrolling: 'touch',
+                }}
+              >
+                {/* Categories */}
+                <div className="flex items-center space-x-6">
+                  {categories.map((category) => (
+                    <div
+                      key={category.slug}
+                      className="flex-shrink-0 cursor-pointer"
+                      ref={(el) => {
+                        if (el) categoryRefs.current[category.slug] = el;
+                      }}
                     >
-                      <span
-                        className="mr-2"
-                        style={{
-                          color: activeCategory === category.slug ? category.icon_color : undefined,
-                        }}
-                      >
-                        {getIconComponent(category.icon)}
-                      </span>
-                      <span className="text-sm font-medium">{category.name}</span>
-
-                      {/* Underline indicator */}
-                      <div
-                        className={`absolute right-0 -bottom-1 left-0 h-0.5 transition-all duration-200 ${
+                      <button
+                        onClick={() => handleCategoryChange(category.slug)}
+                        className={`relative flex items-center px-1 py-2 whitespace-nowrap transition-all duration-200 ${
                           activeCategory === category.slug
-                            ? 'scale-x-100 opacity-100'
-                            : 'scale-x-0 opacity-0'
+                            ? 'text-text'
+                            : 'text-text-muted hover:text-text'
                         }`}
-                        style={{
-                          backgroundColor:
-                            activeCategory === category.slug ? category.icon_color : undefined,
-                        }}
-                      />
-                    </button>
-                  </div>
-                ))}
+                      >
+                        <span
+                          className="mr-2"
+                          style={{
+                            color:
+                              activeCategory === category.slug ? category.icon_color : undefined,
+                          }}
+                        >
+                          {getIconComponent(category.icon)}
+                        </span>
+                        <span className="text-sm font-medium">{category.name}</span>
 
-                {/* Edit Categories Button - Only show for authenticated users */}
-                {userIsAuthenticated && (
-                  <div className="ml-4 flex-shrink-0">
-                    <Link href="/account/edit-categories">
-                      <button className="text-text-muted hover:text-text hover:bg-surface-elevated rounded-full p-2 transition-colors">
-                        <Settings size={18} />
+                        {/* Underline indicator */}
+                        <div
+                          className={`absolute right-0 -bottom-1 left-0 h-0.5 transition-all duration-200 ${
+                            activeCategory === category.slug
+                              ? 'scale-x-100 opacity-100'
+                              : 'scale-x-0 opacity-0'
+                          }`}
+                          style={{
+                            backgroundColor:
+                              activeCategory === category.slug ? category.icon_color : undefined,
+                          }}
+                        />
                       </button>
-                    </Link>
-                  </div>
-                )}
+                    </div>
+                  ))}
+
+                  {/* Edit Categories Button - Only show for authenticated users */}
+                  {userIsAuthenticated && (
+                    <div className="ml-4 flex-shrink-0">
+                      <Link href="/account/edit-categories">
+                        <button className="text-text-muted hover:text-text hover:bg-surface-elevated rounded-full p-2 transition-colors">
+                          <Settings size={18} />
+                        </button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </header>
 
       {/* Info Modal */}

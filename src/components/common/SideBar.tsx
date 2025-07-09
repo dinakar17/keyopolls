@@ -95,12 +95,6 @@ const SideBar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
   // Filter menu items based on authentication status
   const menuItems = allMenuItems.filter((item) => userIsAuthenticated || !item.requiresAuth);
 
-  const formatCount = (count: number): string => {
-    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-    return count.toString();
-  };
-
   return (
     <div
       className={`fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 ${
@@ -134,24 +128,6 @@ const SideBar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
               >
                 <X size={18} />
               </button>
-            </div>
-
-            {/* Aura Stats */}
-            <div className="bg-background/10 rounded-lg p-3 backdrop-blur-sm">
-              <div className="flex justify-around">
-                <div className="text-center">
-                  <div className="text-background text-base font-semibold">
-                    {formatCount(profileData.aura_polls)}
-                  </div>
-                  <div className="text-background/75 text-xs">Polls Aura</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-background text-base font-semibold">
-                    {formatCount(profileData.aura_comments)}
-                  </div>
-                  <div className="text-background/75 text-xs">Comments Aura</div>
-                </div>
-              </div>
             </div>
           </div>
         )}

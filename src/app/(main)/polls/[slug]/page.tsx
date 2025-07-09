@@ -150,6 +150,9 @@ const PollDisplayPage = () => {
     );
   }
 
+  // Check if user has voted to determine if comments should be shown
+  const showComments = poll.user_has_voted;
+
   return (
     <>
       {/* Sticky Poll Preview */}
@@ -164,16 +167,18 @@ const PollDisplayPage = () => {
           <PollContent poll={poll} onPollDataUpdate={handlePollDataUpdate} />
         </div>
 
-        {/* Comments Section */}
-        <CommentsSection
-          contentType="Poll"
-          objectId={poll.id}
-          allowedMediaTypes={['images', 'link']}
-        />
+        {/* Comments Section - Only shown after user has voted */}
+        {showComments && (
+          <CommentsSection
+            contentType="Poll"
+            objectId={poll.id}
+            allowedMediaTypes={['images', 'link']}
+          />
+        )}
       </div>
 
-      {/* Bottom Input Bar */}
-      {!searchParams.get('view') && (
+      {/* Bottom Input Bar - Only shown after user has voted */}
+      {!searchParams.get('view') && showComments && (
         <div className="border-border bg-background fixed right-0 bottom-0 left-0 z-10 flex border-t p-2 shadow-lg">
           <button
             onClick={() => openCreateDrawer()}

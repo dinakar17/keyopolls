@@ -24,16 +24,10 @@ interface PollFormProps {
   communityDetails: CommunityDetails | null;
   optionImages: { [key: number]: { file: File; preview: string } };
   hasImages: boolean;
-  durationDays: number;
   rulesDrawerOpen: boolean;
-  durationDrawerOpen: boolean;
-  setShowCommunityOverlay: (show: boolean) => void;
   setRulesDrawerOpen: (open: boolean) => void;
-  setDurationDrawerOpen: (open: boolean) => void;
-  setDurationDays: (days: number) => void;
   handleImageUpload: (optionIndex: number, file: File | null) => void;
   removeImage: (optionIndex: number) => void;
-  handleDurationSelect: (days: number) => void;
   handleMaxChoicesSelect: (choices: number) => void;
   handleCorrectAnswerToggle: (enabled: boolean) => void;
   handleOptionCorrectToggle: (index: number, isCorrect: boolean) => void;
@@ -44,21 +38,16 @@ export default function PollForm({
   communityDetails,
   optionImages,
   hasImages,
-  durationDays,
   rulesDrawerOpen,
-  durationDrawerOpen,
-  setShowCommunityOverlay,
   setRulesDrawerOpen,
-  setDurationDrawerOpen,
   handleImageUpload,
   removeImage,
-  handleDurationSelect,
   handleMaxChoicesSelect,
-  handleCorrectAnswerToggle,
   handleOptionCorrectToggle,
 }: PollFormProps) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const explanationRef = useRef<HTMLTextAreaElement>(null);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -71,10 +60,10 @@ export default function PollForm({
   const watchedMaxChoices = form.watch('max_choices');
   const watchedTitle = form.watch('title');
   const watchedDescription = form.watch('description');
-  const watchedHasCorrectAnswer = form.watch('has_correct_answer');
+  const watchedExplanation = form.watch('explanation');
 
   // Check if community supports correct answers (education category)
-  const isEducationCommunity = communityDetails?.category.slug === 'education';
+  const isEducationCommunity = true;
 
   // Auto-resize text areas
   const autoResize = (textareaRef: React.RefObject<HTMLTextAreaElement | null>) => {
@@ -96,6 +85,12 @@ export default function PollForm({
     autoResize(descriptionRef);
   };
 
+  // Handle explanation change with auto-resize
+  const handleExplanationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    form.setValue('explanation', e.target.value);
+    autoResize(explanationRef);
+  };
+
   // Add new option
   const addOption = () => {
     if (fields.length < 10) {
@@ -115,15 +110,11 @@ export default function PollForm({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-4">
-      {/* Community Selection with Rules Button */}
-      <div className="space-y-2">
-        <div className="flex space-x-2">
-          <button
-            type="button"
-            onClick={() => setShowCommunityOverlay(true)}
-            className="border-border bg-surface hover:bg-surface-elevated flex-1 rounded-lg border p-2.5 text-left text-sm transition-colors"
-          >
-            {communityDetails ? (
+      {/* Community Display with Rules Button */}
+      {communityDetails && (
+        <div className="space-y-2">
+          <div className="flex space-x-2">
+            <div className="border-border bg-surface flex-1 rounded-lg border p-2.5">
               <div className="flex items-center space-x-2">
                 {communityDetails.avatar && (
                   <Image
@@ -136,12 +127,8 @@ export default function PollForm({
                 )}
                 <span className="text-text">{communityDetails.name}</span>
               </div>
-            ) : (
-              <span className="text-text-muted">Select a community</span>
-            )}
-          </button>
+            </div>
 
-          {communityDetails && (
             <Drawer open={rulesDrawerOpen} onOpenChange={setRulesDrawerOpen}>
               <DrawerTrigger asChild>
                 <button
@@ -184,23 +171,8 @@ export default function PollForm({
                 </DrawerFooter>
               </DrawerContent>
             </Drawer>
-          )}
-        </div>
-
-        {/* AI Moderation Note */}
-        {communityDetails && (
-          <div className="flex items-start space-x-2 rounded-lg border border-amber-200 bg-amber-50 p-2">
-            <span className="flex-shrink-0 text-xs text-amber-600">⚠️</span>
-            <p className="text-xs leading-relaxed text-amber-800">
-              Posts with vague titles, poor quality images, or content not adhering to community
-              rules are automatically rejected by AI moderation.
-            </p>
           </div>
-        )}
-      </div>
-
-      {formErrors.community_id && (
-        <p className="text-error text-sm">{formErrors.community_id.message}</p>
+        </div>
       )}
 
       {/* Title Input */}
@@ -270,7 +242,7 @@ export default function PollForm({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2z"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2z"
                     />
                   </svg>
                   <span className="text-sm">Add image to question</span>
@@ -320,20 +292,18 @@ export default function PollForm({
                       className="text-text placeholder-text-muted w-full border-none bg-transparent text-sm outline-none"
                     />
 
-                    {/* Correct Answer Checkbox (only for education communities) */}
-                    {isEducationCommunity &&
-                      watchedHasCorrectAnswer &&
-                      watchedPollType !== 'ranking' && (
-                        <label className="flex cursor-pointer items-center space-x-1">
-                          <input
-                            type="checkbox"
-                            checked={watchedOptions[index]?.is_correct || false}
-                            onChange={(e) => handleOptionCorrectToggle(index, e.target.checked)}
-                            className="text-primary focus:ring-primary border-border h-4 w-4 rounded"
-                          />
-                          <span className="text-text-muted text-xs">Correct</span>
-                        </label>
-                      )}
+                    {/* Correct Answer Checkbox (mandatory for education communities) */}
+                    {isEducationCommunity && watchedPollType !== 'ranking' && (
+                      <label className="flex cursor-pointer items-center space-x-1">
+                        <input
+                          type="checkbox"
+                          checked={watchedOptions[index]?.is_correct || false}
+                          onChange={(e) => handleOptionCorrectToggle(index, e.target.checked)}
+                          className="text-primary focus:ring-primary border-border h-4 w-4 rounded"
+                        />
+                        <span className="text-text-muted text-xs">Correct</span>
+                      </label>
+                    )}
                   </div>
 
                   {(!hasImages || !optionImages[index]) && (
@@ -359,7 +329,7 @@ export default function PollForm({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2z"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2z"
                           />
                         </svg>
                         <span>Add image</span>
@@ -426,7 +396,7 @@ export default function PollForm({
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2z"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2z"
                             />
                           </svg>
                         </div>
@@ -460,7 +430,7 @@ export default function PollForm({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002 2z"
                           />
                         </svg>
                         <span className="text-xs">{String.fromCharCode(65 + index)}</span>
@@ -494,70 +464,91 @@ export default function PollForm({
         </div>
       )}
 
-      {/* Correct Answer Settings (only for education communities) */}
+      {/* Correct Answer Settings (mandatory) */}
       {isEducationCommunity && (
         <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-text text-sm font-medium">Correct Answer (Optional)</h3>
-              <p className="text-text-muted text-xs">
-                Set the correct answer for educational purposes
-              </p>
-            </div>
-            <label className="flex cursor-pointer items-center">
-              <input
-                type="checkbox"
-                checked={watchedHasCorrectAnswer}
-                onChange={(e) => handleCorrectAnswerToggle(e.target.checked)}
-                className="text-primary focus:ring-primary border-border h-4 w-4 rounded"
-              />
-            </label>
+          <div>
+            <h3 className="text-text text-sm font-medium">Correct Answer</h3>
+            <p className="text-text-muted text-xs">Set the correct answer for this poll</p>
           </div>
 
-          {watchedHasCorrectAnswer && (
-            <div className="border-border space-y-3 border-t pt-2">
-              {watchedPollType === 'text_input' && (
-                <div>
-                  <label className="text-text-secondary mb-2 block text-sm">
-                    Correct text answer (single word/number)
-                  </label>
-                  <input
-                    {...form.register('correct_text_answer')}
-                    type="text"
-                    placeholder="Enter correct answer"
-                    className="border-border bg-surface-elevated text-text placeholder-text-muted focus:border-primary w-full rounded-lg border px-3 py-2 text-sm outline-none"
-                  />
-                  {formErrors.correct_text_answer && (
-                    <p className="text-error mt-1 text-sm">
-                      {formErrors.correct_text_answer.message}
-                    </p>
-                  )}
-                </div>
-              )}
+          <div className="space-y-3">
+            {watchedPollType === 'text_input' && (
+              <div>
+                <label className="text-text-secondary mb-2 block text-sm">
+                  Correct text answer (single word/number) *
+                </label>
+                <input
+                  {...form.register('correct_text_answer')}
+                  type="text"
+                  placeholder="Enter correct answer"
+                  className="border-border bg-surface-elevated text-text placeholder-text-muted focus:border-primary w-full rounded-lg border px-3 py-2 text-sm outline-none"
+                />
+                {formErrors.correct_text_answer && (
+                  <p className="text-error mt-1 text-sm">
+                    {formErrors.correct_text_answer.message}
+                  </p>
+                )}
+              </div>
+            )}
 
-              {watchedPollType === 'single' && (
-                <p className="text-text-muted text-sm">
-                  Check the correct option above. Only one option can be marked as correct.
-                </p>
-              )}
+            {watchedPollType === 'single' && (
+              <p className="text-text-muted text-sm">
+                Check the correct option above. Only one option can be marked as correct.
+              </p>
+            )}
 
-              {watchedPollType === 'multiple' && (
-                <p className="text-text-muted text-sm">
-                  Check all correct options above. Users must select exactly all correct options to
-                  be marked as correct.
-                </p>
-              )}
+            {watchedPollType === 'multiple' && (
+              <p className="text-text-muted text-sm">
+                Check all correct options above. Users must select exactly all correct options to be
+                marked as correct.
+              </p>
+            )}
 
-              {watchedPollType === 'ranking' && (
-                <p className="text-text-muted text-sm">
-                  The correct ranking will be based on the current order of your options. Users must
-                  rank them in the exact same order to be marked as correct.
-                </p>
-              )}
-            </div>
-          )}
+            {watchedPollType === 'ranking' && (
+              <p className="text-text-muted text-sm">
+                The correct ranking will be based on the current order of your options. Users must
+                rank them in the exact same order to be marked as correct.
+              </p>
+            )}
+          </div>
         </div>
       )}
+
+      {/* Explanation (mandatory) */}
+      <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
+        <div>
+          <h3 className="text-text text-sm font-medium">Explanation *</h3>
+          <p className="text-text-muted text-xs">
+            Provide a detailed explanation for the correct answer (minimum 250 characters)
+          </p>
+        </div>
+
+        <div>
+          <textarea
+            {...form.register('explanation')}
+            ref={explanationRef}
+            value={watchedExplanation}
+            onChange={handleExplanationChange}
+            placeholder="Explain why this is the correct answer. Include relevant details, context, and reasoning to help users understand the concept better..."
+            className="text-text placeholder-text-muted w-full resize-none overflow-hidden border-none bg-transparent text-sm outline-none"
+            style={{ minHeight: '100px' }}
+            rows={4}
+          />
+          <div className="mt-1 flex items-center justify-between">
+            <div className="text-xs">
+              {formErrors.explanation && (
+                <p className="text-error">{formErrors.explanation.message}</p>
+              )}
+            </div>
+            <div className="text-text-muted text-xs">
+              <span className={watchedExplanation?.length >= 250 ? 'text-success' : 'text-warning'}>
+                {watchedExplanation?.length || 0}/250 minimum
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Multiple Choice Settings */}
       {watchedPollType === 'multiple' && (
@@ -599,49 +590,6 @@ export default function PollForm({
           </div>
         </div>
       )}
-
-      {/* Poll Duration */}
-      <div className="border-border bg-surface rounded-lg border p-3">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-text text-sm font-medium">Duration</span>
-          <Drawer open={durationDrawerOpen} onOpenChange={setDurationDrawerOpen}>
-            <DrawerTrigger asChild>
-              <button type="button" className="text-primary text-xs hover:opacity-80">
-                Change
-              </button>
-            </DrawerTrigger>
-            <DrawerContent className="bg-surface border-border">
-              <DrawerHeader>
-                <DrawerTitle className="text-text">Poll Duration</DrawerTitle>
-                <DrawerDescription className="text-text-secondary">
-                  How long should your poll run?
-                </DrawerDescription>
-              </DrawerHeader>
-              <div className="px-4 pb-4">
-                <div className="space-y-2">
-                  {[1, 2, 3, 4, 5, 6, 7].map((days) => (
-                    <button
-                      key={days}
-                      type="button"
-                      onClick={() => handleDurationSelect(days)}
-                      className={`w-full rounded-lg p-3 text-left transition-colors ${
-                        durationDays === days
-                          ? 'border-primary/20 bg-primary/10 text-primary border'
-                          : 'bg-surface-elevated text-text hover:bg-border'
-                      }`}
-                    >
-                      {days} {days === 1 ? 'day' : 'days'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
-        </div>
-        <div className="text-text-secondary text-sm">
-          Poll will last: {durationDays} {durationDays === 1 ? 'day' : 'days'}
-        </div>
-      </div>
     </div>
   );
 }

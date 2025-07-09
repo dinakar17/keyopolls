@@ -35,9 +35,7 @@ export default function CreatePoll() {
   const [showCommunityOverlay, setShowCommunityOverlay] = useState(false);
   const [hasImages, setHasImages] = useState(false);
   const [rulesDrawerOpen, setRulesDrawerOpen] = useState(false);
-  const [durationDrawerOpen, setDurationDrawerOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [durationDays, setDurationDays] = useState(1);
   const [optionImages, setOptionImages] = useState<{
     [key: number]: { file: File; preview: string };
   }>({});
@@ -80,11 +78,11 @@ export default function CreatePoll() {
       title: savedData.title || '',
       description: savedData.description || '',
       poll_type: savedData.poll_type || 'single',
+      explanation: savedData.explanation || '',
       community_id: 0,
       allow_multiple_votes: savedData.allow_multiple_votes || false,
       max_choices: savedData.max_choices || 4,
       requires_aura: savedData.requires_aura || 0,
-      expires_at: '', // No default value
       has_correct_answer: savedData.has_correct_answer || false,
       correct_text_answer: savedData.correct_text_answer || '',
       correct_ranking_order: savedData.correct_ranking_order || [],
@@ -194,14 +192,6 @@ export default function CreatePoll() {
       delete newImages[optionIndex];
       return newImages;
     });
-  };
-
-  // Handle duration selection
-  const handleDurationSelect = (days: number) => {
-    setDurationDays(days);
-    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-    form.setValue('expires_at', expiresAt.toISOString());
-    setDurationDrawerOpen(false);
   };
 
   // Handle poll type change
@@ -404,16 +394,10 @@ export default function CreatePoll() {
           communityDetails={communityDetails}
           optionImages={optionImages}
           hasImages={hasImages}
-          durationDays={durationDays}
           rulesDrawerOpen={rulesDrawerOpen}
-          durationDrawerOpen={durationDrawerOpen}
-          setShowCommunityOverlay={setShowCommunityOverlay}
           setRulesDrawerOpen={setRulesDrawerOpen}
-          setDurationDrawerOpen={setDurationDrawerOpen}
-          setDurationDays={setDurationDays}
           handleImageUpload={handleImageUpload}
           removeImage={removeImage}
-          handleDurationSelect={handleDurationSelect}
           handleMaxChoicesSelect={handleMaxChoicesSelect}
           handleCorrectAnswerToggle={handleCorrectAnswerToggle}
           handleOptionCorrectToggle={handleOptionCorrectToggle}

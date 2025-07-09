@@ -5,24 +5,24 @@
  * API for Keyo Polls app
  * OpenAPI spec version: 1.0.0
  */
-import type { CategoryResponseSchema } from './categoryResponseSchema';
 import type { CommunityDetailsAvatar } from './communityDetailsAvatar';
 import type { CommunityDetailsBanner } from './communityDetailsBanner';
 import type { CommunityDetailsMembershipDetails } from './communityDetailsMembershipDetails';
 import type { CommunityDetailsRules } from './communityDetailsRules';
+import type { CommunityDetailsSlug } from './communityDetailsSlug';
 import type { CommunityDetailsUserPermissions } from './communityDetailsUserPermissions';
 import type { TagResponseSchema } from './tagResponseSchema';
 
 export interface CommunityDetails {
   id: number;
   name: string;
+  slug?: CommunityDetailsSlug;
   description: string;
   rules?: CommunityDetailsRules;
   avatar?: CommunityDetailsAvatar;
   banner?: CommunityDetailsBanner;
   community_type: string;
   creator_id: number;
-  category: CategoryResponseSchema;
   tags: TagResponseSchema[];
   member_count: number;
   poll_count: number;

@@ -140,7 +140,7 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
     if (shouldShowUserInfo) {
       router.push(`/profiles/${currentPoll.author_username}`);
     } else {
-      router.push(`/communities/${currentPoll.community_name}`);
+      router.push(`/communities/${currentPoll.community_slug}`);
     }
   };
 

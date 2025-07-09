@@ -283,7 +283,7 @@ const Communities = () => {
     showJoinButton?: boolean;
   }) => {
     const handleClick = () => {
-      router.push(`/communities/${community.name}`);
+      router.push(`/communities/${community.slug}`);
     };
 
     const getRoleIcon = (role?: string) => {

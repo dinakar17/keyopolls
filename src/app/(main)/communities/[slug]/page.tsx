@@ -7,9 +7,12 @@ import { useParams, useRouter } from 'next/navigation';
 
 import {
   ArrowLeft,
+  Brain,
+  Briefcase,
   ChevronDown,
   ChevronUp,
   Crown,
+  FileText,
   Globe,
   Lock,
   LogOut,
@@ -39,6 +42,8 @@ import { useProfileStore } from '@/stores/useProfileStore';
 
 import CommunityContent from './CommunityContent';
 
+type TabType = 'polls' | 'leaderboard' | 'about' | 'jobs' | 'articles' | 'flashcards';
+
 const CommunityPage = () => {
   const { accessToken } = useProfileStore();
   const { slug } = useParams<{ slug: string }>();
@@ -49,7 +54,7 @@ const CommunityPage = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showOptionsDrawer, setShowOptionsDrawer] = useState(false);
-  const [activeTab, setActiveTab] = useState<'posts' | 'leaderboard'>('posts');
+  const [activeTab, setActiveTab] = useState<TabType>('polls');
 
   // Simple Share Component
   const SimpleShareButton = ({ communityName }: { communityName: string }) => {
@@ -127,6 +132,11 @@ const CommunityPage = () => {
     }
   };
 
+  // Handle community name click
+  const handleCommunityNameClick = () => {
+    setActiveTab('about');
+  };
+
   // Handle join community
   const handleJoinCommunity = () => {
     if (!community?.id) return;
@@ -195,29 +205,26 @@ const CommunityPage = () => {
     return (
       <div className="bg-background min-h-screen">
         <div className="animate-pulse">
-          {/* Banner with Overlay Header Loading */}
-          <div className="relative h-32">
-            {/* Banner Loading */}
-            <div className="bg-surface-elevated absolute inset-0"></div>
-
-            {/* Header Overlay Loading */}
-            <div className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between px-4 py-3">
-              <div className="h-8 w-8 rounded-full bg-white/20"></div>
+          {/* Header Loading */}
+          <div className="border-border-subtle border-b px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-surface-elevated h-8 w-8 rounded-full"></div>
+                <div className="bg-surface-elevated h-6 w-32 rounded"></div>
+              </div>
               <div className="flex gap-2">
-                <div className="h-8 w-8 rounded-full bg-white/20"></div>
-                <div className="h-8 w-8 rounded-full bg-white/20"></div>
+                <div className="bg-surface-elevated h-8 w-8 rounded-full"></div>
+                <div className="bg-surface-elevated h-8 w-8 rounded-full"></div>
               </div>
             </div>
           </div>
 
-          {/* Avatar & Content Loading */}
-          <div className="px-4 pt-4 pb-4">
-            <div className="bg-surface-elevated -mt-12 mb-4 h-16 w-16 rounded-full"></div>
-            <div className="bg-surface-elevated mb-2 h-6 w-3/4 rounded"></div>
-            <div className="bg-surface-elevated mb-3 h-4 w-full rounded"></div>
-            <div className="mb-4 flex gap-2">
-              <div className="bg-surface-elevated h-8 w-20 rounded"></div>
-              <div className="bg-surface-elevated h-8 w-16 rounded"></div>
+          {/* Tabs Loading */}
+          <div className="border-border-subtle border-b px-4 py-3">
+            <div className="flex gap-6">
+              <div className="bg-surface-elevated h-4 w-12 rounded"></div>
+              <div className="bg-surface-elevated h-4 w-20 rounded"></div>
+              <div className="bg-surface-elevated h-4 w-12 rounded"></div>
             </div>
           </div>
         </div>
@@ -228,24 +235,17 @@ const CommunityPage = () => {
   if (error || !community) {
     return (
       <div className="bg-background flex min-h-screen flex-col">
-        {/* Banner with Overlay Header */}
-        <div className="relative h-32 bg-gradient-to-r from-gray-400 to-gray-600">
-          {/* Header Overlay */}
-          <div className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between px-4 py-3">
-            <button
-              onClick={handleBackClick}
-              className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20"
-            >
-              <ArrowLeft size={20} />
-            </button>
-
-            <div className="flex gap-2">
-              <button className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20">
-                <Search size={18} />
+        {/* Header */}
+        <div className="border-border-subtle border-b px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleBackClick}
+                className="text-text-muted hover:text-text rounded-full p-1.5 transition-colors"
+              >
+                <ArrowLeft size={20} />
               </button>
-              <button className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20">
-                <MoreVertical size={18} />
-              </button>
+              <h1 className="text-text text-lg font-semibold">Community</h1>
             </div>
           </div>
         </div>
@@ -318,22 +318,137 @@ const CommunityPage = () => {
           onClick={handleJoinCommunity}
           disabled={isToggling}
         >
-          {isToggling ? 'Joining...' : 'Join Community'}
+          {isToggling ? 'Joining...' : 'Join'}
         </button>
       );
     }
 
-    return (
-      <div className="bg-surface-elevated text-text-muted rounded-md px-3 py-1.5 text-sm font-medium">
-        Private
-      </div>
-    );
+    return null;
   };
 
   const truncateDescription = (text: string, maxLength: number = 120) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
+
+  const getTabIcon = (tab: TabType) => {
+    switch (tab) {
+      case 'polls':
+        return <FileText className="h-4 w-4" />;
+      case 'leaderboard':
+        return <Crown className="h-4 w-4" />;
+      case 'about':
+        return <Users className="h-4 w-4" />;
+      case 'jobs':
+        return <Briefcase className="h-4 w-4" />;
+      case 'articles':
+        return <FileText className="h-4 w-4" />;
+      case 'flashcards':
+        return <Brain className="h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
+
+  // About Tab Content
+  const AboutContent = () => (
+    <div className="p-4">
+      {/* Banner with Avatar */}
+      <div className="relative mb-6">
+        {/* Banner */}
+        <div className="relative h-32 overflow-hidden rounded-lg">
+          {community.banner ? (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${community.banner})` }}
+            />
+          ) : (
+            <div className="from-primary to-secondary absolute inset-0 bg-gradient-to-r" />
+          )}
+        </div>
+
+        {/* Avatar */}
+        <div className="absolute -bottom-8 left-4">
+          {community.avatar ? (
+            <Image
+              src={community.avatar}
+              alt={community.name}
+              className="border-background h-16 w-16 rounded-full border-4 object-cover"
+              width={64}
+              height={64}
+            />
+          ) : (
+            <div className="border-background bg-surface-elevated flex h-16 w-16 items-center justify-center rounded-full border-4">
+              <Users className="text-text-muted h-6 w-6" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Community Details */}
+      <div className="pt-8">
+        {/* Name and Action Button */}
+        <div className="mb-3 flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-text text-xl leading-tight font-bold">{community.name}</h1>
+          </div>
+          {getActionButton() && <div className="ml-3 flex-shrink-0">{getActionButton()}</div>}
+        </div>
+
+        {/* Description */}
+        {community.description && (
+          <div className="mb-4">
+            <p className="text-text-secondary text-sm leading-relaxed">
+              {showFullDescription
+                ? community.description
+                : truncateDescription(community.description)}
+            </p>
+            {community.description.length > 120 && (
+              <button
+                onClick={() => setShowFullDescription(!showFullDescription)}
+                className="text-primary mt-1 flex items-center gap-1 text-xs transition-opacity hover:opacity-80"
+              >
+                {showFullDescription ? (
+                  <>
+                    <ChevronUp className="h-3 w-3" />
+                    Show less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3" />
+                    Read more
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Community Info */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Community Type */}
+          <div className="bg-surface-elevated text-text-secondary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
+            {getCommunityIcon(community.community_type)}
+            <span className="capitalize">{community.community_type}</span>
+          </div>
+
+          {/* Member Count */}
+          <div className="text-text-muted flex items-center gap-1 text-xs">
+            <Users className="h-3 w-3" />
+            <span>{community.member_count.toLocaleString()} members</span>
+          </div>
+
+          {/* Member Role Badge */}
+          {membership && (
+            <div className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
+              {getRoleIcon(membership.role)}
+              <span className="capitalize">{membership.role}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   // Leave Community Modal
   const LeaveModal = () => (
@@ -380,38 +495,35 @@ const CommunityPage = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      {/* Banner with Overlay Header */}
-      <div className="relative h-32">
-        {/* Banner Background */}
-        {community.banner ? (
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${community.banner})` }}
-          />
-        ) : (
-          <div className="from-primary to-secondary absolute inset-0 bg-gradient-to-r" />
-        )}
-
-        {/* Header Overlay */}
-        <div className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between px-4 py-3">
-          <button
-            onClick={handleBackClick}
-            className="rounded-full p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-          >
-            <ArrowLeft size={20} />
-          </button>
+      {/* Header */}
+      <div className="border-border-subtle border-b px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleBackClick}
+              className="text-text-muted hover:text-text rounded-full p-1.5 transition-colors"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <button
+              onClick={handleCommunityNameClick}
+              className="text-text hover:text-primary font-semibold transition-colors"
+            >
+              {community.name}
+            </button>
+          </div>
 
           <div className="flex gap-2">
             <button
               onClick={handleSearchClick}
-              className="rounded-full p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+              className="text-text-muted hover:text-text rounded-full p-1.5 transition-colors"
             >
               <Search size={18} />
             </button>
 
             <Drawer open={showOptionsDrawer} onOpenChange={setShowOptionsDrawer}>
               <DrawerTrigger asChild>
-                <button className="rounded-full p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-white/20">
+                <button className="text-text-muted hover:text-text rounded-full p-1.5 transition-colors">
                   <MoreVertical size={18} />
                 </button>
               </DrawerTrigger>
@@ -436,132 +548,48 @@ const CommunityPage = () => {
             </Drawer>
           </div>
         </div>
-
-        {/* Avatar positioned to overlap banner */}
-        <div className="absolute -bottom-8 left-4 z-20">
-          {community.avatar ? (
-            <Image
-              src={community.avatar}
-              alt={community.name}
-              className="border-background h-16 w-16 rounded-full border-4 object-cover"
-              width={64}
-              height={64}
-            />
-          ) : (
-            <div className="border-background bg-surface-elevated flex h-16 w-16 items-center justify-center rounded-full border-4">
-              <Users className="text-text-muted h-6 w-6" />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Community Header */}
-      <div className="border-border-subtle border-b">
-        <div className="px-4 pt-12 pb-4">
-          {/* Name and Action Button */}
-          <div className="mb-3 flex items-start justify-between">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-text text-xl leading-tight font-bold">{community.name}</h1>
-            </div>
-            {getActionButton() && <div className="ml-3 flex-shrink-0">{getActionButton()}</div>}
-          </div>
-
-          {/* Description */}
-          {community.description && (
-            <div className="mb-4">
-              <p className="text-text-secondary text-sm leading-relaxed">
-                {showFullDescription
-                  ? community.description
-                  : truncateDescription(community.description)}
-              </p>
-              {community.description.length > 120 && (
-                <button
-                  onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="text-primary mt-1 flex items-center gap-1 text-xs transition-opacity hover:opacity-80"
-                >
-                  {showFullDescription ? (
-                    <>
-                      <ChevronUp className="h-3 w-3" />
-                      Show less
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-3 w-3" />
-                      Read more
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Community Info Row */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {/* Community Type */}
-              <div className="bg-surface-elevated text-text-secondary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
-                {getCommunityIcon(community.community_type)}
-                <span className="capitalize">{community.community_type}</span>
-              </div>
-
-              {/* Member Count */}
-              <div className="text-text-muted flex items-center gap-1 text-xs">
-                <Users className="h-3 w-3" />
-                <span>{community.member_count.toLocaleString()}</span>
-              </div>
-
-              {/* Member Role Badge */}
-              {membership && (
-                <div className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
-                  {getRoleIcon(membership.role)}
-                  <span className="capitalize">{membership.role}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Category */}
-            <div className="bg-surface text-text-secondary rounded px-2 py-1 text-xs">
-              {community.category.name}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Tabs */}
       <div className="border-border-subtle border-b">
-        <div className="flex px-4">
-          <button
-            onClick={() => setActiveTab('posts')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'posts'
-                ? 'text-primary border-primary border-b-2'
-                : 'text-text-muted hover:text-text'
-            }`}
-          >
-            Posts
-          </button>
-          <button
-            onClick={() => setActiveTab('leaderboard')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'leaderboard'
-                ? 'text-primary border-primary border-b-2'
-                : 'text-text-muted hover:text-text'
-            }`}
-          >
-            Leaderboard
-          </button>
+        <div className="flex overflow-x-auto px-4">
+          {[
+            { id: 'polls', label: 'Polls' },
+            { id: 'flashcards', label: 'Flashcards' },
+            { id: 'articles', label: 'Articles' },
+            { id: 'leaderboard', label: 'Leaderboard' },
+            { id: 'jobs', label: 'Jobs' },
+            { id: 'about', label: 'About' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as TabType)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab.id
+                  ? 'text-primary border-primary border-b-2'
+                  : 'text-text-muted hover:text-text'
+              }`}
+            >
+              {getTabIcon(tab.id as TabType)}
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Content */}
-      <CommunityContent
-        community={community}
-        activeTab={activeTab}
-        onCreatePoll={handleCreatePoll}
-      />
+      {activeTab === 'about' ? (
+        <AboutContent />
+      ) : (
+        <CommunityContent
+          community={community}
+          activeTab={activeTab}
+          onCreatePoll={handleCreatePoll}
+        />
+      )}
 
       {/* Floating Create Poll Button (for members) */}
-      {isMember && permissions?.can_post && activeTab === 'posts' && (
+      {isMember && permissions?.can_post && activeTab === 'polls' && (
         <CreateButton path="/create-poll" onClick={handleCreatePoll} />
       )}
 

@@ -8,8 +8,8 @@
 import type { MultipleChoiceStatsSchema } from './multipleChoiceStatsSchema';
 import type { PollDetailsAuthorAvatar } from './pollDetailsAuthorAvatar';
 import type { PollDetailsCommunityAvatar } from './pollDetailsCommunityAvatar';
+import type { PollDetailsCommunitySlug } from './pollDetailsCommunitySlug';
 import type { PollDetailsCorrectAnswerStats } from './pollDetailsCorrectAnswerStats';
-import type { PollDetailsExpiresAt } from './pollDetailsExpiresAt';
 import type { PollDetailsImageUrl } from './pollDetailsImageUrl';
 import type { PollDetailsMaxChoices } from './pollDetailsMaxChoices';
 import type { PollDetailsUserReactions } from './pollDetailsUserReactions';
@@ -25,6 +25,7 @@ export interface PollDetails {
   id: number;
   title: string;
   description: string;
+  explanation: string;
   image_url?: PollDetailsImageUrl;
   poll_type: string;
   status: string;
@@ -34,6 +35,7 @@ export interface PollDetails {
   author_aura: number;
   community_id: number;
   community_name: string;
+  community_slug?: PollDetailsCommunitySlug;
   community_avatar?: PollDetailsCommunityAvatar;
   allow_multiple_votes: boolean;
   max_choices?: PollDetailsMaxChoices;
@@ -41,9 +43,7 @@ export interface PollDetails {
   is_pinned: boolean;
   has_correct_answer: boolean;
   correct_answer_stats?: PollDetailsCorrectAnswerStats;
-  expires_at?: PollDetailsExpiresAt;
   is_active: boolean;
-  is_expired: boolean;
   total_votes: number;
   total_voters: number;
   option_count: number;

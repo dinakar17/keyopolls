@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { Compass, Home, Inbox, Users } from 'lucide-react';
+import { Inbox, Users } from 'lucide-react';
 
 const BottomNavigation = () => {
   // State for visibility based on scroll
@@ -17,9 +17,9 @@ const BottomNavigation = () => {
 
   // Navigation items defined within the component
   const navigationItems = [
-    { id: 'home', name: 'Home', icon: Home, path: '/' },
-    { id: 'explore', name: 'Explore', icon: Compass, path: '/explore' },
-    { id: 'communities', name: 'Communities', icon: Users, path: '/communities' },
+    // { id: 'home', name: 'Home', icon: Home, path: '/' },
+    // { id: 'explore', name: 'Explore', icon: Compass, path: '/explore' },
+    { id: 'communities', name: 'Communities', icon: Users, path: '/' },
     { id: 'inbox', name: 'Inbox', icon: Inbox, path: '/inbox' },
   ];
 

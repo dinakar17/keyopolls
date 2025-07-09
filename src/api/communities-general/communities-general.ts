@@ -35,25 +35,25 @@ Handles all visibility rules and user-specific data.
  * @summary Get Community
  */
 export const keyopollsCommunitiesApiGeneralGetCommunity = (
-  communityName: string,
+  communitySlug: string,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal
 ) => {
   return customInstance<CommunityDetails>(
-    { url: `/api/communities/general/communities/${communityName}`, method: 'GET', signal },
+    { url: `/api/communities/general/communities/${communitySlug}`, method: 'GET', signal },
     options
   );
 };
 
-export const getKeyopollsCommunitiesApiGeneralGetCommunityQueryKey = (communityName: string) => {
-  return [`/api/communities/general/communities/${communityName}`] as const;
+export const getKeyopollsCommunitiesApiGeneralGetCommunityQueryKey = (communitySlug: string) => {
+  return [`/api/communities/general/communities/${communitySlug}`] as const;
 };
 
 export const getKeyopollsCommunitiesApiGeneralGetCommunityQueryOptions = <
   TData = Awaited<ReturnType<typeof keyopollsCommunitiesApiGeneralGetCommunity>>,
   TError = ErrorType<Message>,
 >(
-  communityName: string,
+  communitySlug: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -68,14 +68,14 @@ export const getKeyopollsCommunitiesApiGeneralGetCommunityQueryOptions = <
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getKeyopollsCommunitiesApiGeneralGetCommunityQueryKey(communityName);
+    queryOptions?.queryKey ?? getKeyopollsCommunitiesApiGeneralGetCommunityQueryKey(communitySlug);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof keyopollsCommunitiesApiGeneralGetCommunity>>
   > = ({ signal }) =>
-    keyopollsCommunitiesApiGeneralGetCommunity(communityName, requestOptions, signal);
+    keyopollsCommunitiesApiGeneralGetCommunity(communitySlug, requestOptions, signal);
 
-  return { queryKey, queryFn, enabled: !!communityName, ...queryOptions } as UseQueryOptions<
+  return { queryKey, queryFn, enabled: !!communitySlug, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof keyopollsCommunitiesApiGeneralGetCommunity>>,
     TError,
     TData
@@ -91,7 +91,7 @@ export function useKeyopollsCommunitiesApiGeneralGetCommunity<
   TData = Awaited<ReturnType<typeof keyopollsCommunitiesApiGeneralGetCommunity>>,
   TError = ErrorType<Message>,
 >(
-  communityName: string,
+  communitySlug: string,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -116,7 +116,7 @@ export function useKeyopollsCommunitiesApiGeneralGetCommunity<
   TData = Awaited<ReturnType<typeof keyopollsCommunitiesApiGeneralGetCommunity>>,
   TError = ErrorType<Message>,
 >(
-  communityName: string,
+  communitySlug: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -141,7 +141,7 @@ export function useKeyopollsCommunitiesApiGeneralGetCommunity<
   TData = Awaited<ReturnType<typeof keyopollsCommunitiesApiGeneralGetCommunity>>,
   TError = ErrorType<Message>,
 >(
-  communityName: string,
+  communitySlug: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -162,7 +162,7 @@ export function useKeyopollsCommunitiesApiGeneralGetCommunity<
   TData = Awaited<ReturnType<typeof keyopollsCommunitiesApiGeneralGetCommunity>>,
   TError = ErrorType<Message>,
 >(
-  communityName: string,
+  communitySlug: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -176,7 +176,7 @@ export function useKeyopollsCommunitiesApiGeneralGetCommunity<
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getKeyopollsCommunitiesApiGeneralGetCommunityQueryOptions(
-    communityName,
+    communitySlug,
     options
   );
 

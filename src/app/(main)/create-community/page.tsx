@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Camera, ChevronDown, Plus, Upload, X } from 'lucide-react';
+import { Camera, ChevronDown, Upload, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -19,31 +19,17 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { toast } from '@/components/ui/toast';
-import { COMMUNITY_CATEGORIES } from '@/constants/categories';
 import { useProfileStore } from '@/stores/useProfileStore';
 
 const communitySchema = z.object({
-  name: z
-    .string()
-    .min(3, 'Community name must be at least 3 characters')
-    .max(25, 'Community name cannot exceed 25 characters')
-    .regex(/^[a-z0-9_]+$/, 'Name can only contain lowercase letters, numbers, and underscores'),
+  name: z.string().min(1, 'Community name is required'),
   description: z
     .string()
     .min(10, 'Description must be at least 10 characters')
     .max(300, 'Description cannot exceed 300 characters'),
   community_type: z.enum(['public', 'private', 'restricted']),
-  category_id: z.number({ required_error: 'Please select a category' }),
-  tag_names: z
-    .array(
-      z
-        .string()
-        .min(2, 'Topic must be at least 2 characters')
-        .max(50, 'Topic cannot exceed 50 characters')
-    )
-    .min(1, 'At least 1 topic is required')
-    .max(3, 'Maximum 3 topics allowed'),
   avatar: z.any().refine((file) => file !== null, 'Community avatar is required'),
+  banner: z.any().optional(),
 });
 
 type CommunityFormData = z.infer<typeof communitySchema>;
@@ -85,7 +71,7 @@ const CommunityCreateForm = () => {
       mutation: {
         onSuccess: (response) => {
           toast.success('Congratulations! Your community has been created successfully.');
-          router.push(`/communities/${response.data.name}`);
+          router.push(`/communities/${response.data.slug}`);
         },
         onError: (error) => {
           console.error('Error creating community:', error);
@@ -96,17 +82,14 @@ const CommunityCreateForm = () => {
       },
     });
 
-  const [topics, setTopics] = useState<string[]>([]);
-  const [topicInput, setTopicInput] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<(typeof COMMUNITY_CATEGORIES)[0] | null>(
-    null
-  );
   const [selectedCommunityType, setSelectedCommunityType] = useState(communityTypes[0]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [typeDrawerOpen, setTypeDrawerOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
+  const bannerFileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -122,8 +105,8 @@ const CommunityCreateForm = () => {
     mode: 'onChange',
     defaultValues: {
       community_type: 'public',
-      tag_names: [],
       avatar: null,
+      banner: null,
     },
   });
 
@@ -156,46 +139,51 @@ const CommunityCreateForm = () => {
     }
   };
 
+  const handleBannerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setError('banner', { message: 'Banner file size must be less than 10MB' });
+        return;
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('banner', { message: 'Only JPEG, PNG, and WebP images are allowed' });
+        return;
+      }
+
+      setBannerFile(file);
+      setValue('banner', file);
+      clearErrors('banner');
+      trigger('banner');
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setBannerPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const removeAvatar = () => {
     setAvatarFile(null);
     setAvatarPreview(null);
     setValue('avatar', null);
     trigger('avatar');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    if (avatarFileInputRef.current) {
+      avatarFileInputRef.current.value = '';
     }
   };
 
-  const addTopic = () => {
-    const trimmedTopic = topicInput.trim().toLowerCase();
-    if (trimmedTopic && !topics.includes(trimmedTopic) && topics.length < 3) {
-      const newTopics = [...topics, trimmedTopic];
-      setTopics(newTopics);
-      setValue('tag_names', newTopics);
-      setTopicInput('');
-      trigger('tag_names');
+  const removeBanner = () => {
+    setBannerFile(null);
+    setBannerPreview(null);
+    setValue('banner', null);
+    trigger('banner');
+    if (bannerFileInputRef.current) {
+      bannerFileInputRef.current.value = '';
     }
-  };
-
-  const removeTopic = (topicToRemove: string) => {
-    const newTopics = topics.filter((topic) => topic !== topicToRemove);
-    setTopics(newTopics);
-    setValue('tag_names', newTopics);
-    trigger('tag_names');
-  };
-
-  const handleTopicInputKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addTopic();
-    }
-  };
-
-  const selectCategory = (category: (typeof COMMUNITY_CATEGORIES)[0]) => {
-    setSelectedCategory(category);
-    setValue('category_id', category.id);
-    setCategoryDrawerOpen(false);
-    trigger('category_id');
   };
 
   const selectCommunityType = (type: (typeof communityTypes)[0]) => {
@@ -213,13 +201,12 @@ const CommunityCreateForm = () => {
         name: data.name,
         description: data.description,
         community_type: data.community_type,
-        category_id: data.category_id,
-        tag_names: data.tag_names,
       };
       createCommunity({
         data: {
           data: communityData,
           avatar: avatarFile || undefined,
+          banner: bannerFile || undefined,
         },
       });
     } catch (error) {
@@ -255,7 +242,66 @@ const CommunityCreateForm = () => {
             </div>
           )}
 
-          {/* Avatar Upload - Now Required */}
+          {/* Banner Upload */}
+          <div className="space-y-3">
+            <label className="text-text block text-sm font-medium">
+              Community Banner (Optional)
+            </label>
+            <div className="space-y-3">
+              <div className="relative">
+                <div
+                  className={`border-border bg-surface flex h-32 w-full items-center justify-center overflow-hidden rounded-lg border ${errors.banner ? 'border-error' : ''}`}
+                >
+                  {bannerPreview ? (
+                    <Image
+                      src={bannerPreview}
+                      alt="Banner preview"
+                      className="h-full w-full object-cover"
+                      width={400}
+                      height={128}
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <Camera className="text-text-muted mx-auto mb-2 h-8 w-8" />
+                      <p className="text-text-muted text-sm">No banner selected</p>
+                    </div>
+                  )}
+                </div>
+                {bannerPreview && (
+                  <button
+                    type="button"
+                    onClick={removeBanner}
+                    className="bg-error text-background absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full text-xs transition-colors hover:bg-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => bannerFileInputRef.current?.click()}
+                  className="border-border bg-surface text-text hover:bg-surface-elevated inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {bannerPreview ? 'Change Banner' : 'Choose Banner'}
+                </button>
+                <p className="text-text-muted text-xs">
+                  PNG, JPG, WebP (max 10MB) - Recommended: 1200x400px
+                </p>
+              </div>
+            </div>
+            <input
+              ref={bannerFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleBannerChange}
+              className="hidden"
+            />
+            {errors.banner && <p className="text-error text-sm">{String(errors.banner.message)}</p>}
+          </div>
+
+          {/* Avatar Upload - Required */}
           <div className="space-y-3">
             <label className="text-text block text-sm font-medium">
               Community Avatar <span className="text-error">*</span>
@@ -290,7 +336,7 @@ const CommunityCreateForm = () => {
               <div className="flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => avatarFileInputRef.current?.click()}
                   className="border-border bg-surface text-text hover:bg-surface-elevated inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium transition-colors"
                 >
                   <Upload className="mr-2 h-4 w-4" />
@@ -300,7 +346,7 @@ const CommunityCreateForm = () => {
               </div>
             </div>
             <input
-              ref={fileInputRef}
+              ref={avatarFileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={handleAvatarChange}
@@ -319,13 +365,11 @@ const CommunityCreateForm = () => {
                 {...register('name')}
                 id="name"
                 type="text"
-                placeholder="community_name"
+                placeholder="Enter community name"
                 className="border-border bg-background text-text placeholder:text-text-muted focus:border-primary focus:ring-primary w-full rounded-md border px-3 py-2 focus:ring-1 focus:outline-none"
               />
             </div>
-            <p className="text-text-muted text-xs">
-              3-25 characters, lowercase letters, numbers, and underscores only.
-            </p>
+            <p className="text-text-muted text-xs">Choose any name for your community.</p>
             {errors.name && <p className="text-error text-sm">{errors.name.message}</p>}
           </div>
 
@@ -398,124 +442,6 @@ const CommunityCreateForm = () => {
                 </div>
               </DrawerContent>
             </Drawer>
-          </div>
-
-          {/* Category Selection - Now Required */}
-          <div className="space-y-3">
-            <label className="text-text block text-sm font-medium">
-              Category <span className="text-error">*</span>
-            </label>
-            <Drawer open={categoryDrawerOpen} onOpenChange={setCategoryDrawerOpen}>
-              <DrawerTrigger asChild>
-                <button
-                  type="button"
-                  className={`border-border bg-background hover:bg-surface-elevated focus:border-primary focus:ring-primary flex w-full items-center justify-between rounded-md border px-3 py-2 text-left transition-colors focus:ring-1 focus:outline-none ${errors.category_id ? 'border-error' : ''}`}
-                >
-                  {selectedCategory ? (
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="text-background flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium"
-                        style={{ backgroundColor: selectedCategory.icon_color }}
-                      >
-                        {selectedCategory.icon.charAt(0)}
-                      </div>
-                      <span className="text-text font-medium">{selectedCategory.name}</span>
-                    </div>
-                  ) : (
-                    <span className="text-text-muted">Select a category</span>
-                  )}
-                  <ChevronDown className="text-text-muted h-4 w-4" />
-                </button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>Choose Category</DrawerTitle>
-                </DrawerHeader>
-                <div className="max-h-[60vh] space-y-2 overflow-y-auto p-4">
-                  {COMMUNITY_CATEGORIES.map((category) => (
-                    <button
-                      key={category.id}
-                      type="button"
-                      onClick={() => selectCategory(category)}
-                      className={`border-border hover:bg-surface-elevated w-full rounded-md border p-3 text-left transition-colors ${
-                        selectedCategory?.id === category.id
-                          ? 'border-primary ring-primary ring-1'
-                          : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="text-background flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium"
-                          style={{ backgroundColor: category.icon_color }}
-                        >
-                          {category.icon.charAt(0)}
-                        </div>
-                        <div>
-                          <h3 className="text-text font-medium">{category.name}</h3>
-                          <p className="text-text-secondary text-sm">{category.description}</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </DrawerContent>
-            </Drawer>
-            {errors.category_id && (
-              <p className="text-error text-sm">{errors.category_id.message}</p>
-            )}
-          </div>
-
-          {/* Topics */}
-          <div className="space-y-3">
-            <label className="text-text block text-sm font-medium">
-              Topics <span className="text-error">*</span> (1-3 required)
-            </label>
-            <p className="text-text-secondary text-sm">
-              Add topics to help people find your community
-            </p>
-
-            {/* Topic Input */}
-            <div className="flex gap-2">
-              <input
-                value={topicInput}
-                onChange={(e) => setTopicInput(e.target.value)}
-                onKeyDown={handleTopicInputKeyPress}
-                placeholder="Type a topic and press Enter"
-                disabled={topics.length >= 3}
-                maxLength={50}
-                className="border-border bg-background text-text placeholder:text-text-muted focus:border-primary focus:ring-primary flex-1 rounded-md border px-3 py-2 focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              <button
-                type="button"
-                onClick={addTopic}
-                disabled={!topicInput.trim() || topics.length >= 3}
-                className="bg-primary text-background rounded-md px-3 py-2 transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Topic Display */}
-            {topics.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {topics.map((topic, index) => (
-                  <div
-                    key={index}
-                    className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm"
-                  >
-                    <span>{topic}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeTopic(topic)}
-                      className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            {errors.tag_names && <p className="text-error text-sm">{errors.tag_names.message}</p>}
           </div>
         </div>
       </div>

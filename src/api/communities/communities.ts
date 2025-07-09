@@ -39,6 +39,9 @@ export const keyopollsCommunitiesApiOperationsCreateCommunity = (
   if (keyopollsCommunitiesApiOperationsCreateCommunityBody.avatar !== undefined) {
     formData.append(`avatar`, keyopollsCommunitiesApiOperationsCreateCommunityBody.avatar);
   }
+  if (keyopollsCommunitiesApiOperationsCreateCommunityBody.banner !== undefined) {
+    formData.append(`banner`, keyopollsCommunitiesApiOperationsCreateCommunityBody.banner);
+  }
   formData.append(
     `data`,
     JSON.stringify(keyopollsCommunitiesApiOperationsCreateCommunityBody.data)

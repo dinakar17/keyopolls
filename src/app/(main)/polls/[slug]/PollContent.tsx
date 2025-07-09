@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-import { ArrowDown, ArrowUp, Send } from 'lucide-react';
+import { ArrowDown, ArrowUp, Info, Send } from 'lucide-react';
 
 import { useKeyopollsPollsApiGeneralCastVote } from '@/api/polls/polls';
 import { CastVoteSchema, PollDetails } from '@/api/schemas';
@@ -16,7 +16,6 @@ import MediaViewer from '@/components/common/MediaViewer';
 import ShareButton from '@/components/common/ShareButton';
 import toast from '@/components/ui/toast';
 import { useProfileStore } from '@/stores/useProfileStore';
-import { getTimeRemaining } from '@/utils';
 
 interface PollContentProps {
   poll: PollDetails;
@@ -245,7 +244,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
 
   // Check if user voted for this option
   const isUserVotedOption = (optionId: number): boolean => {
-    if (!poll?.show_results || !poll.user_has_voted || !poll.user_votes) return false;
+    if (!poll?.user_has_voted || !poll.user_votes) return false;
     return poll.user_votes.some((vote) => vote.option_id === optionId);
   };
 
@@ -269,49 +268,11 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
   const showVoteButton =
     canInteract && (poll.poll_type === 'multiple' || poll.poll_type === 'ranking');
 
+  // Updated condition: only show results if user has voted
+  const showResults = poll.user_has_voted;
+
   return (
     <>
-      {/* Community Header */}
-      <div className="flex items-center justify-between p-4 pb-2">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push(`/communities/${poll.community_name}`)}
-            className="flex-shrink-0"
-          >
-            {poll.community_avatar ? (
-              <Image
-                src={poll.community_avatar}
-                alt={`${poll.community_name} avatar`}
-                width={32}
-                height={32}
-                className="h-8 w-8 rounded-full object-cover transition-opacity hover:opacity-80"
-              />
-            ) : (
-              <div className="bg-primary text-background flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-opacity hover:opacity-80">
-                {poll.community_name.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </button>
-          <div className="flex flex-col">
-            <button
-              onClick={() => router.push(`/communities/${poll.community_name}`)}
-              className="text-text hover:text-primary text-left font-semibold transition-colors"
-            >
-              {poll.community_name}
-              <span className="text-text-secondary ml-1">
-                . {getTimeRemaining(poll.expires_at)}
-              </span>
-            </button>
-            <button
-              onClick={() => router.push(`/profiles/${poll.author_username}`)}
-              className="text-text-secondary hover:text-primary text-left text-xs transition-colors"
-            >
-              @{poll.author_username}
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Poll Content */}
       <div className="px-4">
         {/* Title */}
@@ -366,7 +327,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
         {poll.poll_type === 'text_input' ? (
           /* Text Input Poll */
           <div className="mb-4">
-            {poll.show_results ? (
+            {showResults ? (
               /* Show text responses as bubbles */
               <div className="space-y-4">
                 {poll.text_responses && poll.text_responses.length > 0 ? (
@@ -498,7 +459,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
               const isSelected = selectedOptions.includes(option.id);
               const rank = getRankForOption(option.id);
               const isVoted = isUserVotedOption(option.id);
-              const percentage = poll.show_results
+              const percentage = showResults
                 ? poll.poll_type === 'ranking'
                   ? option.best_rank_percentage || 0
                   : option.vote_percentage
@@ -510,9 +471,9 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                   className={`relative overflow-hidden rounded-lg border transition-all duration-200 ${
                     canInteract ? 'hover:border-primary/50 cursor-pointer' : 'cursor-default'
                   } ${
-                    isVoted && poll.show_results
+                    isVoted && showResults
                       ? 'border-primary'
-                      : option.is_correct && poll.show_results && poll.has_correct_answer
+                      : option.is_correct && showResults && poll.has_correct_answer
                         ? 'border-success'
                         : 'border-border'
                   }`}
@@ -533,7 +494,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                   }}
                 >
                   {/* Background bar for results */}
-                  {poll.show_results && percentage > 0 && (
+                  {showResults && percentage > 0 && (
                     <div
                       className={`absolute inset-0 transition-all duration-300 ${
                         isVoted
@@ -549,7 +510,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                   <div className="relative flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                       {/* Correct answer indicator */}
-                      {option.is_correct && poll.show_results && poll.has_correct_answer && (
+                      {option.is_correct && showResults && poll.has_correct_answer && (
                         <div className="text-success text-sm font-medium">✓</div>
                       )}
 
@@ -557,10 +518,10 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                       {poll.poll_type === 'single' && (
                         <div
                           className={`h-4 w-4 rounded-full border-2 ${
-                            isVoted && poll.show_results ? 'border-primary' : 'border-border'
+                            isVoted && showResults ? 'border-primary' : 'border-border'
                           }`}
                         >
-                          {isVoted && poll.show_results && (
+                          {isVoted && showResults && (
                             <div className="bg-primary m-0.5 h-2 w-2 rounded-full" />
                           )}
                         </div>
@@ -598,15 +559,13 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                         </div>
                       )}
 
-                      <span
-                        className={`text-text ${isVoted && poll.show_results ? 'font-medium' : ''}`}
-                      >
+                      <span className={`text-text ${isVoted && showResults ? 'font-medium' : ''}`}>
                         {option.text}
                       </span>
                     </div>
 
                     {/* Percentage display */}
-                    {poll.show_results && (
+                    {showResults && (
                       <div className="flex items-center gap-2">
                         {poll.poll_type === 'ranking' && option.best_rank && (
                           <span className="text-text-secondary text-xs">
@@ -664,8 +623,45 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
           </div>
         )}
 
-        {/* Correct Answer Stats */}
-        {poll.show_results && poll.has_correct_answer && poll.correct_answer_stats && (
+        {/* Subtle note about what becomes available after answering */}
+        {!poll.user_has_voted && (
+          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <div className="flex items-start gap-2">
+              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium">After you answer this poll:</p>
+                <ul className="mt-1 text-xs text-blue-700">
+                  <li>• You'll see detailed results and statistics</li>
+                  <li>• The author's explanation will be revealed</li>
+                  <li>• You can join the discussion in comments</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Explanation - Only shown after user has voted */}
+        {showResults && poll.explanation && (
+          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <div className="text-green-600">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-green-800">Explanation</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-green-700">{poll.explanation}</p>
+          </div>
+        )}
+
+        {/* Correct Answer Stats - Only shown after user has voted */}
+        {showResults && poll.has_correct_answer && poll.correct_answer_stats && (
           <div className="border-success/20 bg-success/10 mb-4 rounded-lg border p-3">
             <div className="flex items-center gap-2">
               <span className="text-success text-sm font-medium">✓</span>
@@ -677,8 +673,8 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
           </div>
         )}
 
-        {/* Multiple Choice Distribution Stats */}
-        {poll.show_results &&
+        {/* Multiple Choice Distribution Stats - Only shown after user has voted */}
+        {showResults &&
           poll.poll_type === 'multiple' &&
           poll.multiple_choice_stats &&
           poll.multiple_choice_stats.length > 0 && (
@@ -703,14 +699,24 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
             </div>
           )}
 
-        {/* Total Votes */}
-        {poll && (
+        {/* Total Votes - Only shown after user has voted */}
+        {showResults && poll && (
           <div className="text-text-secondary mb-4 text-right text-sm">
             {poll.poll_type === 'text_input'
               ? `${poll.total_voters} ${poll.total_voters === 1 ? 'response' : 'responses'}`
               : `${poll.total_votes} ${poll.total_votes === 1 ? 'vote' : 'votes'}`}
           </div>
         )}
+      </div>
+
+      {/* Subtle Author Attribution */}
+      <div className="px-4 pb-2">
+        <button
+          onClick={() => router.push(`/profiles/${poll.author_username}`)}
+          className="text-text-muted hover:text-primary text-xs transition-colors"
+        >
+          Created by @{poll.author_username}
+        </button>
       </div>
 
       {/* Action Bar - Updated with better layout and view count */}

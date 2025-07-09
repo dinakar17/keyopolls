@@ -8,6 +8,8 @@
 import type { PollCreateSchemaCorrectRankingOrder } from './pollCreateSchemaCorrectRankingOrder';
 import type { PollCreateSchemaCorrectTextAnswer } from './pollCreateSchemaCorrectTextAnswer';
 import type { PollCreateSchemaDescription } from './pollCreateSchemaDescription';
+import type { PollCreateSchemaExpiresAt } from './pollCreateSchemaExpiresAt';
+import type { PollCreateSchemaExplanation } from './pollCreateSchemaExplanation';
 import type { PollCreateSchemaMaxChoices } from './pollCreateSchemaMaxChoices';
 import type { PollOptionCreateSchema } from './pollOptionCreateSchema';
 
@@ -16,10 +18,11 @@ export interface PollCreateSchema {
   description?: PollCreateSchemaDescription;
   poll_type: string;
   community_id: number;
+  explanation?: PollCreateSchemaExplanation;
   allow_multiple_votes?: boolean;
   max_choices?: PollCreateSchemaMaxChoices;
   requires_aura?: number;
-  expires_at: string;
+  expires_at?: PollCreateSchemaExpiresAt;
   has_correct_answer?: boolean;
   correct_text_answer?: PollCreateSchemaCorrectTextAnswer;
   correct_ranking_order?: PollCreateSchemaCorrectRankingOrder;
