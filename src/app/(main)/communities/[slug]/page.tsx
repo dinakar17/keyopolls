@@ -40,9 +40,14 @@ import { toast } from '@/components/ui/toast';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import { useProfileStore } from '@/stores/useProfileStore';
 
-import CommunityContent from './CommunityContent';
+import ArticlesContent from './ArticlesContent';
+import FlashcardsContent from './FlashcardContent';
+import JobsContent from './JobsContent';
+import LeaderboardContent from './LeaderBoardContent';
+// Import individual content components
+import PollsContent from './PollsContent';
 
-type TabType = 'polls' | 'leaderboard' | 'about' | 'jobs' | 'articles' | 'flashcards';
+type TabType = 'polls' | 'flashcards' | 'articles' | 'leaderboard' | 'jobs' | 'about';
 
 const CommunityPage = () => {
   const { accessToken } = useProfileStore();
@@ -55,45 +60,6 @@ const CommunityPage = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showOptionsDrawer, setShowOptionsDrawer] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('polls');
-
-  // Simple Share Component
-  const SimpleShareButton = ({ communityName }: { communityName: string }) => {
-    const handleShare = async () => {
-      const shareData = {
-        title: `${communityName} Community`,
-        text: `Check out the ${communityName} community!`,
-        url: window.location.href,
-      };
-
-      try {
-        if (navigator.share && navigator.canShare(shareData)) {
-          await navigator.share(shareData);
-        } else {
-          // Fallback to clipboard
-          await navigator.clipboard.writeText(window.location.href);
-          toast.success('Community link copied to clipboard!');
-        }
-      } catch {
-        // Fallback to clipboard if sharing fails
-        try {
-          await navigator.clipboard.writeText(window.location.href);
-          toast.success('Community link copied to clipboard!');
-        } catch {
-          toast.error('Failed to share community link');
-        }
-      }
-    };
-
-    return (
-      <button
-        onClick={handleShare}
-        className="hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
-      >
-        <Share size={18} className="text-text-secondary" />
-        <span className="text-text font-medium">Share Community</span>
-      </button>
-    );
-  };
 
   // Fetch community data
   const {
@@ -120,24 +86,21 @@ const CommunityPage = () => {
       },
     });
 
-  // Handle back button
+  // Handlers
   const handleBackClick = () => {
     router.back();
   };
 
-  // Handle search click
   const handleSearchClick = () => {
     if (community?.name) {
       router.push(`/explore?mode=search&community=${encodeURIComponent(community.name)}`);
     }
   };
 
-  // Handle community name click
   const handleCommunityNameClick = () => {
     setActiveTab('about');
   };
 
-  // Handle join community
   const handleJoinCommunity = () => {
     if (!community?.id) return;
 
@@ -158,13 +121,11 @@ const CommunityPage = () => {
     );
   };
 
-  // Handle leave community from drawer
   const handleLeaveFromDrawer = () => {
     setShowOptionsDrawer(false);
     setShowLeaveModal(true);
   };
 
-  // Handle leave community
   const handleLeaveCommunity = () => {
     if (!community?.id) return;
 
@@ -201,11 +162,35 @@ const CommunityPage = () => {
     router.push('/create-poll');
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: `${community?.name} Community`,
+      text: `Check out the ${community?.name} community!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Community link copied to clipboard!');
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Community link copied to clipboard!');
+      } catch {
+        toast.error('Failed to share community link');
+      }
+    }
+  };
+
+  // Loading state
   if (isLoading) {
     return (
       <div className="bg-background min-h-screen">
         <div className="animate-pulse">
-          {/* Header Loading */}
           <div className="border-border-subtle border-b px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -218,8 +203,6 @@ const CommunityPage = () => {
               </div>
             </div>
           </div>
-
-          {/* Tabs Loading */}
           <div className="border-border-subtle border-b px-4 py-3">
             <div className="flex gap-6">
               <div className="bg-surface-elevated h-4 w-12 rounded"></div>
@@ -232,10 +215,10 @@ const CommunityPage = () => {
     );
   }
 
+  // Error state
   if (error || !community) {
     return (
       <div className="bg-background flex min-h-screen flex-col">
-        {/* Header */}
         <div className="border-border-subtle border-b px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -249,7 +232,6 @@ const CommunityPage = () => {
             </div>
           </div>
         </div>
-
         <div className="flex flex-1 items-center justify-center p-4">
           <div className="text-center">
             <div className="text-error mb-2 text-lg font-medium">Community not found</div>
@@ -262,13 +244,14 @@ const CommunityPage = () => {
     );
   }
 
+  // Community data
   const membership = community.membership_details;
   const permissions = community.user_permissions;
-
   const isModerator = ['creator', 'admin', 'moderator'].includes(membership?.role || '');
   const isMember = membership?.is_active;
   const isCreator = membership?.role === 'creator';
 
+  // Helper functions
   const getCommunityIcon = (type: string) => {
     switch (type) {
       case 'public':
@@ -301,7 +284,7 @@ const CommunityPage = () => {
         return (
           <button
             className="bg-surface border-border text-text hover:bg-surface-elevated flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
-            onClick={() => router.push(`/communities/${community.name}/admin`)}
+            onClick={() => router.push(`/communities/${community.slug}/admin`)}
           >
             <Settings className="h-4 w-4" />
             Manage
@@ -326,36 +309,34 @@ const CommunityPage = () => {
     return null;
   };
 
-  const truncateDescription = (text: string, maxLength: number = 120) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
-
   const getTabIcon = (tab: TabType) => {
     switch (tab) {
       case 'polls':
         return <FileText className="h-4 w-4" />;
-      case 'leaderboard':
-        return <Crown className="h-4 w-4" />;
-      case 'about':
-        return <Users className="h-4 w-4" />;
-      case 'jobs':
-        return <Briefcase className="h-4 w-4" />;
-      case 'articles':
-        return <FileText className="h-4 w-4" />;
       case 'flashcards':
         return <Brain className="h-4 w-4" />;
+      case 'articles':
+        return <FileText className="h-4 w-4" />;
+      case 'leaderboard':
+        return <Crown className="h-4 w-4" />;
+      case 'jobs':
+        return <Briefcase className="h-4 w-4" />;
+      case 'about':
+        return <Users className="h-4 w-4" />;
       default:
         return null;
     }
   };
 
-  // About Tab Content
+  const truncateDescription = (text: string, maxLength: number = 120) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
+  // About content component
   const AboutContent = () => (
     <div className="p-4">
-      {/* Banner with Avatar */}
       <div className="relative mb-6">
-        {/* Banner */}
         <div className="relative h-32 overflow-hidden rounded-lg">
           {community.banner ? (
             <div
@@ -366,8 +347,6 @@ const CommunityPage = () => {
             <div className="from-primary to-secondary absolute inset-0 bg-gradient-to-r" />
           )}
         </div>
-
-        {/* Avatar */}
         <div className="absolute -bottom-8 left-4">
           {community.avatar ? (
             <Image
@@ -385,9 +364,7 @@ const CommunityPage = () => {
         </div>
       </div>
 
-      {/* Community Details */}
       <div className="pt-8">
-        {/* Name and Action Button */}
         <div className="mb-3 flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <h1 className="text-text text-xl leading-tight font-bold">{community.name}</h1>
@@ -395,7 +372,6 @@ const CommunityPage = () => {
           {getActionButton() && <div className="ml-3 flex-shrink-0">{getActionButton()}</div>}
         </div>
 
-        {/* Description */}
         {community.description && (
           <div className="mb-4">
             <p className="text-text-secondary text-sm leading-relaxed">
@@ -424,21 +400,15 @@ const CommunityPage = () => {
           </div>
         )}
 
-        {/* Community Info */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Community Type */}
           <div className="bg-surface-elevated text-text-secondary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
             {getCommunityIcon(community.community_type)}
             <span className="capitalize">{community.community_type}</span>
           </div>
-
-          {/* Member Count */}
           <div className="text-text-muted flex items-center gap-1 text-xs">
             <Users className="h-3 w-3" />
             <span>{community.member_count.toLocaleString()} members</span>
           </div>
-
-          {/* Member Role Badge */}
           {membership && (
             <div className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
               {getRoleIcon(membership.role)}
@@ -450,7 +420,27 @@ const CommunityPage = () => {
     </div>
   );
 
-  // Leave Community Modal
+  // Render tab content
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'polls':
+        return <PollsContent community={community} onCreatePoll={handleCreatePoll} />;
+      case 'flashcards':
+        return <FlashcardsContent />;
+      case 'articles':
+        return <ArticlesContent />;
+      case 'leaderboard':
+        return <LeaderboardContent />;
+      case 'jobs':
+        return <JobsContent />;
+      case 'about':
+        return <AboutContent />;
+      default:
+        return <PollsContent community={community} onCreatePoll={handleCreatePoll} />;
+    }
+  };
+
+  // Leave modal component
   const LeaveModal = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-background w-full max-w-md rounded-lg p-6">
@@ -463,7 +453,6 @@ const CommunityPage = () => {
             <X className="h-5 w-5" />
           </button>
         </div>
-
         <div className="mb-6">
           <p className="text-text-secondary text-sm">
             Are you sure you want to leave <strong>{community.name}</strong>?
@@ -473,7 +462,6 @@ const CommunityPage = () => {
             again.
           </p>
         </div>
-
         <div className="flex gap-3">
           <button
             onClick={() => setShowLeaveModal(false)}
@@ -507,7 +495,7 @@ const CommunityPage = () => {
             </button>
             <button
               onClick={handleCommunityNameClick}
-              className="text-text hover:text-primary font-semibold transition-colors"
+              className="text-text hover:text-primary text-lg font-semibold transition-colors"
             >
               {community.name}
             </button>
@@ -532,7 +520,13 @@ const CommunityPage = () => {
                   <DrawerTitle>Community Options</DrawerTitle>
                 </DrawerHeader>
                 <div className="space-y-2 p-4">
-                  <SimpleShareButton communityName={community.name} />
+                  <button
+                    onClick={handleShare}
+                    className="hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
+                  >
+                    <Share size={18} className="text-text-secondary" />
+                    <span className="text-text font-medium">Share Community</span>
+                  </button>
 
                   {isMember && !isCreator && (
                     <button
@@ -578,17 +572,9 @@ const CommunityPage = () => {
       </div>
 
       {/* Content */}
-      {activeTab === 'about' ? (
-        <AboutContent />
-      ) : (
-        <CommunityContent
-          community={community}
-          activeTab={activeTab}
-          onCreatePoll={handleCreatePoll}
-        />
-      )}
+      {renderTabContent()}
 
-      {/* Floating Create Poll Button (for members) */}
+      {/* Floating Create Poll Button */}
       {isMember && permissions?.can_post && activeTab === 'polls' && (
         <CreateButton path="/create-poll" onClick={handleCreatePoll} />
       )}

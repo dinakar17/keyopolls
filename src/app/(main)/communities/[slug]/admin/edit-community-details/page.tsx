@@ -61,8 +61,6 @@ const EditCommunity = () => {
     }
   }, [community]);
 
-  console.log('Community data:', community);
-
   // Auto-resize textarea function
   const autoResize = (element: HTMLTextAreaElement) => {
     element.style.height = 'auto';
