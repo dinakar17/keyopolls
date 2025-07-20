@@ -1,28 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import Image from 'next/image';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 import {
   ArrowLeft,
+  BarChart3,
   Brain,
   Briefcase,
-  ChevronDown,
-  ChevronUp,
   Crown,
   FileText,
-  Globe,
-  Lock,
   LogOut,
   MoreVertical,
   Search,
-  Settings,
   Share,
-  Shield,
   Users,
   X,
+  Zap,
 } from 'lucide-react';
 
 import { useKeyopollsCommunitiesApiGeneralGetCommunity } from '@/api/communities-general/communities-general';
@@ -40,23 +35,33 @@ import { toast } from '@/components/ui/toast';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import { useProfileStore } from '@/stores/useProfileStore';
 
+import AIAnalysisContent from './AIAnalysisContent';
+import AboutContent from './AboutContent';
 import ArticlesContent from './ArticlesContent';
-import FlashcardsContent from './FlashcardContent';
+import BattlesContent from './BattlesContent';
 import JobsContent from './JobsContent';
 import LeaderboardContent from './LeaderBoardContent';
-// Import individual content components
 import PollsContent from './PollsContent';
+import QuizzesContent from './QuizzesContent';
 
-type TabType = 'polls' | 'flashcards' | 'articles' | 'leaderboard' | 'jobs' | 'about';
+type TabType =
+  | 'polls'
+  | 'quizzes'
+  | 'battles'
+  | 'ai-analysis'
+  | 'articles'
+  | 'leaderboard'
+  | 'jobs'
+  | 'about';
 
 const CommunityPage = () => {
   const { accessToken } = useProfileStore();
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setCommunityDetails } = useCommunityStore();
 
   // UI State
-  const [showFullDescription, setShowFullDescription] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showOptionsDrawer, setShowOptionsDrawer] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('polls');
@@ -86,6 +91,37 @@ const CommunityPage = () => {
       },
     });
 
+  // Sync tab with URL query params
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab') as TabType;
+    const validTabs: TabType[] = [
+      'polls',
+      'quizzes',
+      'battles',
+      'ai-analysis',
+      'articles',
+      'leaderboard',
+      'jobs',
+      'about',
+    ];
+
+    if (tabFromUrl && validTabs.includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    } else if (!tabFromUrl) {
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      newSearchParams.set('tab', 'polls');
+      router.replace(`/communities/${slug}?${newSearchParams.toString()}`, { scroll: false });
+    }
+  }, [searchParams, slug, router]);
+
+  // Update URL when tab changes
+  const handleTabChange = (newTab: TabType) => {
+    setActiveTab(newTab);
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('tab', newTab);
+    router.replace(`/communities/${slug}?${newSearchParams.toString()}`, { scroll: false });
+  };
+
   // Handlers
   const handleBackClick = () => {
     router.back();
@@ -98,27 +134,7 @@ const CommunityPage = () => {
   };
 
   const handleCommunityNameClick = () => {
-    setActiveTab('about');
-  };
-
-  const handleJoinCommunity = () => {
-    if (!community?.id) return;
-
-    toggleMembership(
-      {
-        communityId: community.id,
-        data: { action: 'join' },
-      },
-      {
-        onSuccess: (response) => {
-          toast.success(response.data.message);
-          refetch();
-        },
-        onError: (error) => {
-          toast.error(error.response?.data?.message || 'Failed to join community');
-        },
-      }
-    );
+    handleTabChange('about');
   };
 
   const handleLeaveFromDrawer = () => {
@@ -247,74 +263,19 @@ const CommunityPage = () => {
   // Community data
   const membership = community.membership_details;
   const permissions = community.user_permissions;
-  const isModerator = ['creator', 'admin', 'moderator'].includes(membership?.role || '');
   const isMember = membership?.is_active;
   const isCreator = membership?.role === 'creator';
-
-  // Helper functions
-  const getCommunityIcon = (type: string) => {
-    switch (type) {
-      case 'public':
-        return <Globe className="h-3 w-3" />;
-      case 'private':
-        return <Lock className="h-3 w-3" />;
-      case 'restricted':
-        return <Shield className="h-3 w-3" />;
-      default:
-        return <Globe className="h-3 w-3" />;
-    }
-  };
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'creator':
-        return <Crown className="text-warning h-3 w-3" />;
-      case 'admin':
-        return <Shield className="text-accent h-3 w-3" />;
-      case 'moderator':
-        return <Shield className="text-primary h-3 w-3" />;
-      default:
-        return <Users className="text-text-muted h-3 w-3" />;
-    }
-  };
-
-  const getActionButton = () => {
-    if (isMember) {
-      if (isModerator) {
-        return (
-          <button
-            className="bg-surface border-border text-text hover:bg-surface-elevated flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
-            onClick={() => router.push(`/communities/${community.slug}/admin`)}
-          >
-            <Settings className="h-4 w-4" />
-            Manage
-          </button>
-        );
-      }
-      return null;
-    }
-
-    if (permissions?.can_join) {
-      return (
-        <button
-          className="bg-primary text-background rounded-md px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
-          onClick={handleJoinCommunity}
-          disabled={isToggling}
-        >
-          {isToggling ? 'Joining...' : 'Join'}
-        </button>
-      );
-    }
-
-    return null;
-  };
 
   const getTabIcon = (tab: TabType) => {
     switch (tab) {
       case 'polls':
         return <FileText className="h-4 w-4" />;
-      case 'flashcards':
+      case 'quizzes':
         return <Brain className="h-4 w-4" />;
+      case 'battles':
+        return <Zap className="h-4 w-4" />;
+      case 'ai-analysis':
+        return <BarChart3 className="h-4 w-4" />;
       case 'articles':
         return <FileText className="h-4 w-4" />;
       case 'leaderboard':
@@ -328,113 +289,25 @@ const CommunityPage = () => {
     }
   };
 
-  const truncateDescription = (text: string, maxLength: number = 120) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
-
-  // About content component
-  const AboutContent = () => (
-    <div className="p-4">
-      <div className="relative mb-6">
-        <div className="relative h-32 overflow-hidden rounded-lg">
-          {community.banner ? (
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${community.banner})` }}
-            />
-          ) : (
-            <div className="from-primary to-secondary absolute inset-0 bg-gradient-to-r" />
-          )}
-        </div>
-        <div className="absolute -bottom-8 left-4">
-          {community.avatar ? (
-            <Image
-              src={community.avatar}
-              alt={community.name}
-              className="border-background h-16 w-16 rounded-full border-4 object-cover"
-              width={64}
-              height={64}
-            />
-          ) : (
-            <div className="border-background bg-surface-elevated flex h-16 w-16 items-center justify-center rounded-full border-4">
-              <Users className="text-text-muted h-6 w-6" />
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="pt-8">
-        <div className="mb-3 flex items-start justify-between">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-text text-xl leading-tight font-bold">{community.name}</h1>
-          </div>
-          {getActionButton() && <div className="ml-3 flex-shrink-0">{getActionButton()}</div>}
-        </div>
-
-        {community.description && (
-          <div className="mb-4">
-            <p className="text-text-secondary text-sm leading-relaxed">
-              {showFullDescription
-                ? community.description
-                : truncateDescription(community.description)}
-            </p>
-            {community.description.length > 120 && (
-              <button
-                onClick={() => setShowFullDescription(!showFullDescription)}
-                className="text-primary mt-1 flex items-center gap-1 text-xs transition-opacity hover:opacity-80"
-              >
-                {showFullDescription ? (
-                  <>
-                    <ChevronUp className="h-3 w-3" />
-                    Show less
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-3 w-3" />
-                    Read more
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="bg-surface-elevated text-text-secondary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
-            {getCommunityIcon(community.community_type)}
-            <span className="capitalize">{community.community_type}</span>
-          </div>
-          <div className="text-text-muted flex items-center gap-1 text-xs">
-            <Users className="h-3 w-3" />
-            <span>{community.member_count.toLocaleString()} members</span>
-          </div>
-          {membership && (
-            <div className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
-              {getRoleIcon(membership.role)}
-              <span className="capitalize">{membership.role}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
   // Render tab content
   const renderTabContent = () => {
     switch (activeTab) {
       case 'polls':
         return <PollsContent community={community} onCreatePoll={handleCreatePoll} />;
-      case 'flashcards':
-        return <FlashcardsContent />;
+      case 'quizzes':
+        return <QuizzesContent />;
+      case 'battles':
+        return <BattlesContent />;
+      case 'ai-analysis':
+        return <AIAnalysisContent />;
       case 'articles':
-        return <ArticlesContent />;
+        return <ArticlesContent community={community} />;
       case 'leaderboard':
         return <LeaderboardContent />;
       case 'jobs':
         return <JobsContent />;
       case 'about':
-        return <AboutContent />;
+        return <AboutContent community={community} onCommunityUpdate={refetch} />;
       default:
         return <PollsContent community={community} onCreatePoll={handleCreatePoll} />;
     }
@@ -546,10 +419,12 @@ const CommunityPage = () => {
 
       {/* Tabs */}
       <div className="border-border-subtle border-b">
-        <div className="flex overflow-x-auto px-4">
+        <div className="scrollbar-hide flex overflow-x-auto px-4">
           {[
             { id: 'polls', label: 'Polls' },
-            { id: 'flashcards', label: 'Flashcards' },
+            { id: 'quizzes', label: 'Quizzes' },
+            { id: 'battles', label: 'Battles' },
+            { id: 'ai-analysis', label: 'AI Analysis' },
             { id: 'articles', label: 'Articles' },
             { id: 'leaderboard', label: 'Leaderboard' },
             { id: 'jobs', label: 'Jobs' },
@@ -557,7 +432,7 @@ const CommunityPage = () => {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabType)}
+              onClick={() => handleTabChange(tab.id as TabType)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.id
                   ? 'text-primary border-primary border-b-2'

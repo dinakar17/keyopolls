@@ -267,7 +267,7 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
     <>
       {/* Filters Section */}
       <div className="border-border-subtle border-b px-4 py-3">
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
           <div className="flex-shrink-0">
             <FilterDrawer
               options={sortOptions}

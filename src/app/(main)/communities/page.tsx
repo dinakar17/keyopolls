@@ -11,6 +11,7 @@ import { useKeyopollsCommunitiesApiGeneralListCommunities } from '@/api/communit
 import { useKeyopollsCommunitiesApiOperationsToggleCommunityMembership } from '@/api/communities/communities';
 import { CommunityDetails } from '@/api/schemas';
 import BottomNavigation from '@/components/common/BottomNavigation';
+import ErrorDisplay from '@/components/common/ErrorDisplay';
 import { toast } from '@/components/ui/toast';
 import { useProfileStore } from '@/stores/useProfileStore';
 import { formatNumber } from '@/utils';
@@ -75,6 +76,7 @@ const Communities = () => {
   const {
     data: allCommunitiesData,
     isLoading: allCommunitiesLoading,
+    error: allCommunitiesError,
     refetch,
   } = useKeyopollsCommunitiesApiGeneralListCommunities(
     {
@@ -95,25 +97,28 @@ const Communities = () => {
   );
 
   // Fetch search results
-  const { data: searchData, isLoading: searchLoading } =
-    useKeyopollsCommunitiesApiGeneralListCommunities(
-      {
-        search: searchQuery,
-        page: searchPage,
-        page_size: 20,
-        sort_by: 'member_count',
-        order: 'desc',
+  const {
+    data: searchData,
+    isLoading: searchLoading,
+    error: searchError,
+  } = useKeyopollsCommunitiesApiGeneralListCommunities(
+    {
+      search: searchQuery,
+      page: searchPage,
+      page_size: 20,
+      sort_by: 'member_count',
+      order: 'desc',
+    },
+    {
+      request: {
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       },
-      {
-        request: {
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-        },
-        query: {
-          enabled: isSearchMode,
-          refetchOnWindowFocus: false,
-        },
-      }
-    );
+      query: {
+        enabled: isSearchMode,
+        refetchOnWindowFocus: false,
+      },
+    }
+  );
 
   // Handle my communities data
   useEffect(() => {
@@ -454,7 +459,16 @@ const Communities = () => {
                 <h2 className="text-text font-medium">Search Results for "{searchQuery}"</h2>
               </div>
 
-              {searchResults.length > 0 ? (
+              {searchError ? (
+                <ErrorDisplay
+                  error={searchError}
+                  onRetry={() => {
+                    setSearchPage(1);
+                    setSearchResults([]);
+                    // The query will automatically refetch when searchQuery changes
+                  }}
+                />
+              ) : searchResults.length > 0 ? (
                 <div>
                   {searchResults.map((community, index) => (
                     <CommunityItem
@@ -549,7 +563,16 @@ const Communities = () => {
                   </h2>
                 </div>
 
-                {allCommunities.length > 0 ? (
+                {allCommunitiesError ? (
+                  <ErrorDisplay
+                    error={allCommunitiesError}
+                    onRetry={() => {
+                      setAllCommunitiesPage(1);
+                      setAllCommunities([]);
+                      refetch();
+                    }}
+                  />
+                ) : allCommunities.length > 0 ? (
                   <div>
                     {allCommunities
                       .filter((community) => !community.membership_details?.is_active)

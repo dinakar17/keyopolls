@@ -21,13 +21,12 @@ import {
   Home,
   Laptop,
   Menu,
-  MessageCircle,
   Microscope,
   Music,
   Palette,
   Plane,
   Settings,
-  Shield,
+  Target,
   TreePine,
   Trophy,
   Users,
@@ -272,10 +271,10 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
                 onClick={handleOpenInfoModal}
               >
                 <div className="flex items-start space-x-2">
-                  <Image src="/logo.svg" alt="Keyo Logo" width={24} height={24} priority />
-                  <span className="text-primary text-lg font-bold">Keyo</span>
+                  <Image src="/logo.svg" alt="Pulse Logo" width={24} height={24} priority />
+                  <span className="text-primary text-lg font-bold">Pulse</span>
                 </div>
-                <p className="text-text-muted text-xs font-medium">Where opinions matter</p>
+                <p className="text-text-muted text-xs font-medium">Learn, build, grow</p>
               </div>
 
               {/* Right side - Empty space for balance */}
@@ -369,13 +368,13 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
         )}
       </header>
 
-      {/* Info Modal */}
+      {/* Info Modal - Simplified */}
       {isInfoModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-background border-border w-full max-w-md rounded-lg border shadow-lg">
+          <div className="bg-background border-border w-full max-w-sm rounded-lg border shadow-lg">
             {/* Modal Header */}
             <div className="border-border-subtle flex items-center justify-between border-b p-4">
-              <h2 className="text-text text-lg font-semibold">What Makes Keyo Special</h2>
+              <h2 className="text-text text-lg font-semibold">Welcome to Pulse</h2>
               <button
                 onClick={handleCloseInfoModal}
                 className="text-text-muted hover:text-text rounded-full p-1 transition-colors"
@@ -384,61 +383,38 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
               </button>
             </div>
 
-            {/* Modal Content */}
-            <div className="space-y-4 p-4">
-              {/* Point 1: Opinion-First & Micro Learning Platform */}
-              <div className="flex items-start space-x-3">
-                <div className="bg-primary/10 flex-shrink-0 rounded-full p-2">
-                  <Vote size={16} className="text-primary" />
+            {/* Modal Content - Clear but Concise */}
+            <div className="space-y-3 p-4">
+              {/* What is Pulse */}
+              <div className="mb-4 text-center">
+                <div className="bg-primary/10 mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full">
+                  <Users size={16} className="text-primary" />
                 </div>
-                <div>
-                  <h3 className="text-text text-sm font-medium">Opinion-First Micro Learning</h3>
-                  <p className="text-text-secondary text-xs">
-                    Share your thoughts on diverse topics while learning something new every day.
-                    Every opinion counts and teaches.
-                  </p>
-                </div>
+                <h3 className="text-text text-sm font-medium">Micro-learning platform</h3>
+                <p className="text-text-secondary text-xs">
+                  Learn from professionals in bite-sized lessons
+                </p>
               </div>
 
-              {/* Point 2: Aura System & Daily Streaks */}
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 rounded-full bg-yellow-500/10 p-2">
-                  <Zap size={16} className="text-yellow-600" />
+              {/* How it works */}
+              <div className="space-y-2">
+                <div className="flex items-center space-x-3">
+                  <Zap size={14} className="flex-shrink-0 text-yellow-600" />
+                  <span className="text-text-secondary text-xs">
+                    Answer polls & review flashcards daily
+                  </span>
                 </div>
-                <div>
-                  <h3 className="text-text text-sm font-medium">Build Daily Learning Streaks</h3>
-                  <p className="text-text-secondary text-xs">
-                    Earn Aura points and maintain daily streaks by participating in polls and
-                    discussions. Turn curiosity into a habit.
-                  </p>
+                <div className="flex items-center space-x-3">
+                  <Target size={14} className="text-success flex-shrink-0" />
+                  <span className="text-text-secondary text-xs">
+                    Build Aura points & learning streaks
+                  </span>
                 </div>
-              </div>
-
-              {/* Point 3: Zero Promotional Content */}
-              <div className="flex items-start space-x-3">
-                <div className="bg-success/10 flex-shrink-0 rounded-full p-2">
-                  <Shield size={16} className="text-success" />
-                </div>
-                <div>
-                  <h3 className="text-text text-sm font-medium">Zero Promotional Polls</h3>
-                  <p className="text-text-secondary text-xs">
-                    Our AI moderation ensures absolutely no ads or promotional content. Only genuine
-                    opinions and meaningful discussions.
-                  </p>
-                </div>
-              </div>
-
-              {/* Point 4: Quality Over Quantity */}
-              <div className="flex items-start space-x-3">
-                <div className="bg-info/10 flex-shrink-0 rounded-full p-2">
-                  <MessageCircle size={16} className="text-info" />
-                </div>
-                <div>
-                  <h3 className="text-text text-sm font-medium">Quality-First Discussions</h3>
-                  <p className="text-text-secondary text-xs">
-                    Only 3 polls per community per day to prevent spam and engagement farming. Every
-                    poll matters.
-                  </p>
+                <div className="flex items-center space-x-3">
+                  <Briefcase size={14} className="text-info flex-shrink-0" />
+                  <span className="text-text-secondary text-xs">
+                    Apply for jobs in your interest areas
+                  </span>
                 </div>
               </div>
             </div>
@@ -449,7 +425,7 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
                 onClick={handleCloseInfoModal}
                 className="bg-primary text-background w-full rounded-lg py-2 text-sm font-medium transition-opacity hover:opacity-90"
               >
-                Start Polling!
+                Get Started
               </button>
             </div>
           </div>

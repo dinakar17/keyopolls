@@ -24,12 +24,18 @@ import type {
 import { customInstance } from '.././custom-instance';
 import type { BodyType, ErrorType } from '.././custom-instance';
 import type {
+  ArticleDetails,
+  ArticlesList,
+  ChangeRoleRequestSchema,
   CompleteGoogleRegistrationResponseSchema,
   CompleteGoogleRegistrationSchema,
   CompleteRegistrationResponseSchema,
   CompleteRegistrationSchema,
   GoogleSignInResponseSchema,
   GoogleSignInSchema,
+  KeyopollsArticlesApiCreateArticleBody,
+  KeyopollsArticlesApiListArticlesParams,
+  KeyopollsArticlesApiUpdateArticleBody,
   LoginResponseSchema,
   LoginSchema,
   Message,
@@ -737,3 +743,674 @@ export function useKeyopollsProfileApiAuthCheckUsernameAvailability<
 
   return query;
 }
+
+/**
+ * Create a new article.
+Requires authentication.
+ * @summary Create Article
+ */
+export const keyopollsArticlesApiCreateArticle = (
+  keyopollsArticlesApiCreateArticleBody: BodyType<KeyopollsArticlesApiCreateArticleBody>,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  const formData = new FormData();
+  if (keyopollsArticlesApiCreateArticleBody.main_image !== undefined) {
+    formData.append(`main_image`, keyopollsArticlesApiCreateArticleBody.main_image);
+  }
+  formData.append(`data`, JSON.stringify(keyopollsArticlesApiCreateArticleBody.data));
+
+  return customInstance<ArticleDetails>(
+    {
+      url: `/api/articles/`,
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/form-data' },
+      data: formData,
+      signal,
+    },
+    options
+  );
+};
+
+export const getKeyopollsArticlesApiCreateArticleMutationOptions = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keyopollsArticlesApiCreateArticle>>,
+    TError,
+    { data: BodyType<KeyopollsArticlesApiCreateArticleBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keyopollsArticlesApiCreateArticle>>,
+  TError,
+  { data: BodyType<KeyopollsArticlesApiCreateArticleBody> },
+  TContext
+> => {
+  const mutationKey = ['keyopollsArticlesApiCreateArticle'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keyopollsArticlesApiCreateArticle>>,
+    { data: BodyType<KeyopollsArticlesApiCreateArticleBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return keyopollsArticlesApiCreateArticle(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeyopollsArticlesApiCreateArticleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsArticlesApiCreateArticle>>
+>;
+export type KeyopollsArticlesApiCreateArticleMutationBody =
+  BodyType<KeyopollsArticlesApiCreateArticleBody>;
+export type KeyopollsArticlesApiCreateArticleMutationError = ErrorType<Message>;
+
+/**
+ * @summary Create Article
+ */
+export const useKeyopollsArticlesApiCreateArticle = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keyopollsArticlesApiCreateArticle>>,
+      TError,
+      { data: BodyType<KeyopollsArticlesApiCreateArticleBody> },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof keyopollsArticlesApiCreateArticle>>,
+  TError,
+  { data: BodyType<KeyopollsArticlesApiCreateArticleBody> },
+  TContext
+> => {
+  const mutationOptions = getKeyopollsArticlesApiCreateArticleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+/**
+ * Get a paginated list of articles with comprehensive filtering options.
+
+Features:
+- Pagination with configurable page size
+- Filter by community, author, published status
+- Search across title, subtitle, and content
+- My articles filter for authenticated users
+- Multiple sorting options
+- Authentication-aware visibility (published vs drafts)
+
+Query Parameters:
+- page: Page number (default: 1)
+- per_page: Items per page (default: 20, max: 100)
+- community_id: Filter by community ID
+- community_slug: Filter by community slug
+- author_username: Filter by author username
+- is_published: Filter by published status (true/false/null for all)
+- my_articles: Show only current user's articles (requires auth)
+- search: Search term for title, subtitle, or content
+- order_by: Sort field (created_at, title with - for desc)
+ * @summary List Articles
+ */
+export const keyopollsArticlesApiListArticles = (
+  params?: KeyopollsArticlesApiListArticlesParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  return customInstance<ArticlesList>(
+    { url: `/api/articles/`, method: 'GET', params, signal },
+    options
+  );
+};
+
+export const getKeyopollsArticlesApiListArticlesQueryKey = (
+  params?: KeyopollsArticlesApiListArticlesParams
+) => {
+  return [`/api/articles/`, ...(params ? [params] : [])] as const;
+};
+
+export const getKeyopollsArticlesApiListArticlesQueryOptions = <
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsArticlesApiListArticlesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getKeyopollsArticlesApiListArticlesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>> = ({
+    signal,
+  }) => keyopollsArticlesApiListArticles(params, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type KeyopollsArticlesApiListArticlesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>
+>;
+export type KeyopollsArticlesApiListArticlesQueryError = ErrorType<Message>;
+
+export function useKeyopollsArticlesApiListArticles<
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>,
+  TError = ErrorType<Message>,
+>(
+  params: undefined | KeyopollsArticlesApiListArticlesParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsArticlesApiListArticles<
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsArticlesApiListArticlesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsArticlesApiListArticles<
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsArticlesApiListArticlesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Articles
+ */
+
+export function useKeyopollsArticlesApiListArticles<
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsArticlesApiListArticlesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiListArticles>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getKeyopollsArticlesApiListArticlesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Update an existing article.
+Only the author can update their article.
+ * @summary Update Article
+ */
+export const keyopollsArticlesApiUpdateArticle = (
+  articleId: number,
+  keyopollsArticlesApiUpdateArticleBody: BodyType<KeyopollsArticlesApiUpdateArticleBody>,
+  options?: SecondParameter<typeof customInstance>
+) => {
+  const formData = new FormData();
+  if (keyopollsArticlesApiUpdateArticleBody.main_image !== undefined) {
+    formData.append(`main_image`, keyopollsArticlesApiUpdateArticleBody.main_image);
+  }
+  formData.append(`data`, JSON.stringify(keyopollsArticlesApiUpdateArticleBody.data));
+
+  return customInstance<ArticleDetails>(
+    {
+      url: `/api/articles/${articleId}`,
+      method: 'PUT',
+      headers: { 'Content-Type': 'multipart/form-data' },
+      data: formData,
+    },
+    options
+  );
+};
+
+export const getKeyopollsArticlesApiUpdateArticleMutationOptions = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keyopollsArticlesApiUpdateArticle>>,
+    TError,
+    { articleId: number; data: BodyType<KeyopollsArticlesApiUpdateArticleBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keyopollsArticlesApiUpdateArticle>>,
+  TError,
+  { articleId: number; data: BodyType<KeyopollsArticlesApiUpdateArticleBody> },
+  TContext
+> => {
+  const mutationKey = ['keyopollsArticlesApiUpdateArticle'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keyopollsArticlesApiUpdateArticle>>,
+    { articleId: number; data: BodyType<KeyopollsArticlesApiUpdateArticleBody> }
+  > = (props) => {
+    const { articleId, data } = props ?? {};
+
+    return keyopollsArticlesApiUpdateArticle(articleId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeyopollsArticlesApiUpdateArticleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsArticlesApiUpdateArticle>>
+>;
+export type KeyopollsArticlesApiUpdateArticleMutationBody =
+  BodyType<KeyopollsArticlesApiUpdateArticleBody>;
+export type KeyopollsArticlesApiUpdateArticleMutationError = ErrorType<Message>;
+
+/**
+ * @summary Update Article
+ */
+export const useKeyopollsArticlesApiUpdateArticle = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keyopollsArticlesApiUpdateArticle>>,
+      TError,
+      { articleId: number; data: BodyType<KeyopollsArticlesApiUpdateArticleBody> },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof keyopollsArticlesApiUpdateArticle>>,
+  TError,
+  { articleId: number; data: BodyType<KeyopollsArticlesApiUpdateArticleBody> },
+  TContext
+> => {
+  const mutationOptions = getKeyopollsArticlesApiUpdateArticleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+/**
+ * Delete an article.
+Only the author can delete their article.
+ * @summary Delete Article
+ */
+export const keyopollsArticlesApiDeleteArticle = (
+  articleId: number,
+  options?: SecondParameter<typeof customInstance>
+) => {
+  return customInstance<Message>({ url: `/api/articles/${articleId}`, method: 'DELETE' }, options);
+};
+
+export const getKeyopollsArticlesApiDeleteArticleMutationOptions = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keyopollsArticlesApiDeleteArticle>>,
+    TError,
+    { articleId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keyopollsArticlesApiDeleteArticle>>,
+  TError,
+  { articleId: number },
+  TContext
+> => {
+  const mutationKey = ['keyopollsArticlesApiDeleteArticle'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keyopollsArticlesApiDeleteArticle>>,
+    { articleId: number }
+  > = (props) => {
+    const { articleId } = props ?? {};
+
+    return keyopollsArticlesApiDeleteArticle(articleId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeyopollsArticlesApiDeleteArticleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsArticlesApiDeleteArticle>>
+>;
+
+export type KeyopollsArticlesApiDeleteArticleMutationError = ErrorType<Message>;
+
+/**
+ * @summary Delete Article
+ */
+export const useKeyopollsArticlesApiDeleteArticle = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keyopollsArticlesApiDeleteArticle>>,
+      TError,
+      { articleId: number },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof keyopollsArticlesApiDeleteArticle>>,
+  TError,
+  { articleId: number },
+  TContext
+> => {
+  const mutationOptions = getKeyopollsArticlesApiDeleteArticleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+/**
+ * Get a specific article by ID.
+Authentication is optional - provides additional context if authenticated.
+ * @summary Get Article
+ */
+export const keyopollsArticlesApiGetArticle = (
+  articleId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  return customInstance<ArticleDetails>(
+    { url: `/api/articles/${articleId}`, method: 'GET', signal },
+    options
+  );
+};
+
+export const getKeyopollsArticlesApiGetArticleQueryKey = (articleId: number) => {
+  return [`/api/articles/${articleId}`] as const;
+};
+
+export const getKeyopollsArticlesApiGetArticleQueryOptions = <
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>,
+  TError = ErrorType<Message>,
+>(
+  articleId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getKeyopollsArticlesApiGetArticleQueryKey(articleId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>> = ({
+    signal,
+  }) => keyopollsArticlesApiGetArticle(articleId, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!articleId, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type KeyopollsArticlesApiGetArticleQueryResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>
+>;
+export type KeyopollsArticlesApiGetArticleQueryError = ErrorType<Message>;
+
+export function useKeyopollsArticlesApiGetArticle<
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>,
+  TError = ErrorType<Message>,
+>(
+  articleId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsArticlesApiGetArticle<
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>,
+  TError = ErrorType<Message>,
+>(
+  articleId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsArticlesApiGetArticle<
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>,
+  TError = ErrorType<Message>,
+>(
+  articleId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Article
+ */
+
+export function useKeyopollsArticlesApiGetArticle<
+  TData = Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>,
+  TError = ErrorType<Message>,
+>(
+  articleId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof keyopollsArticlesApiGetArticle>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getKeyopollsArticlesApiGetArticleQueryOptions(articleId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Change the role of a community member.
+Only the community creator can change member roles.
+
+Available roles:
+- member: Regular community member
+- moderator: Can moderate content and manage members
+- recruiter: Can invite new members
+- creator: Cannot be assigned (only one creator per community)
+
+Restrictions:
+- Only community creator can change roles
+- Cannot change creator role
+- Cannot assign creator role to others
+- Cannot change your own role
+- Target user must be an active member of the community
+ * @summary Change Member Role
+ */
+export const keyopollsCommunitiesApiAdminChangeMemberRole = (
+  communityId: number,
+  changeRoleRequestSchema: BodyType<ChangeRoleRequestSchema>,
+  options?: SecondParameter<typeof customInstance>
+) => {
+  return customInstance<Message>(
+    {
+      url: `/api/communities/admin/communities/${communityId}/members/role`,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      data: changeRoleRequestSchema,
+    },
+    options
+  );
+};
+
+export const getKeyopollsCommunitiesApiAdminChangeMemberRoleMutationOptions = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keyopollsCommunitiesApiAdminChangeMemberRole>>,
+    TError,
+    { communityId: number; data: BodyType<ChangeRoleRequestSchema> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keyopollsCommunitiesApiAdminChangeMemberRole>>,
+  TError,
+  { communityId: number; data: BodyType<ChangeRoleRequestSchema> },
+  TContext
+> => {
+  const mutationKey = ['keyopollsCommunitiesApiAdminChangeMemberRole'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keyopollsCommunitiesApiAdminChangeMemberRole>>,
+    { communityId: number; data: BodyType<ChangeRoleRequestSchema> }
+  > = (props) => {
+    const { communityId, data } = props ?? {};
+
+    return keyopollsCommunitiesApiAdminChangeMemberRole(communityId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeyopollsCommunitiesApiAdminChangeMemberRoleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsCommunitiesApiAdminChangeMemberRole>>
+>;
+export type KeyopollsCommunitiesApiAdminChangeMemberRoleMutationBody =
+  BodyType<ChangeRoleRequestSchema>;
+export type KeyopollsCommunitiesApiAdminChangeMemberRoleMutationError = ErrorType<Message>;
+
+/**
+ * @summary Change Member Role
+ */
+export const useKeyopollsCommunitiesApiAdminChangeMemberRole = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keyopollsCommunitiesApiAdminChangeMemberRole>>,
+      TError,
+      { communityId: number; data: BodyType<ChangeRoleRequestSchema> },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof keyopollsCommunitiesApiAdminChangeMemberRole>>,
+  TError,
+  { communityId: number; data: BodyType<ChangeRoleRequestSchema> },
+  TContext
+> => {
+  const mutationOptions = getKeyopollsCommunitiesApiAdminChangeMemberRoleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};

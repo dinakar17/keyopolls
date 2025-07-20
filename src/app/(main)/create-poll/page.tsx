@@ -85,7 +85,6 @@ export default function CreatePoll() {
       requires_aura: savedData.requires_aura || 0,
       has_correct_answer: savedData.has_correct_answer || false,
       correct_text_answer: savedData.correct_text_answer || '',
-      correct_ranking_order: savedData.correct_ranking_order || [],
       options: savedData.options || [
         { text: '', order: 0, is_correct: false },
         { text: '', order: 1, is_correct: false },
@@ -131,7 +130,6 @@ export default function CreatePoll() {
   useEffect(() => {
     form.setValue('has_correct_answer', false);
     form.setValue('correct_text_answer', '');
-    form.setValue('correct_ranking_order', []);
     // Reset is_correct for all options
     watchedOptions.forEach((_, index) => {
       form.setValue(`options.${index}.is_correct`, false);
@@ -147,18 +145,18 @@ export default function CreatePoll() {
       setOptionImages((prev) => {
         const textInputImage = prev[0];
         if (textInputImage && textInputImage.preview) {
-          return { ...prev, 0: textInputImage };
+          return { 0: textInputImage } as { [key: number]: { file: File; preview: string } };
         }
-        return {};
+        return {} as { [key: number]: { file: File; preview: string } };
       });
     } else if (watchedOptions.length === 0) {
-      // Add default options for choice-based polls and clear text input image
+      // Add default options for choice-based polls
       form.setValue('options', [
         { text: '', order: 0, is_correct: false },
         { text: '', order: 1, is_correct: false },
       ]);
-      // Clear text input image when switching to choice-based polls
-      setOptionImages({});
+      // For single/multiple choice, we can keep standalone images (index -1) or option images
+      // No need to clear images when switching from text input to choice-based
     }
   }, [watchedPollType, form, watchedOptions.length]);
 
@@ -195,7 +193,7 @@ export default function CreatePoll() {
   };
 
   // Handle poll type change
-  const handlePollTypeChange = (pollType: 'single' | 'multiple' | 'ranking' | 'text_input') => {
+  const handlePollTypeChange = (pollType: 'single' | 'multiple' | 'text_input') => {
     form.setValue('poll_type', pollType);
     // Clear any existing error when changing poll type
     setErrorMessage(null);
@@ -216,7 +214,6 @@ export default function CreatePoll() {
     if (!enabled) {
       // Clear all correct answer data
       form.setValue('correct_text_answer', '');
-      form.setValue('correct_ranking_order', []);
       watchedOptions.forEach((_, index) => {
         form.setValue(`options.${index}.is_correct`, false);
       });
@@ -246,6 +243,12 @@ export default function CreatePoll() {
     }
 
     // For choice-based polls, validate that all options with text have images
+    // OR there's a standalone question image (index -1)
+    const hasStandaloneImage = optionImages[-1];
+    if (hasStandaloneImage) {
+      return true; // Standalone image is always valid
+    }
+
     const validOptions = watchedOptions.filter((option) => option.text.trim());
     for (let i = 0; i < validOptions.length; i++) {
       if (!optionImages[i]) {
@@ -269,9 +272,6 @@ export default function CreatePoll() {
       return watchedOptions.some((option) => option.is_correct);
     } else if (watchedPollType === 'multiple') {
       return watchedOptions.some((option) => option.is_correct);
-    } else if (watchedPollType === 'ranking') {
-      // For ranking, we'll set the correct order based on the current option order
-      return true;
     }
     return true;
   };
@@ -313,25 +313,25 @@ export default function CreatePoll() {
 
         // Validate images if any are present
         if (!validateImages()) {
-          if (watchedPollType === 'text_input') {
+          const hasStandaloneImage = optionImages[-1];
+          if (hasStandaloneImage) {
+            // If there's a standalone image, it's always valid
+            // This case shouldn't happen with current validation logic
+          } else if (watchedPollType === 'text_input') {
             setErrorMessage('Please add or remove the question image.');
           } else {
-            setErrorMessage('Please add images to all options or remove all images.');
+            setErrorMessage(
+              'Please add images to all options, add a standalone question image, or remove all images.'
+            );
           }
           return;
         }
       }
 
-      // Set correct ranking order for ranking polls
-      const finalData = { ...data };
-      if (data.has_correct_answer && data.poll_type === 'ranking') {
-        finalData.correct_ranking_order = data.options.map((_, index) => index);
-      }
-
       createPoll(
         {
           data: {
-            data: finalData,
+            data: data,
             option_images: hasImages ? Object.values(optionImages).map((img) => img.file) : [],
           },
         },
@@ -446,7 +446,7 @@ export default function CreatePoll() {
       {/* Bottom Poll Type Selector */}
       <div className="border-border bg-background fixed right-0 bottom-0 left-0 border-t p-2">
         <div className="mx-auto max-w-2xl">
-          <div className="flex space-x-1">
+          <div className="flex space-x-2">
             {[
               {
                 value: 'single' as const,
@@ -463,13 +463,6 @@ export default function CreatePoll() {
                 description: 'Multiple options',
               },
               {
-                value: 'ranking' as const,
-                label: 'Ranking',
-                shortLabel: 'Ranking',
-                icon: '↕',
-                description: 'Rank by preference',
-              },
-              {
                 value: 'text_input' as const,
                 label: 'Text Input',
                 shortLabel: 'Text',
@@ -483,25 +476,19 @@ export default function CreatePoll() {
                   key={type.value}
                   type="button"
                   onClick={() => handlePollTypeChange(type.value)}
-                  className={`flex items-center rounded-lg border transition-all duration-200 ${
+                  className={`flex flex-1 items-center justify-center rounded-lg border p-3 transition-all duration-200 ${
                     isSelected
                       ? 'border-primary/20 bg-primary/10 text-primary'
                       : 'border-border bg-surface text-text-secondary hover:bg-surface-elevated'
                   }`}
-                  style={{
-                    width: isSelected ? '55%' : '15%',
-                    padding: '6px 8px',
-                  }}
                 >
-                  <span className="mr-1.5 flex-shrink-0 text-sm">{type.icon}</span>
-                  <div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden">
-                    <span className={`w-full text-xs font-medium ${isSelected ? '' : 'truncate'}`}>
+                  <span className="mr-2 text-sm">{type.icon}</span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs font-medium">
                       {isSelected ? type.label : type.shortLabel}
                     </span>
                     {isSelected && (
-                      <span className="text-primary w-full truncate text-xs leading-tight">
-                        {type.description}
-                      </span>
+                      <span className="text-primary text-xs leading-tight">{type.description}</span>
                     )}
                   </div>
                 </button>

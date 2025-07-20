@@ -25,8 +25,10 @@ import { customInstance } from '.././custom-instance';
 import type { BodyType, ErrorType } from '.././custom-instance';
 import type {
   KeyopollsProfileApiGeneralEditProfileInfoBody,
+  KeyopollsProfileApiGeneralGetUsersListParams,
   Message,
   ProfileDetailsSchema,
+  UsersListResponseSchema,
 } from '.././schemas';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -287,3 +289,174 @@ export const useKeyopollsProfileApiGeneralEditProfileInfo = <
 
   return useMutation(mutationOptions, queryClient);
 };
+/**
+ * Get a paginated list of users with optional filtering and searching.
+
+Features:
+- Search by username, display_name, or email
+- Filter by community membership and role
+- Pagination with configurable page size
+- Multiple sorting options
+- Returns community-specific data when filtering by community
+
+Query Parameters:
+- search: Search term for username, display_name, or email
+- community_id: Filter users by community membership
+- role: Filter by role (only works with community_id)
+- page: Page number (default: 1)
+- per_page: Items per page (default: 20, max: 100)
+- order_by: Sort field (created_at, username, total_aura with - for desc)
+ * @summary Get Users List
+ */
+export const keyopollsProfileApiGeneralGetUsersList = (
+  params?: KeyopollsProfileApiGeneralGetUsersListParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  return customInstance<UsersListResponseSchema>(
+    { url: `/api/user/general/users`, method: 'GET', params, signal },
+    options
+  );
+};
+
+export const getKeyopollsProfileApiGeneralGetUsersListQueryKey = (
+  params?: KeyopollsProfileApiGeneralGetUsersListParams
+) => {
+  return [`/api/user/general/users`, ...(params ? [params] : [])] as const;
+};
+
+export const getKeyopollsProfileApiGeneralGetUsersListQueryOptions = <
+  TData = Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsProfileApiGeneralGetUsersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getKeyopollsProfileApiGeneralGetUsersListQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>
+  > = ({ signal }) => keyopollsProfileApiGeneralGetUsersList(params, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type KeyopollsProfileApiGeneralGetUsersListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>
+>;
+export type KeyopollsProfileApiGeneralGetUsersListQueryError = ErrorType<Message>;
+
+export function useKeyopollsProfileApiGeneralGetUsersList<
+  TData = Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+  TError = ErrorType<Message>,
+>(
+  params: undefined | KeyopollsProfileApiGeneralGetUsersListParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsProfileApiGeneralGetUsersList<
+  TData = Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsProfileApiGeneralGetUsersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsProfileApiGeneralGetUsersList<
+  TData = Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsProfileApiGeneralGetUsersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Users List
+ */
+
+export function useKeyopollsProfileApiGeneralGetUsersList<
+  TData = Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsProfileApiGeneralGetUsersListParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsProfileApiGeneralGetUsersList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getKeyopollsProfileApiGeneralGetUsersListQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
