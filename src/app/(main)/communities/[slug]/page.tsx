@@ -13,7 +13,6 @@ import {
   FileText,
   LogOut,
   MoreVertical,
-  Search,
   Share,
   Users,
   X,
@@ -125,12 +124,6 @@ const CommunityPage = () => {
   // Handlers
   const handleBackClick = () => {
     router.back();
-  };
-
-  const handleSearchClick = () => {
-    if (community?.name) {
-      router.push(`/explore?mode=search&community=${encodeURIComponent(community.name)}`);
-    }
   };
 
   const handleCommunityNameClick = () => {
@@ -375,13 +368,6 @@ const CommunityPage = () => {
           </div>
 
           <div className="flex gap-2">
-            <button
-              onClick={handleSearchClick}
-              className="text-text-muted hover:text-text rounded-full p-1.5 transition-colors"
-            >
-              <Search size={18} />
-            </button>
-
             <Drawer open={showOptionsDrawer} onOpenChange={setShowOptionsDrawer}>
               <DrawerTrigger asChild>
                 <button className="text-text-muted hover:text-text rounded-full p-1.5 transition-colors">
@@ -450,9 +436,10 @@ const CommunityPage = () => {
       {renderTabContent()}
 
       {/* Floating Create Poll Button */}
-      {isMember && permissions?.can_post && activeTab === 'polls' && (
-        <CreateButton path="/create-poll" onClick={handleCreatePoll} />
-      )}
+      {isMember &&
+        (membership?.role === 'creator' || membership?.role === 'moderator') &&
+        permissions?.can_post &&
+        activeTab === 'polls' && <CreateButton path="/create-poll" onClick={handleCreatePoll} />}
 
       {/* Leave Community Modal */}
       {showLeaveModal && <LeaveModal />}

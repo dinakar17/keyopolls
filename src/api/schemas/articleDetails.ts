@@ -12,6 +12,7 @@ import type { ArticleDetailsCommunitySlug } from './articleDetailsCommunitySlug'
 import type { ArticleDetailsLink } from './articleDetailsLink';
 import type { ArticleDetailsMainImageUrl } from './articleDetailsMainImageUrl';
 import type { ArticleDetailsSubtitle } from './articleDetailsSubtitle';
+import type { ArticleDetailsTags } from './articleDetailsTags';
 import type { ArticleDetailsUserReactions } from './articleDetailsUserReactions';
 
 /**
@@ -39,6 +40,7 @@ export interface ArticleDetails {
   dislike_count?: number;
   share_count?: number;
   comment_count?: number;
+  tags?: ArticleDetailsTags;
   is_author?: boolean;
   user_reactions?: ArticleDetailsUserReactions;
   is_bookmarked?: boolean;

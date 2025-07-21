@@ -11,6 +11,8 @@ import type { PollCreateSchemaDescription } from './pollCreateSchemaDescription'
 import type { PollCreateSchemaExpiresAt } from './pollCreateSchemaExpiresAt';
 import type { PollCreateSchemaExplanation } from './pollCreateSchemaExplanation';
 import type { PollCreateSchemaMaxChoices } from './pollCreateSchemaMaxChoices';
+import type { PollCreateSchemaTags } from './pollCreateSchemaTags';
+import type { PollCreateSchemaTodos } from './pollCreateSchemaTodos';
 import type { PollOptionCreateSchema } from './pollOptionCreateSchema';
 
 export interface PollCreateSchema {
@@ -19,6 +21,7 @@ export interface PollCreateSchema {
   poll_type: string;
   community_id: number;
   explanation?: PollCreateSchemaExplanation;
+  todos?: PollCreateSchemaTodos;
   allow_multiple_votes?: boolean;
   max_choices?: PollCreateSchemaMaxChoices;
   requires_aura?: number;
@@ -27,4 +30,5 @@ export interface PollCreateSchema {
   correct_text_answer?: PollCreateSchemaCorrectTextAnswer;
   correct_ranking_order?: PollCreateSchemaCorrectRankingOrder;
   options?: PollOptionCreateSchema[];
+  tags?: PollCreateSchemaTags;
 }

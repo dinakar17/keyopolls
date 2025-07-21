@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
 import { useKeyopollsPollsApiOperationsCreatePoll } from '@/api/polls/polls';
 import { toast } from '@/components/ui/toast';
@@ -51,7 +51,7 @@ export default function CreatePoll() {
     }
   }
 
-  function loadFormData() {
+  function loadFormData(): Partial<PollFormData> {
     if (typeof window === 'undefined') return {};
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -85,6 +85,8 @@ export default function CreatePoll() {
       requires_aura: savedData.requires_aura || 0,
       has_correct_answer: savedData.has_correct_answer || false,
       correct_text_answer: savedData.correct_text_answer || '',
+      tags: savedData.tags || [],
+      todos: savedData.todos || [],
       options: savedData.options || [
         { text: '', order: 0, is_correct: false },
         { text: '', order: 1, is_correct: false },
@@ -103,8 +105,10 @@ export default function CreatePoll() {
   const watchedPollType = form.watch('poll_type');
   const watchedTitle = form.watch('title');
   const watchedDescription = form.watch('description');
+  const watchedExplanation = form.watch('explanation');
   const watchedHasCorrectAnswer = form.watch('has_correct_answer');
   const watchedCorrectTextAnswer = form.watch('correct_text_answer');
+  const watchedTags = form.watch('tags');
 
   // Save to localStorage when key fields change
   useEffect(() => {
@@ -113,9 +117,11 @@ export default function CreatePoll() {
   }, [
     watchedTitle,
     watchedDescription,
+    watchedExplanation,
     watchedPollType,
     watchedOptions,
     watchedHasCorrectAnswer,
+    watchedTags,
     form,
   ]);
 
@@ -276,8 +282,33 @@ export default function CreatePoll() {
     return true;
   };
 
+  // Validate tags
+  const validateTags = (tags: string[]) => {
+    if (!tags || tags.length === 0) return true;
+
+    // Check for duplicates (case insensitive)
+    const uniqueTags = new Set(tags.map((tag) => tag.toLowerCase().trim()));
+    if (uniqueTags.size !== tags.length) {
+      return false;
+    }
+
+    // Check each tag individually
+    for (const tag of tags) {
+      if (!tag || tag.trim().length === 0) return false;
+      if (tag.length > 50) return false;
+      if (!/^[a-zA-Z0-9\s\-_]+$/.test(tag)) return false;
+    }
+
+    return true;
+  };
+
+  // Strip HTML tags for character count
+  const stripHtmlTags = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '');
+  };
+
   // Handle form submission
-  const onSubmit = async (data: PollFormData) => {
+  const onSubmit: SubmitHandler<PollFormData> = async (data) => {
     try {
       // Clear any existing error
       setErrorMessage(null);
@@ -285,6 +316,23 @@ export default function CreatePoll() {
       // Check for community selection
       if (!communityDetails) {
         setErrorMessage('Please select a community for your poll.');
+        return;
+      }
+
+      // Custom validation for explanation (check plain text length)
+      if (watchedExplanation) {
+        const plainText = stripHtmlTags(watchedExplanation);
+        if (plainText.length < 250) {
+          setErrorMessage(
+            'Explanation must be at least 250 characters (excluding HTML formatting).'
+          );
+          return;
+        }
+      }
+
+      // Validate tags
+      if (data.tags && !validateTags(data.tags)) {
+        setErrorMessage('Please check your tags for duplicates or invalid characters.');
         return;
       }
 
@@ -328,10 +376,18 @@ export default function CreatePoll() {
         }
       }
 
+      // Clean and normalize tags before submission
+      const cleanedData = {
+        ...data,
+        tags: data.tags
+          ? data.tags.map((tag) => tag.trim().toLowerCase()).filter((tag) => tag.length > 0)
+          : [],
+      };
+
       createPoll(
         {
           data: {
-            data: data,
+            data: cleanedData,
             option_images: hasImages ? Object.values(optionImages).map((img) => img.file) : [],
           },
         },
@@ -342,8 +398,8 @@ export default function CreatePoll() {
             clearCommunityDetails();
             router.replace(`/polls/${response.data.id}`);
           },
-          onError: (error) => {
-            setErrorMessage(error.response?.data.message || 'An unexpected error occurred');
+          onError: (error: any) => {
+            setErrorMessage(error.response?.data?.message || 'An unexpected error occurred');
             console.error('Poll creation error:', error);
           },
         }

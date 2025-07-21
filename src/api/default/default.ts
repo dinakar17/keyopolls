@@ -847,7 +847,7 @@ export const useKeyopollsArticlesApiCreateArticle = <
 
 Features:
 - Pagination with configurable page size
-- Filter by community, author, published status
+- Filter by community, creator, published status
 - Search across title, subtitle, and content
 - My articles filter for authenticated users
 - Multiple sorting options

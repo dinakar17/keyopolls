@@ -60,16 +60,23 @@ export const googleRegistrationSchema = z.object({
 });
 
 // Poll related schemas
+// Tag validation schema
+const tagSchema = z
+  .string()
+  .min(1, 'Tag cannot be empty')
+  .max(50, 'Tag must be 50 characters or less')
+  .regex(
+    /^[a-zA-Z0-9\s\-_]+$/,
+    'Tag can only contain letters, numbers, spaces, hyphens, and underscores'
+  );
 
-// Zod schema for poll option
-export const pollOptionSchema = z.object({
-  text: z.string().min(1, 'Option text is required').max(200, 'Option text too long'),
-  order: z.number(),
-  is_correct: z.boolean().optional(),
-  image: z.any().optional(),
+// Poll option schema
+const pollOptionSchema = z.object({
+  text: z.string().max(200, 'Option text too long'),
+  order: z.number().min(0),
+  is_correct: z.boolean(),
 });
 
-// Main poll creation schema
 export const pollCreateSchema = z
   .object({
     title: z.string().min(20, 'Title must be at least 20 characters').max(200, 'Title too long'),
@@ -88,9 +95,11 @@ export const pollCreateSchema = z
     allow_multiple_votes: z.boolean(),
     max_choices: z.number().min(1),
     requires_aura: z.number().min(0),
-    has_correct_answer: z.boolean().optional(),
+    has_correct_answer: z.boolean(),
     correct_text_answer: z.string().optional(),
     correct_ranking_order: z.array(z.number()).optional(),
+    tags: z.array(tagSchema).max(5, 'Maximum 5 tags allowed'),
+    todos: z.array(z.object({ text: z.string().max(200, 'Todo item too long') })).optional(),
     options: z
       .array(pollOptionSchema)
       .min(0, 'Invalid options')
@@ -134,6 +143,20 @@ export const pollCreateSchema = z
     {
       message: 'Correct text answer cannot contain spaces',
       path: ['correct_text_answer'],
+    }
+  )
+  .refine(
+    (data) => {
+      // Validate unique tags
+      if (data.tags && data.tags.length > 0) {
+        const uniqueTags = new Set(data.tags.map((tag) => tag.toLowerCase().trim()));
+        return uniqueTags.size === data.tags.length;
+      }
+      return true;
+    },
+    {
+      message: 'Tags must be unique',
+      path: ['tags'],
     }
   );
 

@@ -19,6 +19,8 @@ import {
 } from '@/components/ui/drawer';
 import { PollFormData } from '@/types';
 
+import PollFormSettings from './PollFormSettings';
+
 interface PollFormProps {
   form: UseFormReturn<PollFormData>;
   communityDetails: CommunityDetails | null;
@@ -47,20 +49,27 @@ export default function PollForm({
 }: PollFormProps) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
-  const explanationRef = useRef<HTMLTextAreaElement>(null);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'options',
   });
 
+  const {
+    fields: todoFields,
+    append: appendTodo,
+    remove: removeTodo,
+  } = useFieldArray({
+    control: form.control,
+    name: 'todos',
+  });
+
   // Watch form values
   const watchedOptions = form.watch('options');
   const watchedPollType = form.watch('poll_type');
-  const watchedMaxChoices = form.watch('max_choices');
   const watchedTitle = form.watch('title');
   const watchedDescription = form.watch('description');
-  const watchedExplanation = form.watch('explanation');
+  const watchedTodos = form.watch('todos') || [];
 
   // Check if community supports correct answers (education category)
   const isEducationCommunity = true;
@@ -85,12 +94,6 @@ export default function PollForm({
     autoResize(descriptionRef);
   };
 
-  // Handle explanation change with auto-resize
-  const handleExplanationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    form.setValue('explanation', e.target.value);
-    autoResize(explanationRef);
-  };
-
   // Add new option
   const addOption = () => {
     if (fields.length < 10) {
@@ -104,6 +107,18 @@ export default function PollForm({
       remove(index);
       removeImage(index);
     }
+  };
+
+  // Add new todo
+  const addTodo = () => {
+    if (todoFields.length < 20) {
+      appendTodo({ text: '' });
+    }
+  };
+
+  // Remove todo
+  const removeTodoItem = (index: number) => {
+    removeTodo(index);
   };
 
   const formErrors = form.formState.errors;
@@ -211,6 +226,64 @@ export default function PollForm({
         )}
       </div>
 
+      {/* Todos Section */}
+      <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
+        <div>
+          <h3 className="text-text text-sm font-medium">Personal Todos</h3>
+          <p className="text-text-muted text-xs">
+            Add personal improvement todos for this poll (max 20)
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {todoFields.map((field, index) => (
+            <div key={field.id} className="flex items-center space-x-2">
+              <input
+                {...form.register(`todos.${index}.text`)}
+                type="text"
+                placeholder={`Todo ${index + 1}: What do you want to improve?`}
+                className="border-border bg-surface-elevated text-text placeholder-text-muted focus:border-primary flex-1 rounded-lg border px-3 py-2 text-sm outline-none"
+                maxLength={200}
+              />
+              <button
+                type="button"
+                onClick={() => removeTodoItem(index)}
+                className="text-text-muted hover:text-error flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            </div>
+          ))}
+
+          {todoFields.length < 20 && (
+            <button
+              type="button"
+              onClick={addTodo}
+              className="border-border text-text-muted hover:border-border-subtle hover:text-text flex w-full items-center justify-center space-x-2 rounded-lg border-2 border-dashed p-2 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span className="text-sm">Add todo</span>
+            </button>
+          )}
+
+          <div className="text-text-muted text-xs">{watchedTodos.length}/20 todos</div>
+        </div>
+      </div>
+
       {/* Text Input Poll Instructions and Image Upload */}
       {watchedPollType === 'text_input' && (
         <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
@@ -242,7 +315,7 @@ export default function PollForm({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2z"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002 2z"
                     />
                   </svg>
                   <span className="text-sm">Add image to question</span>
@@ -329,7 +402,7 @@ export default function PollForm({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2z"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002 2z"
                           />
                         </svg>
                         <span>Add image</span>
@@ -396,7 +469,7 @@ export default function PollForm({
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2z"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002 2z"
                             />
                           </svg>
                         </div>
@@ -464,132 +537,12 @@ export default function PollForm({
         </div>
       )}
 
-      {/* Correct Answer Settings (mandatory) */}
-      {isEducationCommunity && (
-        <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
-          <div>
-            <h3 className="text-text text-sm font-medium">Correct Answer</h3>
-            <p className="text-text-muted text-xs">Set the correct answer for this poll</p>
-          </div>
-
-          <div className="space-y-3">
-            {watchedPollType === 'text_input' && (
-              <div>
-                <label className="text-text-secondary mb-2 block text-sm">
-                  Correct text answer (single word/number) *
-                </label>
-                <input
-                  {...form.register('correct_text_answer')}
-                  type="text"
-                  placeholder="Enter correct answer"
-                  className="border-border bg-surface-elevated text-text placeholder-text-muted focus:border-primary w-full rounded-lg border px-3 py-2 text-sm outline-none"
-                />
-                {formErrors.correct_text_answer && (
-                  <p className="text-error mt-1 text-sm">
-                    {formErrors.correct_text_answer.message}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {watchedPollType === 'single' && (
-              <p className="text-text-muted text-sm">
-                Check the correct option above. Only one option can be marked as correct.
-              </p>
-            )}
-
-            {watchedPollType === 'multiple' && (
-              <p className="text-text-muted text-sm">
-                Check all correct options above. Users must select exactly all correct options to be
-                marked as correct.
-              </p>
-            )}
-
-            {watchedPollType === 'ranking' && (
-              <p className="text-text-muted text-sm">
-                The correct ranking will be based on the current order of your options. Users must
-                rank them in the exact same order to be marked as correct.
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Explanation (mandatory) */}
-      <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
-        <div>
-          <h3 className="text-text text-sm font-medium">Explanation *</h3>
-          <p className="text-text-muted text-xs">
-            Provide a detailed explanation for the correct answer (minimum 250 characters)
-          </p>
-        </div>
-
-        <div>
-          <textarea
-            {...form.register('explanation')}
-            ref={explanationRef}
-            value={watchedExplanation}
-            onChange={handleExplanationChange}
-            placeholder="Explain why this is the correct answer. Include relevant details, context, and reasoning to help users understand the concept better..."
-            className="text-text placeholder-text-muted w-full resize-none overflow-hidden border-none bg-transparent text-sm outline-none"
-            style={{ minHeight: '100px' }}
-            rows={4}
-          />
-          <div className="mt-1 flex items-center justify-between">
-            <div className="text-xs">
-              {formErrors.explanation && (
-                <p className="text-error">{formErrors.explanation.message}</p>
-              )}
-            </div>
-            <div className="text-text-muted text-xs">
-              <span className={watchedExplanation?.length >= 250 ? 'text-success' : 'text-warning'}>
-                {watchedExplanation?.length || 0}/250 minimum
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Multiple Choice Settings */}
-      {watchedPollType === 'multiple' && (
-        <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
-          <h3 className="text-text text-sm font-medium">Multiple Choice Settings</h3>
-
-          <div>
-            <label className="text-text-secondary mb-2 block text-sm">
-              Maximum choices per user
-            </label>
-            <div className="flex space-x-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-                .slice(0, Math.max(4, watchedOptions.length))
-                .map((choice) => (
-                  <button
-                    key={choice}
-                    type="button"
-                    onClick={() => handleMaxChoicesSelect(choice)}
-                    disabled={choice > watchedOptions.length}
-                    className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                      watchedMaxChoices === choice
-                        ? 'bg-primary text-background'
-                        : choice > watchedOptions.length
-                          ? 'bg-surface-elevated text-text-muted cursor-not-allowed'
-                          : 'bg-surface-elevated text-text hover:bg-border'
-                    }`}
-                  >
-                    {choice}
-                  </button>
-                ))}
-            </div>
-            <p className="text-text-muted mt-1 text-xs">
-              Users can select up to {watchedMaxChoices} option
-              {watchedMaxChoices !== 1 ? 's' : ''} when voting
-            </p>
-            {formErrors.max_choices && (
-              <p className="text-error mt-1 text-sm">{formErrors.max_choices.message}</p>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Pass remaining settings to separate component */}
+      <PollFormSettings
+        form={form}
+        isEducationCommunity={isEducationCommunity}
+        handleMaxChoicesSelect={handleMaxChoicesSelect}
+      />
     </div>
   );
 }

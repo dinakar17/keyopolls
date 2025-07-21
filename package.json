@@ -10,6 +10,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-react": "^11.0.0",
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-avatar": "^1.1.9",
     "@radix-ui/react-dialog": "^1.1.13",
@@ -39,6 +40,7 @@
     "@yoopta/toolbar": "^4.9.7",
     "@yoopta/video": "^4.9.7",
     "axios": "^1.9.0",
+    "ckeditor5": "^46.0.0",
     "class-variance-authority": "^0.7.1",
     "date-fns": "^4.1.0",
     "emoji-picker-react": "^4.12.2",
