@@ -78,7 +78,7 @@ export default function CreatePoll() {
       title: savedData.title || '',
       description: savedData.description || '',
       poll_type: savedData.poll_type || 'single',
-      explanation: savedData.explanation || '',
+      explanation: JSON.stringify(savedData.explanation || ''),
       community_id: 0,
       allow_multiple_votes: savedData.allow_multiple_votes || false,
       max_choices: savedData.max_choices || 4,

@@ -22,140 +22,136 @@ const LeaderboardContent = () => {
 
   const getRankDisplay = (index: number, rank: number) => {
     if (index < 3) {
-      const colors = [
-        'bg-gradient-to-r from-yellow-400 to-yellow-600',
-        'bg-gradient-to-r from-gray-300 to-gray-500',
-        'bg-gradient-to-r from-amber-600 to-amber-800',
-      ];
+      const colors = ['bg-warning', 'bg-text-muted', 'bg-warning/70'];
       return (
         <div
-          className={`flex h-10 w-10 items-center justify-center rounded-full font-bold text-white ${colors[index]}`}
+          className={`text-background flex h-9 w-9 items-center justify-center rounded-full font-bold ${colors[index]}`}
         >
           {rank}
         </div>
       );
     }
     return (
-      <div className="bg-surface-elevated text-text-secondary flex h-10 w-10 items-center justify-center rounded-full font-medium">
+      <div className="bg-surface-elevated text-text-secondary border-border flex h-9 w-9 items-center justify-center rounded-full border font-medium">
         {rank}
       </div>
     );
   };
 
   return (
-    <div className="space-y-6 p-4">
-      {/* Header */}
-      <div className="text-center">
-        <div className="text-primary mb-3">
-          <Trophy className="mx-auto h-10 w-10" />
+    <div className="bg-background min-h-screen">
+      <div className="mx-auto max-w-2xl px-4 py-8">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <div className="text-primary mb-3">
+            <Trophy className="mx-auto h-8 w-8" />
+          </div>
+          <h2 className="text-text mb-2 text-2xl font-bold">Community Leaderboard</h2>
+          <p className="text-text-secondary text-sm">
+            {currentMonth} • Top contributors ranked by Aura & Daily Streaks
+          </p>
         </div>
-        <h2 className="text-text mb-2 text-2xl font-bold">Community Leaderboard</h2>
-        <p className="text-text-secondary text-sm">
-          {currentMonth} • Top contributors ranked by Aura & Daily Streaks
-        </p>
-      </div>
 
-      {/* Preview Notice */}
-      <div className="rounded-r-lg border-l-4 border-yellow-400 bg-yellow-50 p-4">
-        <div className="flex items-center">
-          <Trophy className="mr-2 h-5 w-5 text-yellow-400" />
-          <div>
-            <p className="text-sm font-medium text-yellow-800">Feature Preview</p>
-            <p className="mt-1 text-xs text-yellow-700">
-              Leaderboard is coming soon! This is a preview of what's to come.
-            </p>
+        {/* Preview Notice */}
+        <div className="border-warning/20 bg-warning/10 border-l-warning mb-8 rounded-lg border border-l-4 p-4">
+          <div className="flex items-center">
+            <Trophy className="text-warning mr-2 h-5 w-5" />
+            <div>
+              <p className="text-warning text-sm font-medium">Feature Preview</p>
+              <p className="text-text-secondary mt-1 text-xs">
+                Leaderboard is coming soon! This is a preview of what's to come.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Leaderboard List */}
-      <div className="space-y-4">
-        {mockLeaderboardData.map((user, index) => (
-          <div
-            key={user.username}
-            className={`border-border-subtle border-b py-4 last:border-b-0 ${
-              index < 3 ? 'from-primary/5 bg-gradient-to-r to-transparent' : ''
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              {/* Rank */}
-              <div className="flex-shrink-0">{getRankDisplay(index, user.rank)}</div>
+        {/* Leaderboard List */}
+        <div className="space-y-0">
+          {mockLeaderboardData.map((user, index) => (
+            <div
+              key={user.username}
+              className={`border-border-subtle hover:bg-surface-elevated/30 border-b py-4 transition-colors ${
+                index < 3 ? 'bg-primary/5' : ''
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                {/* Rank */}
+                <div className="flex-shrink-0">{getRankDisplay(index, user.rank)}</div>
 
-              {/* Avatar */}
-              <div className="flex-shrink-0">
-                {user.avatar ? (
-                  <Image
-                    src={user.avatar}
-                    alt={user.username}
-                    className="h-12 w-12 rounded-full object-cover"
-                    width={48}
-                    height={48}
-                  />
-                ) : (
-                  <div className="text-background flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 font-medium">
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              {/* User Info */}
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="text-text truncate text-lg font-semibold">@{user.username}</span>
-                  {index < 3 && (
-                    <div className="text-primary">
-                      <Trophy className="h-4 w-4" />
+                {/* Avatar */}
+                <div className="flex-shrink-0">
+                  {user.avatar ? (
+                    <Image
+                      src={user.avatar}
+                      alt={user.username}
+                      className="h-11 w-11 rounded-full object-cover"
+                      width={44}
+                      height={44}
+                    />
+                  ) : (
+                    <div className="text-background bg-primary flex h-11 w-11 items-center justify-center rounded-full font-medium">
+                      {user.username.charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
-                <div className="text-text-secondary text-sm">
-                  <span className="font-medium">{user.aura.toLocaleString()} Aura</span>
-                  <span className="mx-2">•</span>
-                  <span>{user.streak} day streak</span>
+
+                {/* User Info */}
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="text-text truncate font-semibold">@{user.username}</span>
+                    {index < 3 && (
+                      <div className="text-warning">
+                        <Trophy className="h-4 w-4" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-text-secondary text-sm">
+                    <span className="font-medium">{user.aura.toLocaleString()} Aura</span>
+                    <span className="mx-2">•</span>
+                    <span>{user.streak} day streak</span>
+                  </div>
+                </div>
+
+                {/* Streak Badge */}
+                <div className="flex-shrink-0">
+                  <div className="bg-success/10 text-success border-success/20 flex items-center gap-1.5 rounded-full border px-2.5 py-1.5">
+                    <div className="bg-success h-1.5 w-1.5 rounded-full"></div>
+                    <span className="text-xs font-medium">{user.streak}d</span>
+                  </div>
                 </div>
               </div>
+            </div>
+          ))}
+        </div>
 
-              {/* Streak Badge */}
-              <div className="flex-shrink-0">
-                <div className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-2 text-green-800">
-                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                  <span className="text-sm font-medium">{user.streak}d</span>
-                </div>
+        {/* Stats Summary */}
+        <div className="border-border bg-surface-elevated/30 mt-8 rounded-lg border p-6">
+          <h3 className="text-text mb-4 font-semibold">This Month's Highlights</h3>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-primary text-xl font-bold">
+                {mockLeaderboardData[0]?.aura.toLocaleString()}
               </div>
+              <div className="text-text-secondary text-xs">Top Aura</div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Stats Summary */}
-      <div className="bg-surface-elevated mt-6 rounded-lg p-4">
-        <h3 className="text-text mb-3 font-semibold">This Month's Highlights</h3>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-primary text-2xl font-bold">
-              {mockLeaderboardData[0]?.aura.toLocaleString()}
+            <div>
+              <div className="text-success text-xl font-bold">{mockLeaderboardData[0]?.streak}</div>
+              <div className="text-text-secondary text-xs">Longest Streak</div>
             </div>
-            <div className="text-text-secondary text-xs">Top Aura</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-green-600">
-              {mockLeaderboardData[0]?.streak}
+            <div>
+              <div className="text-accent text-xl font-bold">{mockLeaderboardData.length}</div>
+              <div className="text-text-secondary text-xs">Active Users</div>
             </div>
-            <div className="text-text-secondary text-xs">Longest Streak</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-purple-600">{mockLeaderboardData.length}</div>
-            <div className="text-text-secondary text-xs">Active Users</div>
           </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="py-8 text-center">
-        <Clock className="text-text-muted mx-auto mb-3 h-8 w-8" />
-        <p className="text-text-secondary text-sm">
-          Full leaderboard functionality launching soon with weekly and monthly rankings
-        </p>
+        {/* Footer */}
+        <div className="border-border-subtle mt-8 border-t pt-8 text-center">
+          <Clock className="text-text-muted mx-auto mb-3 h-6 w-6" />
+          <p className="text-text-secondary text-sm">
+            Full leaderboard functionality launching soon with weekly and monthly rankings
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -45,7 +45,7 @@ import QuizzesContent from './QuizzesContent';
 
 type TabType =
   | 'polls'
-  | 'quizzes'
+  | 'lists'
   | 'battles'
   | 'ai-analysis'
   | 'articles'
@@ -95,7 +95,7 @@ const CommunityPage = () => {
     const tabFromUrl = searchParams.get('tab') as TabType;
     const validTabs: TabType[] = [
       'polls',
-      'quizzes',
+      'lists',
       'battles',
       'ai-analysis',
       'articles',
@@ -263,7 +263,7 @@ const CommunityPage = () => {
     switch (tab) {
       case 'polls':
         return <FileText className="h-4 w-4" />;
-      case 'quizzes':
+      case 'lists':
         return <Brain className="h-4 w-4" />;
       case 'battles':
         return <Zap className="h-4 w-4" />;
@@ -287,7 +287,7 @@ const CommunityPage = () => {
     switch (activeTab) {
       case 'polls':
         return <PollsContent community={community} onCreatePoll={handleCreatePoll} />;
-      case 'quizzes':
+      case 'lists':
         return <QuizzesContent />;
       case 'battles':
         return <BattlesContent />;
@@ -408,7 +408,7 @@ const CommunityPage = () => {
         <div className="scrollbar-hide flex overflow-x-auto px-4">
           {[
             { id: 'polls', label: 'Polls' },
-            { id: 'quizzes', label: 'Quizzes' },
+            { id: 'lists', label: 'Lists' },
             { id: 'battles', label: 'Battles' },
             { id: 'ai-analysis', label: 'AI Analysis' },
             { id: 'articles', label: 'Articles' },

@@ -3,254 +3,247 @@
 import React from 'react';
 
 import {
-  AlertTriangle,
-  Bell,
   Briefcase,
-  CheckCircle,
+  Building,
   Clock,
-  FileText,
-  Shield,
-  Target,
+  DollarSign,
+  MapPin,
+  Star,
   TrendingUp,
   Zap,
 } from 'lucide-react';
 
 const JobsContent = () => {
+  const mockJobs = [
+    {
+      id: 1,
+      title: 'Senior React Developer',
+      company: 'TechFlow Inc.',
+      location: 'Remote • US',
+      salary: '$120k - $160k',
+      type: 'Full-time',
+      matchScore: 92,
+      postedTime: '2h ago',
+      skills: ['React', 'TypeScript', 'Node.js'],
+      applicants: 23,
+    },
+    {
+      id: 2,
+      title: 'Frontend Engineer',
+      company: 'StartupCo',
+      location: 'San Francisco, CA',
+      salary: '$100k - $140k',
+      type: 'Full-time',
+      matchScore: 78,
+      postedTime: '5h ago',
+      skills: ['Vue.js', 'JavaScript', 'CSS'],
+      applicants: 45,
+    },
+    {
+      id: 3,
+      title: 'UI/UX Developer',
+      company: 'Design Studio',
+      location: 'New York, NY',
+      salary: '$90k - $120k',
+      type: 'Contract',
+      matchScore: 65,
+      postedTime: '1d ago',
+      skills: ['React', 'Figma', 'CSS'],
+      applicants: 12,
+    },
+    {
+      id: 4,
+      title: 'Full Stack Developer',
+      company: 'GrowthTech',
+      location: 'Remote • Global',
+      salary: '$80k - $110k',
+      type: 'Full-time',
+      matchScore: 83,
+      postedTime: '1d ago',
+      skills: ['React', 'Python', 'AWS'],
+      applicants: 67,
+    },
+    {
+      id: 5,
+      title: 'Lead Frontend Engineer',
+      company: 'Enterprise Corp',
+      location: 'Austin, TX',
+      salary: '$140k - $180k',
+      type: 'Full-time',
+      matchScore: 89,
+      postedTime: '2d ago',
+      skills: ['React', 'TypeScript', 'Leadership'],
+      applicants: 34,
+    },
+  ];
+
+  const getMatchColor = (score: number) => {
+    if (score >= 80) return 'text-success bg-success/10 border-success/20';
+    if (score >= 60) return 'text-warning bg-warning/10 border-warning/20';
+    return 'text-error bg-error/10 border-error/20';
+  };
+
+  const getMatchText = (score: number) => {
+    if (score >= 80) return 'High Match';
+    if (score >= 60) return 'Good Match';
+    return 'Low Match';
+  };
+
   return (
-    <div className="bg-background min-h-screen p-4">
-      <div className="mx-auto max-w-2xl">
-        {/* Hero Section */}
+    <div className="bg-background min-h-screen">
+      <div className="mx-auto max-w-2xl px-4 py-8">
+        {/* Header */}
         <div className="mb-8 text-center">
-          <div className="relative mb-6">
-            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-              <Briefcase className="h-12 w-12 text-white" />
-            </div>
-            <div className="absolute -top-2 -right-2 rounded-full bg-yellow-400 px-2 py-1 text-xs font-bold text-yellow-900 shadow-md">
-              SOON
-            </div>
+          <div className="text-primary mb-3">
+            <Briefcase className="mx-auto h-8 w-8" />
           </div>
-
-          <h1 className="text-text mb-4 text-3xl font-bold">Community-Tailored Jobs</h1>
-
-          <p className="text-text-secondary mb-6 text-lg leading-relaxed">
+          <h1 className="text-text mb-2 text-2xl font-bold">Community-Tailored Jobs</h1>
+          <p className="text-text-secondary text-sm">
             Revolutionary job board that eliminates ghosting and provides personalized opportunities
-            for your specific community expertise.
           </p>
         </div>
 
-        {/* Community-Specific Feature */}
-        <div className="mb-8 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 p-6 dark:border-blue-700 dark:from-blue-900/20 dark:to-purple-900/20">
-          <div className="flex items-start gap-4">
-            <div className="rounded-lg bg-blue-500 p-3">
-              <Target className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-text mb-2 flex items-center gap-2 text-lg font-semibold">
-                Tailored to Your Community
-                <span className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                  Smart Matching
-                </span>
-              </h3>
-              <p className="text-text-secondary mb-3 text-sm">
-                See only jobs relevant to your community expertise. Machine Learning Engineers see
-                ML jobs, Frontend Developers see React positions, Data Scientists see analytics
-                roles.
-              </p>
-              <div className="rounded-lg bg-white/50 p-3 dark:bg-gray-800/50">
-                <p className="text-text-secondary text-xs">
-                  <strong>Example:</strong> In "Machine Learning Engineers" community, you'll only
-                  see positions requiring ML expertise - no irrelevant job spam!
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Revolutionary Features */}
-        <div className="mb-8 space-y-4">
-          <h2 className="text-text mb-4 flex items-center gap-2 text-xl font-semibold">
-            <Zap className="h-5 w-5 text-yellow-500" />
-            Game-Changing Features
-          </h2>
-
-          {/* No Resume Required */}
-          <div className="bg-surface border-border hover:bg-surface-elevated rounded-xl border p-6 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900/30">
-                <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-text mb-2 text-lg font-semibold">No Resume Required</h3>
-                <p className="text-text-secondary mb-3">
-                  AI-powered profile fields automatically generate standardized applications. Simply
-                  fill out your skills and experience once - our AI handles the rest.
-                </p>
-                <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-700 dark:bg-green-900/20">
-                  <p className="text-sm text-green-800 dark:text-green-200">
-                    ✨ <strong>Smart Feature:</strong> AI creates professional applications from
-                    your profile data
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Honest Probability */}
-          <div className="bg-surface border-border hover:bg-surface-elevated rounded-xl border p-6 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-orange-100 p-3 dark:bg-orange-900/30">
-                <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-text mb-2 text-lg font-semibold">
-                  Honest Selection Probability
-                </h3>
-                <p className="text-text-secondary mb-3">
-                  No more delusion! See your actual chances based on skills and experience. Low
-                  probability? We'll tell you upfront and suggest improvements.
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                    <span className="text-text-secondary">
-                      High Match (80-100%): Apply with confidence
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="h-3 w-3 rounded-full bg-orange-500"></div>
-                    <span className="text-text-secondary">Medium Match (50-79%): Worth a shot</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                    <span className="text-text-secondary">
-                      Low Match (0-49%): Improve skills first
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Active Jobs Only */}
-          <div className="bg-surface border-border hover:bg-surface-elevated rounded-xl border p-6 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-blue-100 p-3 dark:bg-blue-900/30">
-                <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-text mb-2 text-lg font-semibold">3-Week Active Window</h3>
-                <p className="text-text-secondary mb-3">
-                  All jobs auto-expire after 3 weeks. No stale postings, no false hope. Every job
-                  you see is actively hiring right now.
-                </p>
-                <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    ⏰ <strong>Real-time updates:</strong> Jobs vanish automatically to keep the
-                    board fresh and relevant
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Guaranteed Responses */}
-          <div className="bg-surface border-border hover:bg-surface-elevated rounded-xl border p-6 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-purple-100 p-3 dark:bg-purple-900/30">
-                <Bell className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-text mb-2 text-lg font-semibold">100% Response Guarantee</h3>
-                <p className="text-text-secondary mb-3">
-                  Every application gets a response within 4 weeks - via email or app notification.
-                  No more ghosting, ever.
-                </p>
-                <div className="mt-3 flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-text-secondary text-sm">
-                    Zero applications left unanswered
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Application Limits */}
-          <div className="bg-surface border-border hover:bg-surface-elevated rounded-xl border p-6 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-red-100 p-3 dark:bg-red-900/30">
-                <Shield className="h-6 w-6 text-red-600 dark:text-red-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-text mb-2 text-lg font-semibold">Quality Over Quantity</h3>
-                <p className="text-text-secondary mb-3">
-                  Maximum 20 applications per week to prevent spam and ensure quality applications.
-                  Choose wisely, apply strategically.
-                </p>
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-700 dark:bg-red-900/20">
-                  <p className="text-sm text-red-800 dark:text-red-200">
-                    🎯 <strong>Strategic applications:</strong> Focus on quality matches rather than
-                    mass applying
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mission Statement */}
-        <div className="mb-8 rounded-xl border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-6 dark:border-purple-700 dark:from-purple-900/20 dark:to-pink-900/20">
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
-              <AlertTriangle className="h-8 w-8 text-white" />
-            </div>
-            <h3 className="text-text mb-2 text-lg font-semibold">Ending Job Market Ghosting</h3>
-            <p className="text-text-secondary mb-4 text-sm">
-              We're revolutionizing job hunting by eliminating the "ghostly" experience. Every
-              candidate deserves honest feedback and realistic expectations.
-            </p>
-            <div className="rounded-lg bg-white/50 p-4 dark:bg-gray-800/50">
-              <p className="text-text text-sm font-medium">
-                "No more delusion. No more ghosting. Just honest, transparent job hunting that
-                respects both candidates and employers."
+        {/* Preview Notice */}
+        <div className="border-primary/20 bg-primary/10 border-l-primary mb-6 rounded-lg border border-l-4 p-4">
+          <div className="flex items-center">
+            <Zap className="text-primary mr-2 h-5 w-5" />
+            <div>
+              <p className="text-primary text-sm font-medium">Job Board Preview</p>
+              <p className="text-text-secondary mt-1 text-xs">
+                Experience the future of job hunting - tailored to Frontend Developers community
               </p>
             </div>
           </div>
         </div>
 
-        {/* Sample Community Examples */}
-        <div className="bg-surface border-border mb-8 rounded-xl border p-6">
-          <h3 className="text-text mb-4 flex items-center gap-2 text-lg font-semibold">
-            <Target className="text-primary h-5 w-5" />
-            Community-Specific Job Examples
+        {/* Jobs List */}
+        <div className="mb-8 space-y-0">
+          {mockJobs.map((job) => (
+            <div
+              key={job.id}
+              className="border-border-subtle hover:bg-surface-elevated/30 cursor-pointer border-b py-4 transition-colors"
+            >
+              <div className="flex items-start justify-between">
+                {/* Job Info */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start gap-3">
+                    {/* Company Avatar */}
+                    <div className="mt-0.5 flex-shrink-0">
+                      <div className="bg-primary/10 border-primary/20 flex h-8 w-8 items-center justify-center rounded-lg border">
+                        <Building className="text-primary h-4 w-4" />
+                      </div>
+                    </div>
+
+                    {/* Job Details */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-text truncate text-sm font-semibold">{job.title}</h3>
+                          <p className="text-text-secondary text-sm">{job.company}</p>
+                        </div>
+
+                        {/* Match Score */}
+                        <div
+                          className={`ml-3 flex-shrink-0 rounded-full border px-2 py-1 text-xs font-medium ${getMatchColor(job.matchScore)}`}
+                        >
+                          {job.matchScore}% {getMatchText(job.matchScore)}
+                        </div>
+                      </div>
+
+                      {/* Job Meta */}
+                      <div className="text-text-secondary mt-2 flex items-center gap-4 text-xs">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          <span>{job.location}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-3 w-3" />
+                          <span>{job.salary}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{job.postedTime}</span>
+                        </div>
+                      </div>
+
+                      {/* Skills */}
+                      <div className="mt-2 flex items-center gap-1">
+                        {job.skills.slice(0, 3).map((skill, skillIndex) => (
+                          <span
+                            key={skillIndex}
+                            className="bg-surface-elevated text-text-secondary rounded px-2 py-0.5 text-xs"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {job.skills.length > 3 && (
+                          <span className="text-text-muted text-xs">
+                            +{job.skills.length - 3} more
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Applicants */}
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="text-text-muted text-xs">{job.applicants} applicants</div>
+                        <div className="text-primary text-xs font-medium">Apply now</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Key Features */}
+        <div className="mb-8 space-y-3">
+          <h3 className="text-text flex items-center gap-2 font-semibold">
+            <Star className="text-warning h-5 w-5" />
+            Why This Works Better
           </h3>
 
-          <div className="space-y-3">
-            <div className="bg-surface-elevated rounded-lg p-3">
-              <div className="text-text mb-1 text-sm font-medium">Machine Learning Engineers</div>
-              <div className="text-text-secondary text-xs">
-                ML Engineer, Data Scientist, AI Researcher, MLOps Engineer
+          <div className="border-border-subtle hover:bg-surface-elevated/30 border-b p-4 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="bg-success/10 mt-0.5 rounded-lg p-2">
+                <TrendingUp className="text-success h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-text mb-1 font-semibold">Honest Match Scores</h4>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  See your real chances based on skills and experience. No false hope, just honest
+                  assessments.
+                </p>
               </div>
             </div>
+          </div>
 
-            <div className="bg-surface-elevated rounded-lg p-3">
-              <div className="text-text mb-1 text-sm font-medium">Frontend Developers</div>
-              <div className="text-text-secondary text-xs">
-                React Developer, Vue.js Engineer, UI Developer, Frontend Lead
+          <div className="border-border-subtle hover:bg-surface-elevated/30 border-b p-4 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 mt-0.5 rounded-lg p-2">
+                <Zap className="text-primary h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-text mb-1 font-semibold">Community-Specific</h4>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  Only see jobs relevant to Frontend Developers. No irrelevant spam or unrelated
+                  positions.
+                </p>
               </div>
             </div>
+          </div>
 
-            <div className="bg-surface-elevated rounded-lg p-3">
-              <div className="text-text mb-1 text-sm font-medium">Product Managers</div>
-              <div className="text-text-secondary text-xs">
-                Senior PM, Technical PM, Growth PM, Strategy Manager
+          <div className="hover:bg-surface-elevated/30 p-4 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="bg-warning/10 mt-0.5 rounded-lg p-2">
+                <Clock className="text-warning h-5 w-5" />
               </div>
-            </div>
-
-            <div className="bg-surface-elevated rounded-lg p-3">
-              <div className="text-text mb-1 text-sm font-medium">DevOps Engineers</div>
-              <div className="text-text-secondary text-xs">
-                Cloud Engineer, Site Reliability Engineer, Platform Engineer
+              <div className="flex-1">
+                <h4 className="text-text mb-1 font-semibold">No Ghosting Guarantee</h4>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  Every application gets a response within 4 weeks. Jobs auto-expire after 3 weeks
+                  to stay fresh.
+                </p>
               </div>
             </div>
           </div>
@@ -258,17 +251,17 @@ const JobsContent = () => {
 
         {/* CTA Section */}
         <div className="text-center">
-          <div className="bg-surface border-border rounded-xl border p-8">
-            <h3 className="text-text mb-3 text-xl font-semibold">
+          <div className="border-border-subtle border-t p-6">
+            <h3 className="text-text mb-2 text-lg font-semibold">
               Ready to Change Job Hunting Forever?
             </h3>
-            <p className="text-text-secondary mb-6">
+            <p className="text-text-secondary mb-6 text-sm leading-relaxed">
               Join the revolution against ghosting. Get honest feedback, real opportunities, and
               guaranteed responses.
             </p>
             <button
               disabled
-              className="bg-primary/50 text-background cursor-not-allowed rounded-lg px-6 py-3 font-medium opacity-60"
+              className="bg-primary/40 text-background cursor-not-allowed rounded-lg px-6 py-2.5 text-sm font-medium"
             >
               Coming Soon
             </button>

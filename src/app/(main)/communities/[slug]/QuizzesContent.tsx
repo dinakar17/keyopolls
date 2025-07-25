@@ -1,85 +1,87 @@
 import React from 'react';
 
-import { BookOpen, Brain, Clock, Star, Target, TrendingUp } from 'lucide-react';
+import { BookOpen, Folder, List, Star, Target, Vote } from 'lucide-react';
 
-const QuizzesContent = () => {
+const PollsListsContent = () => {
   return (
-    <div className="bg-background min-h-screen p-4">
-      <div className="mx-auto max-w-2xl">
+    <div className="bg-background min-h-screen">
+      <div className="mx-auto max-w-2xl px-4 py-8">
         {/* Hero Section */}
-        <div className="mb-8 text-center">
+        <div className="mb-12 text-center">
           <div className="relative mb-6">
-            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-              <Brain className="h-12 w-12 text-white" />
+            <div className="bg-primary/10 border-primary/20 mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border">
+              <List className="text-primary h-10 w-10" />
             </div>
-            <div className="absolute -top-2 -right-2 rounded-full bg-yellow-400 px-2 py-1 text-xs font-bold text-yellow-900 shadow-md">
+            <div className="bg-warning text-background absolute -top-1 -right-1 rounded-full px-2 py-0.5 text-xs font-semibold shadow-sm">
               SOON
             </div>
           </div>
 
-          <h1 className="text-text mb-4 text-3xl font-bold">Smart Quizzes</h1>
+          <h1 className="text-text mb-3 text-2xl font-bold">Interactive Lists & Polls</h1>
 
-          <p className="text-text-secondary mb-6 text-lg leading-relaxed">
-            Enhance your reviewing and instinctive skills with adaptive quizzes designed to help you
-            master any topic efficiently.
+          <p className="text-text-secondary leading-relaxed">
+            Master any concept with organized lists containing various poll types - from single
+            choice to rankings and text inputs, all categorized into learning concepts.
           </p>
         </div>
 
         {/* Features Preview */}
-        <div className="mb-8 space-y-4">
-          <div className="bg-surface border-border hover:bg-surface-elevated rounded-xl border p-6 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-blue-100 p-3 dark:bg-blue-900/30">
-                <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <div className="mb-8 space-y-3">
+          <div className="border-border-subtle hover:bg-surface-elevated/30 border-b p-4 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 mt-0.5 rounded-lg p-2">
+                <Vote className="text-primary h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h3 className="text-text mb-2 text-lg font-semibold">Adaptive Learning</h3>
-                <p className="text-text-secondary">
-                  Personalized quiz questions that adapt to your knowledge level and learning pace.
+                <h3 className="text-text mb-1 font-semibold">Multiple Poll Types</h3>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  Single choice, multiple choice, ranking polls, and text input questions to engage
+                  with content in different ways.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-surface border-border hover:bg-surface-elevated rounded-xl border p-6 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900/30">
-                <Clock className="h-6 w-6 text-green-600 dark:text-green-400" />
+          <div className="border-border-subtle hover:bg-surface-elevated/30 border-b p-4 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="bg-secondary/10 mt-0.5 rounded-lg p-2">
+                <Folder className="text-secondary h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h3 className="text-text mb-2 text-lg font-semibold">Spaced Repetition</h3>
-                <p className="text-text-secondary">
-                  Smart scheduling ensures you review concepts at optimal intervals for long-term
-                  retention.
+                <h3 className="text-text mb-1 font-semibold">Concept Organization</h3>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  Lists organized into concept folders, allowing you to focus on specific topics and
+                  track mastery of each area.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-surface border-border hover:bg-surface-elevated rounded-xl border p-6 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-purple-100 p-3 dark:bg-purple-900/30">
-                <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+          <div className="border-border-subtle hover:bg-surface-elevated/30 border-b p-4 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="bg-accent/10 mt-0.5 rounded-lg p-2">
+                <Target className="text-accent h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h3 className="text-text mb-2 text-lg font-semibold">Progress Tracking</h3>
-                <p className="text-text-secondary">
-                  Detailed analytics on your learning progress and areas that need improvement.
+                <h3 className="text-text mb-1 font-semibold">Concept Mastery</h3>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  Track your progress through each concept folder and see your mastery level across
+                  different topics.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-surface border-border hover:bg-surface-elevated rounded-xl border p-6 transition-colors">
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-orange-100 p-3 dark:bg-orange-900/30">
-                <BookOpen className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+          <div className="hover:bg-surface-elevated/30 p-4 transition-colors">
+            <div className="flex items-start gap-3">
+              <div className="bg-success/10 mt-0.5 rounded-lg p-2">
+                <BookOpen className="text-success h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h3 className="text-text mb-2 text-lg font-semibold">Multiple Formats</h3>
-                <p className="text-text-secondary">
-                  Various question types including multiple choice, true/false, and
-                  fill-in-the-blank.
+                <h3 className="text-text mb-1 font-semibold">Structured Learning</h3>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  Curated lists within each concept provide a structured approach to learning and
+                  reinforcement.
                 </p>
               </div>
             </div>
@@ -87,45 +89,45 @@ const QuizzesContent = () => {
         </div>
 
         {/* Coming Soon Stats */}
-        <div className="mb-8 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 p-6 dark:border-blue-700 dark:from-blue-900/20 dark:to-purple-900/20">
-          <div className="mb-4 flex items-center gap-3">
-            <Star className="h-6 w-6 text-yellow-500" />
-            <h3 className="text-text text-lg font-semibold">What to Expect</h3>
+        <div className="border-border bg-surface-elevated/30 mb-8 rounded-xl border p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Star className="text-warning h-5 w-5" />
+            <h3 className="text-text font-semibold">What to Expect</h3>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-6">
             <div className="text-center">
-              <div className="text-primary mb-1 text-2xl font-bold">500+</div>
-              <div className="text-text-secondary text-sm">Question Bank</div>
+              <div className="text-primary mb-1 text-xl font-bold">50+</div>
+              <div className="text-text-secondary text-sm">Concept Folders</div>
             </div>
             <div className="text-center">
-              <div className="text-primary mb-1 text-2xl font-bold">10+</div>
-              <div className="text-text-secondary text-sm">Subject Areas</div>
+              <div className="text-primary mb-1 text-xl font-bold">4</div>
+              <div className="text-text-secondary text-sm">Poll Types</div>
             </div>
             <div className="text-center">
-              <div className="text-primary mb-1 text-2xl font-bold">AI</div>
-              <div className="text-text-secondary text-sm">Powered</div>
+              <div className="text-primary mb-1 text-xl font-bold">Interactive</div>
+              <div className="text-text-secondary text-sm">Lists</div>
             </div>
             <div className="text-center">
-              <div className="text-primary mb-1 text-2xl font-bold">24/7</div>
-              <div className="text-text-secondary text-sm">Available</div>
+              <div className="text-primary mb-1 text-xl font-bold">Organized</div>
+              <div className="text-text-secondary text-sm">Learning</div>
             </div>
           </div>
         </div>
 
         {/* CTA Section */}
         <div className="text-center">
-          <div className="bg-surface border-border rounded-xl border p-8">
-            <h3 className="text-text mb-3 text-xl font-semibold">
-              Get Ready to Level Up Your Learning
+          <div className="border-border-subtle border-t p-6">
+            <h3 className="text-text mb-2 text-lg font-semibold">
+              Get Ready to Master Concepts Through Interactive Lists
             </h3>
-            <p className="text-text-secondary mb-6">
-              We're working hard to bring you the most effective quiz experience. Stay tuned for
-              updates!
+            <p className="text-text-secondary mb-6 text-sm leading-relaxed">
+              We're building an engaging way to learn through organized polls and interactive
+              content. Stay tuned for updates!
             </p>
             <button
               disabled
-              className="bg-primary/50 text-background cursor-not-allowed rounded-lg px-6 py-3 font-medium opacity-60"
+              className="bg-primary/40 text-background cursor-not-allowed rounded-lg px-6 py-2.5 text-sm font-medium"
             >
               Coming Soon
             </button>
@@ -136,4 +138,4 @@ const QuizzesContent = () => {
   );
 };
 
-export default QuizzesContent;
+export default PollsListsContent;

@@ -2,15 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import {
-  Archive,
-  BarChart3,
-  CheckCircle,
-  ChevronDown,
-  Clock,
-  Lock,
-  TrendingUp,
-} from 'lucide-react';
+import { Archive, BarChart3, CheckCircle, ChevronDown, Clock, TrendingUp } from 'lucide-react';
 
 import { useKeyopollsPollsApiGeneralListPolls } from '@/api/polls/polls';
 import { CommunityDetails, PollDetails } from '@/api/schemas';
@@ -25,7 +17,6 @@ import {
 import { useProfileStore } from '@/stores/useProfileStore';
 
 type SortFilter = 'newest' | 'oldest' | 'most_votes' | 'trending';
-type StatusFilter = 'active' | 'closed' | 'all';
 type PollTypeFilter = 'all' | 'single' | 'multiple' | 'ranking';
 type VotedFilter = 'all' | 'voted' | 'not_voted';
 
@@ -45,7 +36,6 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
 
   // Filter State
   const [sortFilter, setSortFilter] = useState<SortFilter>('newest');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [pollTypeFilter, setPollTypeFilter] = useState<PollTypeFilter>('all');
   const [votedFilter, setVotedFilter] = useState<VotedFilter>('all');
 
@@ -57,7 +47,7 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
 
   // Refs
   const observer = useRef<IntersectionObserver | null>(null);
-  const prevFiltersRef = useRef({ sortFilter, statusFilter, pollTypeFilter, votedFilter });
+  const prevFiltersRef = useRef({ sortFilter, pollTypeFilter, votedFilter });
 
   // Filter options
   const sortOptions: FilterOption[] = [
@@ -65,12 +55,6 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
     { value: 'oldest', label: 'Oldest', icon: <Archive size={16} /> },
     { value: 'most_votes', label: 'Most Votes', icon: <BarChart3 size={16} /> },
     { value: 'trending', label: 'Trending', icon: <TrendingUp size={16} /> },
-  ];
-
-  const statusOptions: FilterOption[] = [
-    { value: 'all', label: 'All Status' },
-    { value: 'active', label: 'Active', icon: <CheckCircle size={16} /> },
-    { value: 'closed', label: 'Closed', icon: <Lock size={16} /> },
   ];
 
   const pollTypeOptions: FilterOption[] = [
@@ -97,10 +81,8 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
       page: currentPage,
       page_size: 20,
       sort: sortFilter,
-      status: statusFilter === 'all' ? undefined : [statusFilter],
       poll_type: pollTypeFilter === 'all' ? undefined : pollTypeFilter,
       voted: votedFilter === 'all' ? undefined : votedFilter === 'voted',
-      include_expired: statusFilter === 'all',
     },
     {
       request: {
@@ -132,7 +114,7 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
 
   // Handle filter changes
   useEffect(() => {
-    const currentFilters = { sortFilter, statusFilter, pollTypeFilter, votedFilter };
+    const currentFilters = { sortFilter, pollTypeFilter, votedFilter };
     const filtersChanged =
       JSON.stringify(currentFilters) !== JSON.stringify(prevFiltersRef.current);
 
@@ -143,7 +125,7 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
       setPolls([]);
       prevFiltersRef.current = currentFilters;
     }
-  }, [sortFilter, statusFilter, pollTypeFilter, votedFilter]);
+  }, [sortFilter, pollTypeFilter, votedFilter]);
 
   // Handle polls data
   useEffect(() => {
@@ -274,16 +256,6 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
               value={sortFilter}
               onChange={(value) => setSortFilter(value as SortFilter)}
               title="Sort by"
-            />
-          </div>
-
-          <div className="flex-shrink-0">
-            <FilterDrawer
-              options={statusOptions}
-              value={statusFilter}
-              onChange={(value) => setStatusFilter(value as StatusFilter)}
-              title="Poll Status"
-              showIcon={false}
             />
           </div>
 

@@ -12,6 +12,7 @@ import { CastVoteSchema, PollDetails } from '@/api/schemas';
 import BookmarkButton from '@/components/common/BookmarkButton';
 import DislikeButton from '@/components/common/DislikeButton';
 import LikeButton from '@/components/common/LikeButton';
+import MarkdownDisplay from '@/components/common/MarkdownDisplay';
 import MediaViewer from '@/components/common/MediaViewer';
 import ShareButton from '@/components/common/ShareButton';
 import toast from '@/components/ui/toast';
@@ -81,12 +82,18 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
         ? poll.options.filter((option) => option.image_url).map((option) => option.image_url!)
         : [];
 
-  const handleSingleChoiceVote = (optionId: number) => {
+  const handleSingleChoiceToggle = (optionId: number) => {
     if (!poll || poll.user_has_voted || !poll.user_can_vote) return;
+
+    setSelectedOptions([optionId]); // Single choice, so replace with new selection
+  };
+
+  const handleSingleChoiceSubmit = () => {
+    if (!poll || selectedOptions.length === 0) return;
 
     const voteData: CastVoteSchema = {
       poll_id: poll.id,
-      votes: [{ option_id: optionId }],
+      votes: [{ option_id: selectedOptions[0] }],
     };
 
     castVote({ data: voteData });
@@ -264,9 +271,10 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
 
   const canInteract = poll.user_can_vote && !poll.user_has_voted && poll.is_active;
 
-  // Show vote button immediately for multiple choice and ranking polls when user can interact
+  // Show vote button immediately for all option-based polls when user can interact
   const showVoteButton =
-    canInteract && (poll.poll_type === 'multiple' || poll.poll_type === 'ranking');
+    canInteract &&
+    (poll.poll_type === 'single' || poll.poll_type === 'multiple' || poll.poll_type === 'ranking');
 
   // Updated condition: only show results if user has voted
   const showResults = poll.user_has_voted;
@@ -485,7 +493,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                     if (!canInteract) return;
 
                     if (poll.poll_type === 'single') {
-                      handleSingleChoiceVote(option.id);
+                      handleSingleChoiceToggle(option.id);
                     } else if (poll.poll_type === 'multiple') {
                       handleMultipleChoiceToggle(option.id);
                     } else if (poll.poll_type === 'ranking') {
@@ -518,10 +526,14 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                       {poll.poll_type === 'single' && (
                         <div
                           className={`h-4 w-4 rounded-full border-2 ${
-                            isVoted && showResults ? 'border-primary' : 'border-border'
+                            isSelected
+                              ? 'border-primary'
+                              : isVoted && showResults
+                                ? 'border-primary'
+                                : 'border-border'
                           }`}
                         >
-                          {isVoted && showResults && (
+                          {(isSelected || (isVoted && showResults)) && (
                             <div className="bg-primary m-0.5 h-2 w-2 rounded-full" />
                           )}
                         </div>
@@ -588,9 +600,23 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
           </div>
         )}
 
-        {/* Vote Button - Shows immediately for multiple choice and ranking */}
+        {/* Vote Button - Shows immediately for all option-based polls */}
         {showVoteButton && (
           <div className="mb-4">
+            {poll.poll_type === 'single' && (
+              <button
+                onClick={handleSingleChoiceSubmit}
+                disabled={selectedOptions.length === 0 || isPending}
+                className="bg-primary text-background w-full rounded-full px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isPending
+                  ? 'Voting...'
+                  : selectedOptions.length === 0
+                    ? 'Select an option to vote'
+                    : 'Vote'}
+              </button>
+            )}
+
             {poll.poll_type === 'multiple' && (
               <button
                 onClick={handleMultipleChoiceSubmit}
@@ -640,11 +666,11 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
           </div>
         )}
 
-        {/* Explanation - Only shown after user has voted */}
+        {/* Explanation - Only shown after user has voted - Now using MarkdownDisplay */}
         {showResults && poll.explanation && (
-          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <div className="text-green-600">
+          <div className="border-border bg-surface-elevated mb-4 rounded-lg border p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="text-text-secondary">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -654,9 +680,14 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                   />
                 </svg>
               </div>
-              <h3 className="text-sm font-semibold text-green-800">Explanation</h3>
+              <h3 className="text-text text-sm font-semibold">Explanation</h3>
             </div>
-            <p className="text-sm leading-relaxed text-green-700">{poll.explanation}</p>
+            <MarkdownDisplay
+              content={poll.explanation}
+              variant="default"
+              theme="auto"
+              className="text-text"
+            />
           </div>
         )}
 

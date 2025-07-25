@@ -71,9 +71,6 @@ export default function PollForm({
   const watchedDescription = form.watch('description');
   const watchedTodos = form.watch('todos') || [];
 
-  // Check if community supports correct answers (education category)
-  const isEducationCommunity = true;
-
   // Auto-resize text areas
   const autoResize = (textareaRef: React.RefObject<HTMLTextAreaElement | null>) => {
     if (textareaRef.current) {
@@ -229,9 +226,9 @@ export default function PollForm({
       {/* Todos Section */}
       <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
         <div>
-          <h3 className="text-text text-sm font-medium">Personal Todos</h3>
+          <h3 className="text-text text-sm font-medium">Add Todos (Optional)</h3>
           <p className="text-text-muted text-xs">
-            Add personal improvement todos for this poll (max 20)
+            Add todos to help others further improve their skills based on this poll (max 3).
           </p>
         </div>
 
@@ -262,7 +259,7 @@ export default function PollForm({
             </div>
           ))}
 
-          {todoFields.length < 20 && (
+          {todoFields.length < 3 && (
             <button
               type="button"
               onClick={addTodo}
@@ -280,7 +277,7 @@ export default function PollForm({
             </button>
           )}
 
-          <div className="text-text-muted text-xs">{watchedTodos.length}/20 todos</div>
+          <div className="text-text-muted text-xs">{watchedTodos.length}/3 todos</div>
         </div>
       </div>
 
@@ -358,15 +355,21 @@ export default function PollForm({
               <div className="border-border hover:border-border-subtle bg-surface hover:bg-surface-elevated flex items-center space-x-2 rounded-lg border p-3 transition-colors">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center space-x-2">
-                    <input
+                    <textarea
                       {...form.register(`options.${index}.text`)}
-                      type="text"
                       placeholder={`Option ${String.fromCharCode(65 + index)}`}
-                      className="text-text placeholder-text-muted w-full border-none bg-transparent text-sm outline-none"
+                      className="text-text placeholder-text-muted w-full resize-none overflow-hidden border-none bg-transparent text-sm outline-none"
+                      style={{ minHeight: '20px' }}
+                      rows={1}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = target.scrollHeight + 'px';
+                      }}
                     />
 
-                    {/* Correct Answer Checkbox (mandatory for education communities) */}
-                    {isEducationCommunity && watchedPollType !== 'ranking' && (
+                    {/* Correct Answer Checkbox */}
+                    {watchedPollType !== 'ranking' && (
                       <label className="flex cursor-pointer items-center space-x-1">
                         <input
                           type="checkbox"
@@ -515,7 +518,7 @@ export default function PollForm({
             </div>
           )}
 
-          {fields.length < 10 && (
+          {fields.length < 4 && (
             <button
               type="button"
               onClick={addOption}
@@ -538,11 +541,7 @@ export default function PollForm({
       )}
 
       {/* Pass remaining settings to separate component */}
-      <PollFormSettings
-        form={form}
-        isEducationCommunity={isEducationCommunity}
-        handleMaxChoicesSelect={handleMaxChoicesSelect}
-      />
+      <PollFormSettings form={form} handleMaxChoicesSelect={handleMaxChoicesSelect} />
     </div>
   );
 }

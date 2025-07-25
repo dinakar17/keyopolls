@@ -39,8 +39,6 @@ const PollDisplayPage = () => {
     },
   });
 
-  console.log('Error fetching poll:', error);
-
   // Use updated poll data if available, otherwise use fetched data
   const poll = pollData || data?.data;
 

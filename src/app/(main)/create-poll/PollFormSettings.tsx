@@ -2,46 +2,22 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-// Modern CKEditor 5 imports
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import {
-  BlockQuote,
-  Bold,
-  ClassicEditor,
-  Essentials,
-  Heading,
-  Indent,
-  IndentBlock,
-  Italic,
-  Link,
-  List,
-  Paragraph,
-  Underline,
-  Undo,
-} from 'ckeditor5';
-// Import CSS - make sure these are available in your project
-import 'ckeditor5/ckeditor5.css';
 import { UseFormReturn } from 'react-hook-form';
 
 import { useKeyopollsCommonApiTagsGetTagsList } from '@/api/tags/tags';
+import MarkdownEditor from '@/components/common/MarkdownEditor';
 import { PollFormData } from '@/types';
 
 interface PollFormSettingsProps {
   form: UseFormReturn<PollFormData>;
-  isEducationCommunity: boolean;
   handleMaxChoicesSelect: (choices: number) => void;
 }
 
-export default function PollFormSettings({
-  form,
-  isEducationCommunity,
-  handleMaxChoicesSelect,
-}: PollFormSettingsProps) {
+export default function PollFormSettings({ form, handleMaxChoicesSelect }: PollFormSettingsProps) {
   // Tags state
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(-1);
-  const [, setEditorReady] = useState(false);
 
   const { data: tagsData, isLoading: tagsLoading } = useKeyopollsCommonApiTagsGetTagsList(
     {
@@ -182,95 +158,6 @@ export default function PollFormSettings({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Modern CKEditor configuration
-  const editorConfiguration = {
-    licenseKey: 'GPL', // Use 'GPL' for open source or your license key
-    plugins: [
-      Essentials,
-      Paragraph,
-      Bold,
-      Italic,
-      Underline,
-      Link,
-      List,
-      Heading,
-      BlockQuote,
-      Indent,
-      IndentBlock,
-      Undo,
-    ],
-    toolbar: {
-      items: [
-        'heading',
-        '|',
-        'bold',
-        'italic',
-        'underline',
-        '|',
-        'bulletedList',
-        'numberedList',
-        '|',
-        'outdent',
-        'indent',
-        '|',
-        'link',
-        'blockQuote',
-        '|',
-        'undo',
-        'redo',
-      ],
-    },
-    heading: {
-      options: [
-        {
-          model: 'paragraph' as const,
-          view: 'p',
-          title: 'Paragraph',
-          class: 'ck-heading_paragraph',
-        },
-        {
-          model: 'heading1' as const,
-          view: 'h1',
-          title: 'Heading 1',
-          class: 'ck-heading_heading1',
-        },
-        {
-          model: 'heading2' as const,
-          view: 'h2',
-          title: 'Heading 2',
-          class: 'ck-heading_heading2',
-        },
-        {
-          model: 'heading3' as const,
-          view: 'h3',
-          title: 'Heading 3',
-          class: 'ck-heading_heading3',
-        },
-      ],
-    },
-    placeholder:
-      'Explain why this is the correct answer. Include relevant details, context, and reasoning to help users understand the concept better...',
-    link: {
-      decorators: {
-        openInNewTab: {
-          mode: 'manual' as const,
-          label: 'Open in a new tab',
-          attributes: {
-            target: '_blank',
-            rel: 'noopener noreferrer',
-          },
-        },
-      },
-    },
-    list: {
-      properties: {
-        styles: true,
-        startIndex: true,
-        reversed: true,
-      },
-    },
-  };
-
   const formErrors = form.formState.errors;
 
   return (
@@ -293,7 +180,7 @@ export default function PollFormSettings({
                   key={index}
                   className="bg-primary/10 text-primary border-primary/20 flex items-center space-x-1 rounded-full border px-2 py-1 text-xs"
                 >
-                  <span>#{tag}</span>
+                  <span>{tag}</span>
                   <button
                     type="button"
                     onClick={() => removeTag(index)}
@@ -353,7 +240,7 @@ export default function PollFormSettings({
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span>#{tag.name}</span>
+                            <span>{tag.name}</span>
                             <span className="text-xs opacity-70">
                               {tag.usage_count} {tag.usage_count === 1 ? 'use' : 'uses'}
                             </span>
@@ -397,7 +284,7 @@ export default function PollFormSettings({
                                 d="M12 4v16m8-8H4"
                               />
                             </svg>
-                            <span>Create "#{tagInput.trim()}"</span>
+                            <span>Create "{tagInput.trim()}"</span>
                           </div>
                         </button>
                       </>
@@ -430,7 +317,7 @@ export default function PollFormSettings({
                             d="M12 4v16m8-8H4"
                           />
                         </svg>
-                        <span>Create "#{tagInput.trim()}"</span>
+                        <span>Create "{tagInput.trim()}"</span>
                       </div>
                     </button>
                   )}
@@ -456,57 +343,53 @@ export default function PollFormSettings({
       </div>
 
       {/* Correct Answer Settings (mandatory) */}
-      {isEducationCommunity && (
-        <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
-          <div>
-            <h3 className="text-text text-sm font-medium">Correct Answer</h3>
-            <p className="text-text-muted text-xs">Set the correct answer for this poll</p>
-          </div>
-
-          <div className="space-y-3">
-            {watchedPollType === 'text_input' && (
-              <div>
-                <label className="text-text-secondary mb-2 block text-sm">
-                  Correct text answer (single word/number) *
-                </label>
-                <input
-                  {...form.register('correct_text_answer')}
-                  type="text"
-                  placeholder="Enter correct answer"
-                  className="border-border bg-surface-elevated text-text placeholder-text-muted focus:border-primary w-full rounded-lg border px-3 py-2 text-sm outline-none"
-                />
-                {formErrors.correct_text_answer && (
-                  <p className="text-error mt-1 text-sm">
-                    {formErrors.correct_text_answer.message}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {watchedPollType === 'single' && (
-              <p className="text-text-muted text-sm">
-                Check the correct option above. Only one option can be marked as correct.
-              </p>
-            )}
-
-            {watchedPollType === 'multiple' && (
-              <p className="text-text-muted text-sm">
-                Check all correct options above. Users must select exactly all correct options to be
-                marked as correct.
-              </p>
-            )}
-
-            {watchedPollType === 'ranking' && (
-              <p className="text-text-muted text-sm">
-                The correct ranking will be based on the current order of your options. Users must
-                rank them in the exact same order to be marked as correct.
-              </p>
-            )}
-          </div>
+      <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
+        <div>
+          <h3 className="text-text text-sm font-medium">Correct Answer</h3>
+          <p className="text-text-muted text-xs">Set the correct answer for this poll</p>
         </div>
-      )}
 
-      {/* Explanation with Modern CKEditor (mandatory) */}
+        <div className="space-y-3">
+          {watchedPollType === 'text_input' && (
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm">
+                Correct text answer (single word/number) *
+              </label>
+              <input
+                {...form.register('correct_text_answer')}
+                type="text"
+                placeholder="Enter correct answer"
+                className="border-border bg-surface-elevated text-text placeholder-text-muted focus:border-primary w-full rounded-lg border px-3 py-2 text-sm outline-none"
+              />
+              {formErrors.correct_text_answer && (
+                <p className="text-error mt-1 text-sm">{formErrors.correct_text_answer.message}</p>
+              )}
+            </div>
+          )}
+
+          {watchedPollType === 'single' && (
+            <p className="text-text-muted text-sm">
+              Check the correct option above. Only one option can be marked as correct.
+            </p>
+          )}
+
+          {watchedPollType === 'multiple' && (
+            <p className="text-text-muted text-sm">
+              Check all correct options above. Users must select exactly all correct options to be
+              marked as correct.
+            </p>
+          )}
+
+          {watchedPollType === 'ranking' && (
+            <p className="text-text-muted text-sm">
+              The correct ranking will be based on the current order of your options. Users must
+              rank them in the exact same order to be marked as correct.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Explanation with MarkdownEditor (mandatory) */}
       <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
         <div>
           <h3 className="text-text text-sm font-medium">Explanation *</h3>
@@ -515,55 +398,22 @@ export default function PollFormSettings({
           </p>
         </div>
 
-        <div>
-          {typeof window !== 'undefined' && (
-            <div className="border-border overflow-hidden rounded-lg border">
-              <CKEditor
-                editor={ClassicEditor}
-                data={watchedExplanation || ''}
-                config={editorConfiguration}
-                onReady={(editor) => {
-                  setEditorReady(true);
-                  console.log('CKEditor 5 is ready to use!', editor);
-
-                  // Apply custom styles to match your theme
-                  const editable = editor.editing.view.document.getRoot();
-                  if (editable) {
-                    editor.editing.view.change((writer) => {
-                      writer.setStyle('min-height', '150px', editable);
-                    });
-                  }
-                }}
-                onChange={(event, editor) => {
-                  const data = editor.getData();
-                  form.setValue('explanation', data);
-                }}
-                onBlur={() => {
-                  form.trigger('explanation');
-                }}
-                onError={(error, { willEditorRestart }) => {
-                  console.error('CKEditor error:', error);
-                  if (willEditorRestart) {
-                    console.log('Editor will restart');
-                  }
-                }}
-              />
-            </div>
-          )}
-
-          <div className="mt-2 flex items-center justify-between">
-            <div className="text-xs">
-              {formErrors.explanation && (
-                <p className="text-error">{formErrors.explanation.message}</p>
-              )}
-            </div>
-            <div className="text-text-muted text-xs">
-              <span className={watchedExplanation?.length >= 250 ? 'text-success' : 'text-warning'}>
-                {watchedExplanation?.replace(/<[^>]*>/g, '').length || 0}/250 minimum
-              </span>
-            </div>
-          </div>
-        </div>
+        <MarkdownEditor
+          value={watchedExplanation || ''}
+          onChange={(value) => {
+            form.setValue('explanation', value);
+            form.trigger('explanation');
+          }}
+          label=""
+          placeholder="Explain why this is the correct answer. Include relevant details, context, and reasoning to help users understand the concept better..."
+          minCharacters={250}
+          showCharacterCount={true}
+          error={formErrors.explanation?.message}
+          height="200px"
+          required={true}
+          showModeToggle={true}
+          className="w-full"
+        />
       </div>
 
       {/* Multiple Choice Settings */}

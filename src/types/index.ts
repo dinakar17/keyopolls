@@ -84,10 +84,7 @@ export const pollCreateSchema = z
       .string()
       .min(50, 'Description must be at least 50 characters')
       .max(1000, 'Description too long'),
-    explanation: z
-      .string()
-      .min(250, 'Explanation must be at least 250 characters')
-      .max(2000, 'Explanation too long'),
+    explanation: z.string().min(250, 'Explanation must be at least 250 characters'),
     poll_type: z.enum(['single', 'multiple', 'ranking', 'text_input'], {
       required_error: 'Poll type is required',
     }),
@@ -99,7 +96,7 @@ export const pollCreateSchema = z
     correct_text_answer: z.string().optional(),
     correct_ranking_order: z.array(z.number()).optional(),
     tags: z.array(tagSchema).max(5, 'Maximum 5 tags allowed'),
-    todos: z.array(z.object({ text: z.string().max(200, 'Todo item too long') })).optional(),
+    todos: z.array(z.object({ text: z.string().max(280, 'Todo item too long') })).optional(),
     options: z
       .array(pollOptionSchema)
       .min(0, 'Invalid options')
