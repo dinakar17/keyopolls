@@ -143,8 +143,8 @@ export default function CreatePoll() {
     if (!watchedTitle || watchedTitle.trim().length < 20) {
       errors.title = 'Title must be at least 20 characters';
       isValid = false;
-    } else if (watchedTitle.length > 300) {
-      errors.title = 'Title must be less than 300 characters';
+    } else if (watchedTitle.length > 500) {
+      errors.title = 'Title must be less than 500 characters';
       isValid = false;
     }
 
