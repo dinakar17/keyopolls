@@ -209,8 +209,8 @@ export default function CreatePoll() {
         isValid = false;
       } else if (watchedPollType === 'multiple') {
         // For multiple choice, max choices must match the number of correct answers
-        if (watchedMaxChoices !== correctOptions.length) {
-          errors.correctAnswer = `Max choices (${watchedMaxChoices}) must match the number of correct answers (${correctOptions.length})`;
+        if (watchedMaxChoices < correctOptions.length) {
+          errors.correctAnswer = `Max choices (${watchedMaxChoices}) must be at least the number of correct answers (${correctOptions.length})`;
           isValid = false;
         }
       }
