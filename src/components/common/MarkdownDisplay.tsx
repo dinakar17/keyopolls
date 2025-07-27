@@ -78,39 +78,36 @@ export default function MarkdownDisplay({
     switch (variant) {
       case 'compact':
         return {
-          h1: 'text-lg font-bold mb-3 mt-4 first:mt-0',
-          h2: 'text-base font-semibold mb-2 mt-3',
-          h3: 'text-sm font-medium mb-2 mt-2',
-          p: 'mb-2 text-sm leading-relaxed',
+          h1: 'text-lg font-bold mb-3 mt-4 first:mt-0 text-text',
+          h2: 'text-base font-semibold mb-2 mt-3 text-text',
+          h3: 'text-sm font-medium mb-2 mt-2 text-text',
+          p: 'mb-2 text-sm leading-relaxed text-text',
           ul: 'list-disc list-inside mb-2 space-y-0.5 pl-2',
           ol: 'list-decimal list-inside mb-2 space-y-0.5 pl-2',
-          li: 'text-sm',
-          blockquote:
-            'border-l-3 border-gray-300 dark:border-gray-600 pl-3 my-2 italic text-gray-600 dark:text-gray-400',
+          li: 'text-sm text-text',
+          blockquote: 'border-l-3 border-border pl-3 my-2 italic text-text-secondary',
         };
       case 'article':
         return {
-          h1: 'text-3xl font-bold mb-6 mt-8 first:mt-0',
-          h2: 'text-2xl font-semibold mb-4 mt-6',
-          h3: 'text-xl font-medium mb-3 mt-4',
-          p: 'mb-4 leading-relaxed',
+          h1: 'text-3xl font-bold mb-6 mt-8 first:mt-0 text-text',
+          h2: 'text-2xl font-semibold mb-4 mt-6 text-text',
+          h3: 'text-xl font-medium mb-3 mt-4 text-text',
+          p: 'mb-4 leading-relaxed text-text',
           ul: 'list-disc list-inside mb-4 space-y-1 pl-4',
           ol: 'list-decimal list-inside mb-4 space-y-1 pl-4',
-          li: '',
-          blockquote:
-            'border-l-4 border-gray-300 dark:border-gray-600 pl-6 my-4 italic text-gray-600 dark:text-gray-400',
+          li: 'text-text',
+          blockquote: 'border-l-4 border-border pl-6 my-4 italic text-text-secondary',
         };
       default:
         return {
-          h1: 'text-xl font-bold mb-4 mt-6 first:mt-0',
-          h2: 'text-lg font-semibold mb-3 mt-4',
-          h3: 'text-base font-medium mb-2 mt-3',
-          p: 'mb-3 text-sm leading-relaxed',
+          h1: 'text-xl font-bold mb-4 mt-6 first:mt-0 text-text',
+          h2: 'text-lg font-semibold mb-3 mt-4 text-text',
+          h3: 'text-base font-medium mb-2 mt-3 text-text',
+          p: 'mb-3 text-sm leading-relaxed text-text',
           ul: 'list-disc list-inside mb-3 space-y-1 pl-3',
           ol: 'list-decimal list-inside mb-3 space-y-1 pl-3',
-          li: 'text-sm',
-          blockquote:
-            'border-l-4 border-gray-300 dark:border-gray-600 pl-4 my-3 italic text-gray-600 dark:text-gray-400',
+          li: 'text-sm text-text',
+          blockquote: 'border-l-4 border-border pl-4 my-3 italic text-text-secondary',
         };
     }
   };
@@ -118,10 +115,7 @@ export default function MarkdownDisplay({
   const spacingClasses = getSpacingClasses();
 
   return (
-    <div
-      className={`prose dark:prose-invert ${getVariantClasses()} text-gray-900 dark:text-gray-100 ${className}`}
-      style={{ maxWidth }}
-    >
+    <div className={`${getVariantClasses()} text-text ${className}`} style={{ maxWidth }}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}
@@ -130,16 +124,20 @@ export default function MarkdownDisplay({
           h1: ({ children }) => <h1 className={spacingClasses.h1}>{children}</h1>,
           h2: ({ children }) => <h2 className={spacingClasses.h2}>{children}</h2>,
           h3: ({ children }) => <h3 className={spacingClasses.h3}>{children}</h3>,
-          h4: ({ children }) => <h4 className="mt-2 mb-1 text-sm font-medium">{children}</h4>,
-          h5: ({ children }) => <h5 className="mt-2 mb-1 text-sm font-medium">{children}</h5>,
-          h6: ({ children }) => <h6 className="mt-2 mb-1 text-sm font-medium">{children}</h6>,
+          h4: ({ children }) => (
+            <h4 className="text-text mt-2 mb-1 text-sm font-medium">{children}</h4>
+          ),
+          h5: ({ children }) => (
+            <h5 className="text-text mt-2 mb-1 text-sm font-medium">{children}</h5>
+          ),
+          h6: ({ children }) => (
+            <h6 className="text-text mt-2 mb-1 text-sm font-medium">{children}</h6>
+          ),
 
           // Text elements
           p: ({ children }) => <p className={spacingClasses.p}>{children}</p>,
-          strong: ({ children }) => (
-            <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>
-          ),
-          em: ({ children }) => <em className="italic">{children}</em>,
+          strong: ({ children }) => <strong className="text-text font-semibold">{children}</strong>,
+          em: ({ children }) => <em className="text-text italic">{children}</em>,
 
           // Lists with better spacing
           ul: ({ children }) => <ul className={spacingClasses.ul}>{children}</ul>,
@@ -162,12 +160,13 @@ export default function MarkdownDisplay({
                     style={getCodeTheme()}
                     language={match[1]}
                     PreTag="div"
-                    className="rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="border-border rounded-lg border"
                     showLineNumbers={showCodeLineNumbers}
                     customStyle={{
                       fontSize: variant === 'compact' ? '0.75rem' : '0.875rem',
                       margin: 0,
                       padding: '1rem',
+                      backgroundColor: 'var(--color-surface-elevated)',
                     }}
                     {...props}
                   >
@@ -179,7 +178,7 @@ export default function MarkdownDisplay({
 
             return (
               <code
-                className={`rounded border border-gray-200 bg-gray-100 px-2 py-1 font-mono text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 ${
+                className={`border-border bg-surface-elevated text-text rounded border px-2 py-1 font-mono ${
                   variant === 'compact' ? 'text-xs' : 'text-sm'
                 }`}
                 {...props}
@@ -195,7 +194,7 @@ export default function MarkdownDisplay({
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 underline decoration-blue-600/30 transition-colors hover:text-blue-800 hover:decoration-blue-800/60 dark:text-blue-400 dark:decoration-blue-400/30 dark:hover:text-blue-300 dark:hover:decoration-blue-300/60"
+              className="text-primary decoration-primary/30 hover:text-primary/80 hover:decoration-primary/60 underline transition-colors"
             >
               {children}
             </a>
@@ -204,14 +203,14 @@ export default function MarkdownDisplay({
           // Enhanced tables
           table: ({ children }) => (
             <div
-              className={`overflow-x-auto ${variant === 'compact' ? 'my-3' : 'my-4'} rounded-lg border border-gray-200 dark:border-gray-700`}
+              className={`overflow-x-auto ${variant === 'compact' ? 'my-3' : 'my-4'} border-border rounded-lg border`}
             >
-              <table className="w-full border-collapse">{children}</table>
+              <table className="bg-surface w-full border-collapse">{children}</table>
             </div>
           ),
           th: ({ children }) => (
             <th
-              className={`border-b border-gray-200 bg-gray-50 px-4 py-3 text-left font-semibold text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 ${
+              className={`border-border bg-surface-elevated text-text border-b px-4 py-3 text-left font-semibold ${
                 variant === 'compact' ? 'text-xs' : 'text-sm'
               }`}
             >
@@ -220,7 +219,7 @@ export default function MarkdownDisplay({
           ),
           td: ({ children }) => (
             <td
-              className={`border-b border-gray-200 px-4 py-3 text-gray-700 dark:border-gray-700 dark:text-gray-300 ${
+              className={`border-border text-text-secondary border-b px-4 py-3 ${
                 variant === 'compact' ? 'text-xs' : 'text-sm'
               }`}
             >
@@ -229,11 +228,7 @@ export default function MarkdownDisplay({
           ),
 
           // Horizontal rule
-          hr: () => (
-            <hr
-              className={`border-gray-300 dark:border-gray-600 ${variant === 'compact' ? 'my-4' : 'my-6'}`}
-            />
-          ),
+          hr: () => <hr className={`border-border ${variant === 'compact' ? 'my-4' : 'my-6'}`} />,
 
           // Enhanced images
           img: ({ src, alt }) => {
@@ -246,20 +241,16 @@ export default function MarkdownDisplay({
                   alt={alt || ''}
                   width={800}
                   height={600}
-                  className="h-auto max-w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-700"
+                  className="border-border h-auto max-w-full rounded-lg border shadow-sm"
                   style={{ width: '100%', height: 'auto' }}
                 />
-                {alt && (
-                  <p className="mt-2 text-xs text-gray-500 italic dark:text-gray-400">{alt}</p>
-                )}
+                {alt && <p className="text-text-muted mt-2 text-xs italic">{alt}</p>}
               </div>
             );
           },
 
           // Strikethrough
-          del: ({ children }) => (
-            <del className="text-gray-500 line-through dark:text-gray-400">{children}</del>
-          ),
+          del: ({ children }) => <del className="text-text-muted line-through">{children}</del>,
 
           // Task lists
           input: ({ type, checked, disabled }) =>
@@ -268,7 +259,7 @@ export default function MarkdownDisplay({
                 type="checkbox"
                 checked={checked}
                 disabled={disabled}
-                className="mr-2 scale-110 accent-blue-600 dark:accent-blue-400"
+                className="accent-primary mr-2 scale-110"
                 readOnly
               />
             ) : null,

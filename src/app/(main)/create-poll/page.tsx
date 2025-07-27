@@ -135,6 +135,10 @@ export default function CreatePoll() {
     const errors: ValidationErrors = {};
     let isValid = true;
 
+    // Get current form values to ensure we have the latest state
+    const currentValues = form.getValues();
+    const currentOptions = currentValues.options || [];
+
     // 1. Validate Title (compulsory)
     if (!watchedTitle || watchedTitle.trim().length < 20) {
       errors.title = 'Title must be at least 20 characters';
@@ -146,7 +150,7 @@ export default function CreatePoll() {
 
     // 2. Validate Options (at least 2 for choice-based polls)
     if (watchedPollType !== 'text_input') {
-      const validOptions = watchedOptions.filter((option) => option.text.trim());
+      const validOptions = currentOptions.filter((option) => option.text.trim());
       if (validOptions.length < 2) {
         errors.options = 'At least 2 options with text are required';
         isValid = false;
@@ -193,13 +197,13 @@ export default function CreatePoll() {
       if (!watchedCorrectRankingOrder || watchedCorrectRankingOrder.length < 2) {
         errors.correctAnswer = 'Please set the correct ranking order with at least 2 options';
         isValid = false;
-      } else if (watchedCorrectRankingOrder.length !== watchedOptions.length) {
+      } else if (watchedCorrectRankingOrder.length !== currentOptions.length) {
         errors.correctAnswer = 'Ranking order must include all options';
         isValid = false;
       }
     } else {
-      // For single and multiple choice
-      const correctOptions = watchedOptions.filter((option) => option.is_correct);
+      // For single and multiple choice - use current form values
+      const correctOptions = currentOptions.filter((option) => option.is_correct);
       if (correctOptions.length === 0) {
         errors.correctAnswer = 'At least one correct answer must be selected';
         isValid = false;

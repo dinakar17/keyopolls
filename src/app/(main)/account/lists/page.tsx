@@ -306,9 +306,9 @@ const Lists = () => {
 
   // Loading skeleton component
   const LoadingSkeleton = () => (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="border-border animate-pulse rounded-lg border p-4">
+        <div key={i} className="border-border-subtle animate-pulse border-b p-4">
           <div className="mb-3 flex items-start justify-between">
             <div className="bg-surface-elevated h-4 w-4 rounded-full"></div>
             <div className="bg-surface-elevated h-4 w-4 rounded"></div>
@@ -331,9 +331,9 @@ const Lists = () => {
   );
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen pb-16">
       {/* Header */}
-      <div className="bg-background border-border sticky top-0 z-40 border-b">
+      <div className="bg-background border-border-subtle sticky top-0 z-40 border-b">
         <div className="mx-auto max-w-2xl px-4 py-4">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -365,7 +365,7 @@ const Lists = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowCommunitySelector(true)}
-                className="border-border bg-background hover:bg-surface-elevated flex flex-1 items-center space-x-2 rounded-lg border px-3 py-2 text-left transition-colors"
+                className="bg-background border-border hover:bg-surface-elevated flex flex-1 items-center space-x-2 rounded-lg border px-3 py-2 text-left transition-colors"
               >
                 {selectedCommunity ? (
                   <>
@@ -413,7 +413,7 @@ const Lists = () => {
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                   placeholder="Search lists..."
-                  className="border-border bg-background text-text placeholder-text-muted focus:border-primary focus:ring-primary/20 w-full rounded-lg border py-2 pr-4 pl-10 text-sm focus:ring-2 focus:outline-none"
+                  className="bg-background text-text placeholder-text-muted border-border focus:border-primary focus:ring-primary w-full rounded-lg border py-2 pr-4 pl-10 text-sm focus:ring-1 focus:outline-none"
                 />
               </div>
             </div>
@@ -531,13 +531,15 @@ const Lists = () => {
           </div>
         )}
 
-        {/* Lists Grid */}
+        {/* Lists */}
         {!isLoading && allFolders.length > 0 && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {allFolders.map((folder) => (
+          <div className="space-y-0">
+            {allFolders.map((folder, index) => (
               <div
                 key={folder.id}
-                className="group border-border hover:bg-surface-elevated/30 cursor-pointer rounded-lg border p-4 transition-colors"
+                className={`group border-border-subtle hover:bg-surface-elevated/30 cursor-pointer border-b p-4 transition-colors ${
+                  index === 0 ? 'border-border-subtle border-t' : ''
+                }`}
               >
                 <div className="mb-3 flex items-start justify-between">
                   <div
@@ -651,10 +653,10 @@ const Lists = () => {
 
       {/* Community Selection Drawer */}
       <Drawer open={showCommunitySelector} onOpenChange={setShowCommunitySelector}>
-        <DrawerContent className="max-h-[80vh]">
+        <DrawerContent className="bg-surface border-border max-h-[80vh]">
           <DrawerHeader className="border-border border-b">
             <div className="flex items-center justify-between">
-              <DrawerTitle>Select Community</DrawerTitle>
+              <DrawerTitle className="text-text">Select Community</DrawerTitle>
               <DrawerClose asChild>
                 <button className="hover:bg-surface-elevated rounded-full p-1 transition-colors">
                   <X className="text-text-muted h-5 w-5" />
@@ -671,7 +673,7 @@ const Lists = () => {
                 value={communitySearch}
                 onChange={(e) => setCommunitySearch(e.target.value)}
                 placeholder="Search communities..."
-                className="border-border bg-background text-text placeholder-text-muted focus:border-primary focus:ring-primary/20 w-full rounded-lg border px-3 py-2 pl-10 text-sm focus:ring-2 focus:outline-none"
+                className="bg-background text-text placeholder-text-muted border-border focus:border-primary focus:ring-primary w-full rounded-lg border px-3 py-2 pl-10 text-sm focus:ring-1 focus:outline-none"
                 autoFocus
               />
             </div>
@@ -784,7 +786,7 @@ const Lists = () => {
                   onChange={(e) => setFolderForm((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="My Awesome List"
                   maxLength={100}
-                  className="border-border focus:ring-primary focus:border-primary text-text bg-surface w-full rounded-lg border px-3 py-2 focus:ring-2"
+                  className="border-border focus:ring-primary focus:border-primary text-text bg-surface w-full rounded-lg border px-3 py-2 focus:ring-1 focus:outline-none"
                 />
               </div>
 
@@ -801,7 +803,7 @@ const Lists = () => {
                   placeholder="Describe what this list is for..."
                   rows={3}
                   maxLength={500}
-                  className="border-border focus:ring-primary focus:border-primary text-text bg-surface w-full resize-none rounded-lg border px-3 py-2 focus:ring-2"
+                  className="border-border focus:ring-primary focus:border-primary text-text bg-surface w-full resize-none rounded-lg border px-3 py-2 focus:ring-1 focus:outline-none"
                 />
               </div>
 
@@ -816,8 +818,8 @@ const Lists = () => {
                       content_type: e.target.value as 'Poll' | 'Article',
                     }))
                   }
-                  disabled={editingFolder?.is_paid} // Paid folders can't change content type
-                  className="border-border focus:ring-primary focus:border-primary text-text bg-surface w-full rounded-lg border px-3 py-2 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={editingFolder?.is_paid}
+                  className="border-border focus:ring-primary focus:border-primary text-text bg-surface w-full rounded-lg border px-3 py-2 focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="Poll">Polls</option>
                   <option value="Article">Articles</option>
@@ -845,7 +847,7 @@ const Lists = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Lock className="h-4 w-4 text-gray-500" />
+                      <Lock className="text-text-muted h-4 w-4" />
                       <div>
                         <div className="text-text font-medium">Private</div>
                         <div className="text-text-muted text-xs">Only you can see this list</div>
@@ -868,7 +870,7 @@ const Lists = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Globe className="h-4 w-4 text-green-500" />
+                      <Globe className="text-success h-4 w-4" />
                       <div>
                         <div className="text-text font-medium">Public</div>
                         <div className="text-text-muted text-xs">
@@ -894,7 +896,7 @@ const Lists = () => {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <DollarSign className="h-4 w-4 text-yellow-500" />
+                        <DollarSign className="text-warning h-4 w-4" />
                         <div>
                           <div className="text-text font-medium">Paid</div>
                           <div className="text-text-muted text-xs">
@@ -934,7 +936,7 @@ const Lists = () => {
                       placeholder="9.99"
                       min="0.01"
                       step="0.01"
-                      className="border-border focus:ring-primary focus:border-primary text-text bg-surface w-full rounded-lg border py-2 pr-3 pl-8 focus:ring-2"
+                      className="border-border focus:ring-primary focus:border-primary text-text bg-surface w-full rounded-lg border py-2 pr-3 pl-8 focus:ring-1 focus:outline-none"
                     />
                   </div>
                   <p className="text-text-muted mt-1 text-xs">
@@ -994,7 +996,7 @@ const Lists = () => {
                     isCreatingFolder ||
                     isUpdatingFolder
                   }
-                  className="bg-primary text-background hover:bg-primary/90 flex-1 rounded-lg px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                  className="bg-primary text-background flex-1 rounded-lg px-4 py-2 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isCreatingFolder || isUpdatingFolder
                     ? editingFolder
