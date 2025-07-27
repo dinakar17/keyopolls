@@ -34,9 +34,9 @@ interface RoleChangeConfirmation {
 }
 
 const ROLES = [
-  { value: 'member', label: 'Member', icon: Users, color: 'text-gray-600' },
-  { value: 'recruiter', label: 'Recruiter', icon: UserCheck, color: 'text-blue-600' },
-  { value: 'moderator', label: 'Moderator', icon: Shield, color: 'text-green-600' },
+  { value: 'member', label: 'Member', icon: Users, color: 'text-text-secondary' },
+  { value: 'recruiter', label: 'Recruiter', icon: UserCheck, color: 'text-secondary' },
+  { value: 'moderator', label: 'Moderator', icon: Shield, color: 'text-success' },
 ];
 
 const ROLE_FILTERS = [{ value: '', label: 'All Roles' }, ...ROLES];
@@ -248,7 +248,7 @@ const CommunityMembersPage = () => {
 
   const getRoleColor = (role: string) => {
     const roleData = ROLES.find((r) => r.value === role);
-    if (!roleData) return 'text-gray-600';
+    if (!roleData) return 'text-text-secondary';
     return roleData.color;
   };
 
@@ -256,11 +256,11 @@ const CommunityMembersPage = () => {
   if (communityLoading) {
     return (
       <div className="bg-background min-h-screen">
-        <div className="mx-auto max-w-6xl px-4 py-8">
-          <div className="animate-pulse">
-            <div className="bg-surface-elevated mb-8 h-8 w-64 rounded"></div>
-            <div className="bg-surface-elevated mb-6 h-12 w-full rounded-lg"></div>
-            <div className="space-y-4">
+        <div className="mx-auto max-w-2xl px-4 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="bg-surface-elevated h-8 w-64 rounded"></div>
+            <div className="bg-surface-elevated h-12 w-full rounded-lg"></div>
+            <div className="space-y-3">
               {Array.from({ length: 10 }).map((_, i) => (
                 <div key={i} className="bg-surface-elevated h-16 rounded-lg"></div>
               ))}
@@ -274,14 +274,14 @@ const CommunityMembersPage = () => {
   // Error state or no community
   if (!community) {
     return (
-      <div className="bg-background flex min-h-screen items-center justify-center">
+      <div className="bg-background flex min-h-screen items-center justify-center px-4">
         <div className="text-center">
           <AlertCircle className="text-error mx-auto mb-4 h-12 w-12" />
           <h2 className="text-text mb-2 text-xl font-bold">Community not found</h2>
           <p className="text-text-secondary">Please check the URL and try again.</p>
           <button
             onClick={() => router.push('/communities')}
-            className="bg-primary text-background mt-4 rounded-lg px-4 py-2 text-sm font-medium"
+            className="bg-primary text-background mt-4 rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90"
           >
             Go to Communities
           </button>
@@ -293,14 +293,14 @@ const CommunityMembersPage = () => {
   // Access control
   if (!canManageRoles) {
     return (
-      <div className="bg-background flex min-h-screen items-center justify-center">
+      <div className="bg-background flex min-h-screen items-center justify-center px-4">
         <div className="text-center">
           <Shield className="text-error mx-auto mb-4 h-12 w-12" />
           <h2 className="text-text mb-2 text-xl font-bold">Access Denied</h2>
           <p className="text-text-secondary">You don't have permission to manage members.</p>
           <button
             onClick={() => router.push(`/communities/${slug}/admin`)}
-            className="bg-primary text-background mt-4 rounded-lg px-4 py-2 text-sm font-medium"
+            className="bg-primary text-background mt-4 rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90"
           >
             Back to Admin
           </button>
@@ -314,12 +314,12 @@ const CommunityMembersPage = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 py-8">
+      <div className="mx-auto max-w-2xl px-4 py-6">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <button
             onClick={() => router.push(`/communities/${slug}/admin`)}
-            className="text-text-secondary hover:text-text mb-4 flex items-center gap-2 text-sm font-medium transition-colors"
+            className="text-text-secondary hover:text-text mb-4 flex items-center gap-2 text-sm transition-colors"
           >
             <ArrowLeft size={16} />
             Back to Admin
@@ -327,7 +327,7 @@ const CommunityMembersPage = () => {
 
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-text text-2xl font-bold">Manage Members</h1>
+              <h1 className="text-text text-xl font-bold">Manage Members</h1>
               <p className="text-text-secondary text-sm">
                 {community.name} • {totalCount} members
               </p>
@@ -336,7 +336,7 @@ const CommunityMembersPage = () => {
             <button
               onClick={handleRefresh}
               disabled={isInitialLoading}
-              className="text-text-muted hover:text-text rounded-lg p-2 transition-colors disabled:opacity-50"
+              className="text-text-muted hover:text-text rounded-full p-2 transition-colors disabled:opacity-50"
               title="Refresh"
             >
               <RefreshCw size={18} className={isInitialLoading ? 'animate-spin' : ''} />
@@ -345,46 +345,47 @@ const CommunityMembersPage = () => {
         </div>
 
         {/* Filters and Search */}
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="text-text-muted absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search members by name or username..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="border-border bg-surface text-text placeholder:text-text-muted focus:border-primary focus:ring-primary/20 w-full rounded-lg border py-3 pr-4 pl-10 text-sm transition-colors focus:ring-2 focus:outline-none"
-              />
-            </div>
+        <div className="mb-4 space-y-3">
+          {/* Search */}
+          <div className="relative">
+            <Search className="text-text-muted absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search members..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border-border bg-background text-text placeholder:text-text-muted focus:border-primary w-full rounded-lg border py-3 pr-4 pl-10 text-sm transition-colors focus:outline-none"
+            />
+          </div>
 
+          {/* Filters Row */}
+          <div className="flex gap-2">
             {/* Role Filter */}
             <div className="relative">
               <button
                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                className="border-border bg-surface text-text hover:bg-surface-elevated flex min-w-[140px] items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-colors"
+                className="border-border bg-background text-text hover:bg-surface-elevated flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors"
               >
-                <Filter size={16} />
+                <Filter size={14} />
                 {ROLE_FILTERS.find((r) => r.value === selectedRole)?.label || 'All Roles'}
-                <ChevronDown size={16} />
+                <ChevronDown size={14} />
               </button>
 
               {showFilterDropdown && (
-                <div className="border-border bg-surface absolute top-full right-0 z-10 mt-1 w-48 rounded-lg border shadow-lg">
+                <div className="border-border bg-surface absolute top-full left-0 z-10 mt-1 w-40 rounded-lg border shadow-lg">
                   {ROLE_FILTERS.map((role) => (
                     <button
                       key={role.value}
                       onClick={() => handleFilterChange(role.value)}
-                      className="hover:bg-surface-elevated flex w-full items-center gap-2 px-4 py-3 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      className="hover:bg-surface-elevated flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg"
                     >
                       {role.value && (
                         <div className={getRoleColor(role.value)}>
-                          {React.createElement(getRoleIcon(role.value), { size: 16 })}
+                          {React.createElement(getRoleIcon(role.value), { size: 14 })}
                         </div>
                       )}
                       {role.label}
-                      {selectedRole === role.value && <Check className="ml-auto h-4 w-4" />}
+                      {selectedRole === role.value && <Check className="ml-auto h-3 w-3" />}
                     </button>
                   ))}
                 </div>
@@ -395,22 +396,22 @@ const CommunityMembersPage = () => {
             <div className="relative">
               <button
                 onClick={() => setShowSortDropdown(!showSortDropdown)}
-                className="border-border bg-surface text-text hover:bg-surface-elevated flex min-w-[140px] items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-colors"
+                className="border-border bg-background text-text hover:bg-surface-elevated flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors"
               >
-                Sort by
-                <ChevronDown size={16} />
+                Sort
+                <ChevronDown size={14} />
               </button>
 
               {showSortDropdown && (
-                <div className="border-border bg-surface absolute top-full right-0 z-10 mt-1 w-48 rounded-lg border shadow-lg">
+                <div className="border-border bg-surface absolute top-full right-0 z-10 mt-1 w-44 rounded-lg border shadow-lg">
                   {SORT_OPTIONS.map((option) => (
                     <button
                       key={option.value}
                       onClick={() => handleSortChange(option.value)}
-                      className="hover:bg-surface-elevated flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      className="hover:bg-surface-elevated flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg"
                     >
                       {option.label}
-                      {sortBy === option.value && <Check className="h-4 w-4" />}
+                      {sortBy === option.value && <Check className="h-3 w-3" />}
                     </button>
                   ))}
                 </div>
@@ -420,18 +421,18 @@ const CommunityMembersPage = () => {
         </div>
 
         {/* Members List */}
-        <div className="border-border bg-surface rounded-lg border">
+        <div>
           {isInitialLoading ? (
-            <div className="space-y-4 p-6">
-              {Array.from({ length: 10 }).map((_, i) => (
+            <div className="space-y-3">
+              {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="flex items-center gap-4">
+                  <div className="border-border-subtle flex items-center gap-3 border-b py-3">
                     <div className="bg-surface-elevated h-10 w-10 rounded-full"></div>
-                    <div className="flex-1">
-                      <div className="bg-surface-elevated mb-2 h-4 w-32 rounded"></div>
-                      <div className="bg-surface-elevated h-3 w-24 rounded"></div>
+                    <div className="min-w-0 flex-1">
+                      <div className="bg-surface-elevated mb-1 h-4 w-28 rounded"></div>
+                      <div className="bg-surface-elevated h-3 w-20 rounded"></div>
                     </div>
-                    <div className="bg-surface-elevated h-6 w-20 rounded"></div>
+                    <div className="bg-surface-elevated h-5 w-16 rounded"></div>
                   </div>
                 </div>
               ))}
@@ -440,10 +441,10 @@ const CommunityMembersPage = () => {
             <div className="py-12 text-center">
               <AlertCircle className="text-error mx-auto mb-4 h-12 w-12" />
               <h3 className="text-text mb-2 text-lg font-medium">Failed to load members</h3>
-              <p className="text-text-secondary mb-4">Please try again later.</p>
+              <p className="text-text-secondary mb-4 text-sm">Please try again later.</p>
               <button
                 onClick={handleRefresh}
-                className="bg-primary text-background rounded-lg px-4 py-2 text-sm font-medium"
+                className="bg-primary text-background rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90"
               >
                 Retry
               </button>
@@ -452,18 +453,18 @@ const CommunityMembersPage = () => {
             <div className="py-12 text-center">
               <Users className="text-text-muted mx-auto mb-4 h-12 w-12" />
               <h3 className="text-text mb-2 text-lg font-medium">No members found</h3>
-              <p className="text-text-secondary">
+              <p className="text-text-secondary text-sm">
                 {searchQuery || selectedRole
                   ? 'Try adjusting your search or filters.'
                   : 'This community has no members yet.'}
               </p>
             </div>
           ) : (
-            <div ref={scrollContainerRef} className="max-h-[600px] overflow-y-auto">
+            <div ref={scrollContainerRef}>
               {allUsers.map((user, index) => (
                 <div
                   key={`${user.id}-${index}`}
-                  className="border-border flex items-center gap-4 border-b px-6 py-4 last:border-b-0"
+                  className="border-border-subtle hover:bg-surface-elevated/30 flex items-center gap-3 border-b py-3 transition-colors last:border-b-0"
                 >
                   {/* Avatar */}
                   <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
@@ -485,8 +486,10 @@ const CommunityMembersPage = () => {
                   {/* User Info */}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-text truncate font-medium">{user.display_name}</h3>
-                      <span className="text-text-muted text-sm">@{user.username}</span>
+                      <h3 className="text-text truncate text-sm font-medium">
+                        {user.display_name}
+                      </h3>
+                      <span className="text-text-muted text-xs">@{user.username}</span>
                     </div>
                     <div className="text-text-secondary flex items-center gap-3 text-xs">
                       <span>{user.total_aura} aura</span>
@@ -498,10 +501,17 @@ const CommunityMembersPage = () => {
 
                   {/* Role Badge */}
                   <div className="flex flex-shrink-0 items-center gap-2">
-                    {user.role && (
+                    {user.role && user.role !== 'creator' && (
                       <div className={`flex items-center gap-1 ${getRoleColor(user.role)}`}>
-                        {React.createElement(getRoleIcon(user.role), { size: 16 })}
-                        <span className="text-sm font-medium capitalize">{user.role}</span>
+                        {React.createElement(getRoleIcon(user.role), { size: 14 })}
+                        <span className="text-xs font-medium capitalize">{user.role}</span>
+                      </div>
+                    )}
+
+                    {user.role === 'creator' && (
+                      <div className="text-warning flex items-center gap-1">
+                        <Crown size={14} />
+                        <span className="text-xs font-medium">Creator</span>
                       </div>
                     )}
                   </div>
@@ -513,39 +523,32 @@ const CommunityMembersPage = () => {
                         onClick={() =>
                           setShowRoleDropdown(showRoleDropdown === user.id ? null : user.id)
                         }
-                        className="text-text-muted hover:text-text rounded-full p-2 transition-colors"
+                        className="text-text-muted hover:text-text hover:bg-surface-elevated rounded-full p-1.5 transition-colors"
                       >
-                        <MoreVertical size={16} />
+                        <MoreVertical size={14} />
                       </button>
 
                       {showRoleDropdown === user.id && (
-                        <div className="border-border bg-surface absolute top-full right-0 z-10 mt-1 w-48 rounded-lg border shadow-lg">
+                        <div className="border-border bg-surface absolute top-full right-0 z-10 mt-1 w-40 rounded-lg border shadow-lg">
                           <div className="border-border border-b px-3 py-2">
-                            <div className="text-text text-sm font-medium">Change Role</div>
+                            <div className="text-text text-xs font-medium">Change Role</div>
                           </div>
                           {ROLES.map((role) => (
                             <button
                               key={role.value}
                               onClick={() => handleRoleChange(user, role.value)}
                               disabled={user.role === role.value}
-                              className="hover:bg-surface-elevated flex w-full items-center gap-2 px-4 py-3 text-left text-sm transition-colors last:rounded-b-lg disabled:opacity-50"
+                              className="hover:bg-surface-elevated flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors last:rounded-b-lg disabled:opacity-50"
                             >
                               <div className={role.color}>
-                                {React.createElement(role.icon, { size: 16 })}
+                                {React.createElement(role.icon, { size: 14 })}
                               </div>
                               {role.label}
-                              {user.role === role.value && <Check className="ml-auto h-4 w-4" />}
+                              {user.role === role.value && <Check className="ml-auto h-3 w-3" />}
                             </button>
                           ))}
                         </div>
                       )}
-                    </div>
-                  )}
-
-                  {user.role === 'creator' && (
-                    <div className="flex flex-shrink-0 items-center gap-1 text-yellow-600">
-                      <Crown size={16} />
-                      <span className="text-sm font-medium">Creator</span>
                     </div>
                   )}
                 </div>
@@ -556,8 +559,8 @@ const CommunityMembersPage = () => {
                 <div ref={loadingRef} className="flex items-center justify-center py-4">
                   {isLoadingMore ? (
                     <div className="flex items-center gap-2">
-                      <Loader2 className="text-primary h-5 w-5 animate-spin" />
-                      <span className="text-text-secondary text-sm">Loading more members...</span>
+                      <Loader2 className="text-primary h-4 w-4 animate-spin" />
+                      <span className="text-text-secondary text-sm">Loading more...</span>
                     </div>
                   ) : (
                     <div className="text-text-secondary text-sm">Scroll to load more</div>
@@ -571,12 +574,11 @@ const CommunityMembersPage = () => {
         {/* Role Change Confirmation Modal */}
         {roleChangeConfirmation && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-background w-full max-w-md rounded-lg p-6">
+            <div className="bg-background border-border w-full max-w-sm rounded-lg border p-6">
               <div className="mb-4">
                 <h2 className="text-text text-lg font-semibold">Change Role</h2>
                 <p className="text-text-secondary mt-1 text-sm">
-                  Are you sure you want to change{' '}
-                  <strong>{roleChangeConfirmation.user.display_name}</strong>'s role to{' '}
+                  Change <strong>{roleChangeConfirmation.user.display_name}</strong>'s role to{' '}
                   <strong>{roleChangeConfirmation.newRole}</strong>?
                 </p>
               </div>
@@ -584,7 +586,7 @@ const CommunityMembersPage = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setRoleChangeConfirmation(null)}
-                  className="border-border bg-surface text-text hover:bg-surface-elevated flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors"
+                  className="border-border bg-background text-text hover:bg-surface-elevated flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors"
                   disabled={isChangingRole}
                 >
                   Cancel
@@ -592,7 +594,7 @@ const CommunityMembersPage = () => {
                 <button
                   onClick={confirmRoleChange}
                   disabled={isChangingRole}
-                  className="bg-primary text-background flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors hover:opacity-90 disabled:opacity-50"
+                  className="bg-primary text-background flex-1 rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
                   {isChangingRole ? (
                     <div className="flex items-center justify-center gap-2">
@@ -600,7 +602,7 @@ const CommunityMembersPage = () => {
                       Changing...
                     </div>
                   ) : (
-                    'Change Role'
+                    'Confirm'
                   )}
                 </button>
               </div>

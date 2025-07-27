@@ -24,14 +24,16 @@ import type {
 import { customInstance } from '.././custom-instance';
 import type { BodyType, ErrorType } from '.././custom-instance';
 import type {
-  KeyopollsCommonApiBookmarkCreateBookmarkFolder200,
-  KeyopollsCommonApiBookmarkCreateBookmarkFolderParams,
-  KeyopollsCommonApiBookmarkDeleteBookmarkFolder200,
-  KeyopollsCommonApiBookmarkGetBookmarkStatus200,
-  KeyopollsCommonApiBookmarkGetUserBookmarksParams,
+  BookmarkFolderCreateSchema,
+  BookmarkFolderDetailsSchema,
+  BookmarkFoldersListResponseSchema,
+  KeyopollsCommonApiBookmarkGetBookmarkFoldersParams,
   Message,
+  TodoBookmarkStatusListResponseSchema,
+  TodoBookmarkStatusSchema,
   ToggleBookmarkResponseSchema,
   ToggleBookmarkSchema,
+  UpdateBookmarkFolderSchema,
 } from '.././schemas';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -41,10 +43,13 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 All bookmarks are created and managed through the user's pseudonymous profile.
 This provides consistent bookmark management and better organization.
+
+Note: Paid bookmark folders can only contain Poll objects created by
+the folder author.
  * @summary Toggle Bookmark
  */
 export const keyopollsCommonApiBookmarkToggleBookmark = (
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   toggleBookmarkSchema: BodyType<ToggleBookmarkSchema>,
   options?: SecondParameter<typeof customInstance>,
@@ -70,7 +75,7 @@ export const getKeyopollsCommonApiBookmarkToggleBookmarkMutationOptions = <
     Awaited<ReturnType<typeof keyopollsCommonApiBookmarkToggleBookmark>>,
     TError,
     {
-      contentType: 'Poll' | 'GenericComment';
+      contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
       objectId: number;
       data: BodyType<ToggleBookmarkSchema>;
     },
@@ -81,7 +86,7 @@ export const getKeyopollsCommonApiBookmarkToggleBookmarkMutationOptions = <
   Awaited<ReturnType<typeof keyopollsCommonApiBookmarkToggleBookmark>>,
   TError,
   {
-    contentType: 'Poll' | 'GenericComment';
+    contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
     objectId: number;
     data: BodyType<ToggleBookmarkSchema>;
   },
@@ -97,7 +102,7 @@ export const getKeyopollsCommonApiBookmarkToggleBookmarkMutationOptions = <
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof keyopollsCommonApiBookmarkToggleBookmark>>,
     {
-      contentType: 'Poll' | 'GenericComment';
+      contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
       objectId: number;
       data: BodyType<ToggleBookmarkSchema>;
     }
@@ -128,7 +133,7 @@ export const useKeyopollsCommonApiBookmarkToggleBookmark = <
       Awaited<ReturnType<typeof keyopollsCommonApiBookmarkToggleBookmark>>,
       TError,
       {
-        contentType: 'Poll' | 'GenericComment';
+        contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
         objectId: number;
         data: BodyType<ToggleBookmarkSchema>;
       },
@@ -141,7 +146,7 @@ export const useKeyopollsCommonApiBookmarkToggleBookmark = <
   Awaited<ReturnType<typeof keyopollsCommonApiBookmarkToggleBookmark>>,
   TError,
   {
-    contentType: 'Poll' | 'GenericComment';
+    contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
     objectId: number;
     data: BodyType<ToggleBookmarkSchema>;
   },
@@ -152,44 +157,148 @@ export const useKeyopollsCommonApiBookmarkToggleBookmark = <
   return useMutation(mutationOptions, queryClient);
 };
 /**
- * Get all bookmark folders for the authenticated user
- * @summary Get Bookmark Folders
+ * Create a new bookmark folder
+ * @summary Create Bookmark Folder
  */
-export const keyopollsCommonApiBookmarkGetBookmarkFolders = (
+export const keyopollsCommonApiBookmarkCreateBookmarkFolder = (
+  bookmarkFolderCreateSchema: BodyType<BookmarkFolderCreateSchema>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal
 ) => {
-  return customInstance<unknown[]>(
-    { url: `/api/common/bookmarks/folders`, method: 'GET', signal },
+  return customInstance<BookmarkFolderDetailsSchema>(
+    {
+      url: `/api/common/bookmarks/folders`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: bookmarkFolderCreateSchema,
+      signal,
+    },
     options
   );
 };
 
-export const getKeyopollsCommonApiBookmarkGetBookmarkFoldersQueryKey = () => {
-  return [`/api/common/bookmarks/folders`] as const;
+export const getKeyopollsCommonApiBookmarkCreateBookmarkFolderMutationOptions = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
+    TError,
+    { data: BodyType<BookmarkFolderCreateSchema> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
+  TError,
+  { data: BodyType<BookmarkFolderCreateSchema> },
+  TContext
+> => {
+  const mutationKey = ['keyopollsCommonApiBookmarkCreateBookmarkFolder'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
+    { data: BodyType<BookmarkFolderCreateSchema> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return keyopollsCommonApiBookmarkCreateBookmarkFolder(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeyopollsCommonApiBookmarkCreateBookmarkFolderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>
+>;
+export type KeyopollsCommonApiBookmarkCreateBookmarkFolderMutationBody =
+  BodyType<BookmarkFolderCreateSchema>;
+export type KeyopollsCommonApiBookmarkCreateBookmarkFolderMutationError = ErrorType<Message>;
+
+/**
+ * @summary Create Bookmark Folder
+ */
+export const useKeyopollsCommonApiBookmarkCreateBookmarkFolder = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
+      TError,
+      { data: BodyType<BookmarkFolderCreateSchema> },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
+  TError,
+  { data: BodyType<BookmarkFolderCreateSchema> },
+  TContext
+> => {
+  const mutationOptions = getKeyopollsCommonApiBookmarkCreateBookmarkFolderMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+/**
+ * Get bookmark folders for the authenticated user with filtering and pagination
+
+Features:
+- Pagination with customizable page size
+- Filter by access level, content type, todo status, community
+- Search in name and description
+- Multiple ordering options
+- Includes user's own folders + saved public folders + paid subscriptions
+ * @summary Get Bookmark Folders
+ */
+export const keyopollsCommonApiBookmarkGetBookmarkFolders = (
+  params?: KeyopollsCommonApiBookmarkGetBookmarkFoldersParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  return customInstance<BookmarkFoldersListResponseSchema>(
+    { url: `/api/common/bookmarks/folders`, method: 'GET', params, signal },
+    options
+  );
+};
+
+export const getKeyopollsCommonApiBookmarkGetBookmarkFoldersQueryKey = (
+  params?: KeyopollsCommonApiBookmarkGetBookmarkFoldersParams
+) => {
+  return [`/api/common/bookmarks/folders`, ...(params ? [params] : [])] as const;
 };
 
 export const getKeyopollsCommonApiBookmarkGetBookmarkFoldersQueryOptions = <
   TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkFolders>>,
   TError = ErrorType<Message>,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkFolders>>,
-      TError,
-      TData
-    >
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}) => {
+>(
+  params?: KeyopollsCommonApiBookmarkGetBookmarkFoldersParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkFolders>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  }
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getKeyopollsCommonApiBookmarkGetBookmarkFoldersQueryKey();
+    queryOptions?.queryKey ?? getKeyopollsCommonApiBookmarkGetBookmarkFoldersQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkFolders>>
-  > = ({ signal }) => keyopollsCommonApiBookmarkGetBookmarkFolders(requestOptions, signal);
+  > = ({ signal }) => keyopollsCommonApiBookmarkGetBookmarkFolders(params, requestOptions, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkFolders>>,
@@ -207,6 +316,7 @@ export function useKeyopollsCommonApiBookmarkGetBookmarkFolders<
   TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkFolders>>,
   TError = ErrorType<Message>,
 >(
+  params: undefined | KeyopollsCommonApiBookmarkGetBookmarkFoldersParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -231,6 +341,7 @@ export function useKeyopollsCommonApiBookmarkGetBookmarkFolders<
   TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkFolders>>,
   TError = ErrorType<Message>,
 >(
+  params?: KeyopollsCommonApiBookmarkGetBookmarkFoldersParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -255,6 +366,7 @@ export function useKeyopollsCommonApiBookmarkGetBookmarkFolders<
   TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkFolders>>,
   TError = ErrorType<Message>,
 >(
+  params?: KeyopollsCommonApiBookmarkGetBookmarkFoldersParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -275,6 +387,7 @@ export function useKeyopollsCommonApiBookmarkGetBookmarkFolders<
   TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkFolders>>,
   TError = ErrorType<Message>,
 >(
+  params?: KeyopollsCommonApiBookmarkGetBookmarkFoldersParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -287,7 +400,7 @@ export function useKeyopollsCommonApiBookmarkGetBookmarkFolders<
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getKeyopollsCommonApiBookmarkGetBookmarkFoldersQueryOptions(options);
+  const queryOptions = getKeyopollsCommonApiBookmarkGetBookmarkFoldersQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -299,38 +412,45 @@ export function useKeyopollsCommonApiBookmarkGetBookmarkFolders<
 }
 
 /**
- * Create a new bookmark folder
- * @summary Create Bookmark Folder
+ * Update an existing bookmark folder
+
+Note: Paid folders cannot change their access level or content type
+ * @summary Update Bookmark Folder
  */
-export const keyopollsCommonApiBookmarkCreateBookmarkFolder = (
-  params: KeyopollsCommonApiBookmarkCreateBookmarkFolderParams,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal
+export const keyopollsCommonApiBookmarkUpdateBookmarkFolder = (
+  folderId: number,
+  updateBookmarkFolderSchema: BodyType<UpdateBookmarkFolderSchema>,
+  options?: SecondParameter<typeof customInstance>
 ) => {
-  return customInstance<KeyopollsCommonApiBookmarkCreateBookmarkFolder200>(
-    { url: `/api/common/bookmarks/folders`, method: 'POST', params, signal },
+  return customInstance<BookmarkFolderDetailsSchema>(
+    {
+      url: `/api/common/bookmarks/folders/${folderId}`,
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      data: updateBookmarkFolderSchema,
+    },
     options
   );
 };
 
-export const getKeyopollsCommonApiBookmarkCreateBookmarkFolderMutationOptions = <
+export const getKeyopollsCommonApiBookmarkUpdateBookmarkFolderMutationOptions = <
   TError = ErrorType<Message>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
+    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkUpdateBookmarkFolder>>,
     TError,
-    { params: KeyopollsCommonApiBookmarkCreateBookmarkFolderParams },
+    { folderId: number; data: BodyType<UpdateBookmarkFolderSchema> },
     TContext
   >;
   request?: SecondParameter<typeof customInstance>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
+  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkUpdateBookmarkFolder>>,
   TError,
-  { params: KeyopollsCommonApiBookmarkCreateBookmarkFolderParams },
+  { folderId: number; data: BodyType<UpdateBookmarkFolderSchema> },
   TContext
 > => {
-  const mutationKey = ['keyopollsCommonApiBookmarkCreateBookmarkFolder'];
+  const mutationKey = ['keyopollsCommonApiBookmarkUpdateBookmarkFolder'];
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -338,418 +458,92 @@ export const getKeyopollsCommonApiBookmarkCreateBookmarkFolderMutationOptions = 
     : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
-    { params: KeyopollsCommonApiBookmarkCreateBookmarkFolderParams }
+    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkUpdateBookmarkFolder>>,
+    { folderId: number; data: BodyType<UpdateBookmarkFolderSchema> }
   > = (props) => {
-    const { params } = props ?? {};
+    const { folderId, data } = props ?? {};
 
-    return keyopollsCommonApiBookmarkCreateBookmarkFolder(params, requestOptions);
+    return keyopollsCommonApiBookmarkUpdateBookmarkFolder(folderId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type KeyopollsCommonApiBookmarkCreateBookmarkFolderMutationResult = NonNullable<
-  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>
+export type KeyopollsCommonApiBookmarkUpdateBookmarkFolderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkUpdateBookmarkFolder>>
 >;
-
-export type KeyopollsCommonApiBookmarkCreateBookmarkFolderMutationError = ErrorType<Message>;
+export type KeyopollsCommonApiBookmarkUpdateBookmarkFolderMutationBody =
+  BodyType<UpdateBookmarkFolderSchema>;
+export type KeyopollsCommonApiBookmarkUpdateBookmarkFolderMutationError = ErrorType<Message>;
 
 /**
- * @summary Create Bookmark Folder
+ * @summary Update Bookmark Folder
  */
-export const useKeyopollsCommonApiBookmarkCreateBookmarkFolder = <
+export const useKeyopollsCommonApiBookmarkUpdateBookmarkFolder = <
   TError = ErrorType<Message>,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
+      Awaited<ReturnType<typeof keyopollsCommonApiBookmarkUpdateBookmarkFolder>>,
       TError,
-      { params: KeyopollsCommonApiBookmarkCreateBookmarkFolderParams },
+      { folderId: number; data: BodyType<UpdateBookmarkFolderSchema> },
       TContext
     >;
     request?: SecondParameter<typeof customInstance>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
-  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCreateBookmarkFolder>>,
+  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkUpdateBookmarkFolder>>,
   TError,
-  { params: KeyopollsCommonApiBookmarkCreateBookmarkFolderParams },
+  { folderId: number; data: BodyType<UpdateBookmarkFolderSchema> },
   TContext
 > => {
-  const mutationOptions = getKeyopollsCommonApiBookmarkCreateBookmarkFolderMutationOptions(options);
+  const mutationOptions = getKeyopollsCommonApiBookmarkUpdateBookmarkFolderMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
 /**
- * Get user's bookmarks with optional filtering
- * @summary Get User Bookmarks
+ * Check bookmark status for multiple todos
+
+Returns which todos are bookmarked and in which folders
+ * @summary Check Todos Bookmark Status
  */
-export const keyopollsCommonApiBookmarkGetUserBookmarks = (
-  params?: KeyopollsCommonApiBookmarkGetUserBookmarksParams,
+export const keyopollsCommonApiBookmarkCheckTodosBookmarkStatus = (
+  todoBookmarkStatusSchema: BodyType<TodoBookmarkStatusSchema>,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal
 ) => {
-  return customInstance<unknown[]>(
-    { url: `/api/common/bookmarks/bookmarks`, method: 'GET', params, signal },
-    options
-  );
-};
-
-export const getKeyopollsCommonApiBookmarkGetUserBookmarksQueryKey = (
-  params?: KeyopollsCommonApiBookmarkGetUserBookmarksParams
-) => {
-  return [`/api/common/bookmarks/bookmarks`, ...(params ? [params] : [])] as const;
-};
-
-export const getKeyopollsCommonApiBookmarkGetUserBookmarksQueryOptions = <
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-  TError = ErrorType<Message>,
->(
-  params?: KeyopollsCommonApiBookmarkGetUserBookmarksParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-        TError,
-        TData
-      >
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  }
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey =
-    queryOptions?.queryKey ?? getKeyopollsCommonApiBookmarkGetUserBookmarksQueryKey(params);
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>
-  > = ({ signal }) => keyopollsCommonApiBookmarkGetUserBookmarks(params, requestOptions, signal);
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type KeyopollsCommonApiBookmarkGetUserBookmarksQueryResult = NonNullable<
-  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>
->;
-export type KeyopollsCommonApiBookmarkGetUserBookmarksQueryError = ErrorType<Message>;
-
-export function useKeyopollsCommonApiBookmarkGetUserBookmarks<
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-  TError = ErrorType<Message>,
->(
-  params: undefined | KeyopollsCommonApiBookmarkGetUserBookmarksParams,
-  options: {
-    query: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-          TError,
-          Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useKeyopollsCommonApiBookmarkGetUserBookmarks<
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-  TError = ErrorType<Message>,
->(
-  params?: KeyopollsCommonApiBookmarkGetUserBookmarksParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-          TError,
-          Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useKeyopollsCommonApiBookmarkGetUserBookmarks<
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-  TError = ErrorType<Message>,
->(
-  params?: KeyopollsCommonApiBookmarkGetUserBookmarksParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-        TError,
-        TData
-      >
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get User Bookmarks
- */
-
-export function useKeyopollsCommonApiBookmarkGetUserBookmarks<
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-  TError = ErrorType<Message>,
->(
-  params?: KeyopollsCommonApiBookmarkGetUserBookmarksParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetUserBookmarks>>,
-        TError,
-        TData
-      >
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getKeyopollsCommonApiBookmarkGetUserBookmarksQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-/**
- * Check if content is bookmarked by the current user
- * @summary Get Bookmark Status
- */
-export const keyopollsCommonApiBookmarkGetBookmarkStatus = (
-  contentType: 'Poll' | 'GenericComment',
-  objectId: number,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal
-) => {
-  return customInstance<KeyopollsCommonApiBookmarkGetBookmarkStatus200>(
+  return customInstance<TodoBookmarkStatusListResponseSchema>(
     {
-      url: `/api/common/bookmarks/${contentType}/${objectId}/bookmark-status`,
-      method: 'GET',
+      url: `/api/common/bookmarks/todos/bookmark-status`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: todoBookmarkStatusSchema,
       signal,
     },
     options
   );
 };
 
-export const getKeyopollsCommonApiBookmarkGetBookmarkStatusQueryKey = (
-  contentType: 'Poll' | 'GenericComment',
-  objectId: number
-) => {
-  return [`/api/common/bookmarks/${contentType}/${objectId}/bookmark-status`] as const;
-};
-
-export const getKeyopollsCommonApiBookmarkGetBookmarkStatusQueryOptions = <
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-  TError = ErrorType<Message>,
->(
-  contentType: 'Poll' | 'GenericComment',
-  objectId: number,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-        TError,
-        TData
-      >
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  }
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey =
-    queryOptions?.queryKey ??
-    getKeyopollsCommonApiBookmarkGetBookmarkStatusQueryKey(contentType, objectId);
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>
-  > = ({ signal }) =>
-    keyopollsCommonApiBookmarkGetBookmarkStatus(contentType, objectId, requestOptions, signal);
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!(contentType && objectId),
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type KeyopollsCommonApiBookmarkGetBookmarkStatusQueryResult = NonNullable<
-  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>
->;
-export type KeyopollsCommonApiBookmarkGetBookmarkStatusQueryError = ErrorType<Message>;
-
-export function useKeyopollsCommonApiBookmarkGetBookmarkStatus<
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-  TError = ErrorType<Message>,
->(
-  contentType: 'Poll' | 'GenericComment',
-  objectId: number,
-  options: {
-    query: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-          TError,
-          Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useKeyopollsCommonApiBookmarkGetBookmarkStatus<
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-  TError = ErrorType<Message>,
->(
-  contentType: 'Poll' | 'GenericComment',
-  objectId: number,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-          TError,
-          Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useKeyopollsCommonApiBookmarkGetBookmarkStatus<
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-  TError = ErrorType<Message>,
->(
-  contentType: 'Poll' | 'GenericComment',
-  objectId: number,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-        TError,
-        TData
-      >
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get Bookmark Status
- */
-
-export function useKeyopollsCommonApiBookmarkGetBookmarkStatus<
-  TData = Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-  TError = ErrorType<Message>,
->(
-  contentType: 'Poll' | 'GenericComment',
-  objectId: number,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof keyopollsCommonApiBookmarkGetBookmarkStatus>>,
-        TError,
-        TData
-      >
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getKeyopollsCommonApiBookmarkGetBookmarkStatusQueryOptions(
-    contentType,
-    objectId,
-    options
-  );
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-/**
- * Delete a bookmark folder (bookmarks will be moved to no folder)
- * @summary Delete Bookmark Folder
- */
-export const keyopollsCommonApiBookmarkDeleteBookmarkFolder = (
-  folderId: number,
-  options?: SecondParameter<typeof customInstance>
-) => {
-  return customInstance<KeyopollsCommonApiBookmarkDeleteBookmarkFolder200>(
-    { url: `/api/common/bookmarks/folders/${folderId}`, method: 'DELETE' },
-    options
-  );
-};
-
-export const getKeyopollsCommonApiBookmarkDeleteBookmarkFolderMutationOptions = <
+export const getKeyopollsCommonApiBookmarkCheckTodosBookmarkStatusMutationOptions = <
   TError = ErrorType<Message>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkDeleteBookmarkFolder>>,
+    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCheckTodosBookmarkStatus>>,
     TError,
-    { folderId: number },
+    { data: BodyType<TodoBookmarkStatusSchema> },
     TContext
   >;
   request?: SecondParameter<typeof customInstance>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkDeleteBookmarkFolder>>,
+  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCheckTodosBookmarkStatus>>,
   TError,
-  { folderId: number },
+  { data: BodyType<TodoBookmarkStatusSchema> },
   TContext
 > => {
-  const mutationKey = ['keyopollsCommonApiBookmarkDeleteBookmarkFolder'];
+  const mutationKey = ['keyopollsCommonApiBookmarkCheckTodosBookmarkStatus'];
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
       ? options
@@ -757,47 +551,49 @@ export const getKeyopollsCommonApiBookmarkDeleteBookmarkFolderMutationOptions = 
     : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkDeleteBookmarkFolder>>,
-    { folderId: number }
+    Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCheckTodosBookmarkStatus>>,
+    { data: BodyType<TodoBookmarkStatusSchema> }
   > = (props) => {
-    const { folderId } = props ?? {};
+    const { data } = props ?? {};
 
-    return keyopollsCommonApiBookmarkDeleteBookmarkFolder(folderId, requestOptions);
+    return keyopollsCommonApiBookmarkCheckTodosBookmarkStatus(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type KeyopollsCommonApiBookmarkDeleteBookmarkFolderMutationResult = NonNullable<
-  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkDeleteBookmarkFolder>>
+export type KeyopollsCommonApiBookmarkCheckTodosBookmarkStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCheckTodosBookmarkStatus>>
 >;
-
-export type KeyopollsCommonApiBookmarkDeleteBookmarkFolderMutationError = ErrorType<Message>;
+export type KeyopollsCommonApiBookmarkCheckTodosBookmarkStatusMutationBody =
+  BodyType<TodoBookmarkStatusSchema>;
+export type KeyopollsCommonApiBookmarkCheckTodosBookmarkStatusMutationError = ErrorType<Message>;
 
 /**
- * @summary Delete Bookmark Folder
+ * @summary Check Todos Bookmark Status
  */
-export const useKeyopollsCommonApiBookmarkDeleteBookmarkFolder = <
+export const useKeyopollsCommonApiBookmarkCheckTodosBookmarkStatus = <
   TError = ErrorType<Message>,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof keyopollsCommonApiBookmarkDeleteBookmarkFolder>>,
+      Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCheckTodosBookmarkStatus>>,
       TError,
-      { folderId: number },
+      { data: BodyType<TodoBookmarkStatusSchema> },
       TContext
     >;
     request?: SecondParameter<typeof customInstance>;
   },
   queryClient?: QueryClient
 ): UseMutationResult<
-  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkDeleteBookmarkFolder>>,
+  Awaited<ReturnType<typeof keyopollsCommonApiBookmarkCheckTodosBookmarkStatus>>,
   TError,
-  { folderId: number },
+  { data: BodyType<TodoBookmarkStatusSchema> },
   TContext
 > => {
-  const mutationOptions = getKeyopollsCommonApiBookmarkDeleteBookmarkFolderMutationOptions(options);
+  const mutationOptions =
+    getKeyopollsCommonApiBookmarkCheckTodosBookmarkStatusMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

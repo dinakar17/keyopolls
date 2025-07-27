@@ -37,9 +37,7 @@ import { useProfileStore } from '@/stores/useProfileStore';
 import AIAnalysisContent from './AIAnalysisContent';
 import AboutContent from './AboutContent';
 import ArticlesContent from './ArticlesContent';
-import BattlesContent from './BattlesContent';
 import JobsContent from './JobsContent';
-import LeaderboardContent from './LeaderBoardContent';
 import PollsContent from './PollsContent';
 import QuizzesContent from './QuizzesContent';
 
@@ -289,14 +287,14 @@ const CommunityPage = () => {
         return <PollsContent community={community} onCreatePoll={handleCreatePoll} />;
       case 'lists':
         return <QuizzesContent />;
-      case 'battles':
-        return <BattlesContent />;
+      // case 'battles':
+      //   return <BattlesContent />;
       case 'ai-analysis':
         return <AIAnalysisContent />;
       case 'articles':
         return <ArticlesContent community={community} />;
-      case 'leaderboard':
-        return <LeaderboardContent />;
+      // case 'leaderboard':
+      //   return <LeaderboardContent />;
       case 'jobs':
         return <JobsContent />;
       case 'about':
@@ -409,10 +407,8 @@ const CommunityPage = () => {
           {[
             { id: 'polls', label: 'Polls' },
             { id: 'lists', label: 'Lists' },
-            { id: 'battles', label: 'Battles' },
             { id: 'ai-analysis', label: 'AI Analysis' },
             { id: 'articles', label: 'Articles' },
-            { id: 'leaderboard', label: 'Leaderboard' },
             { id: 'jobs', label: 'Jobs' },
             { id: 'about', label: 'About' },
           ].map((tab) => (

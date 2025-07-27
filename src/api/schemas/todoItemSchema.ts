@@ -5,7 +5,9 @@
  * API for Keyo Polls app
  * OpenAPI spec version: 1.0.0
  */
+import type { TodoItemSchemaId } from './todoItemSchemaId';
 
 export interface TodoItemSchema {
+  id?: TodoItemSchemaId;
   text: string;
 }

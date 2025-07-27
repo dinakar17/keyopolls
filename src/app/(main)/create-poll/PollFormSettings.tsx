@@ -11,13 +11,22 @@ import { PollFormData } from '@/types';
 interface PollFormSettingsProps {
   form: UseFormReturn<PollFormData>;
   handleMaxChoicesSelect: (choices: number) => void;
+  handleRankingOrderUpdate: (newRankingOrder: number[]) => void;
 }
 
-export default function PollFormSettings({ form, handleMaxChoicesSelect }: PollFormSettingsProps) {
+export default function PollFormSettings({
+  form,
+  handleMaxChoicesSelect,
+  handleRankingOrderUpdate,
+}: PollFormSettingsProps) {
   // Tags state
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(-1);
+
+  // Ranking state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const { data: tagsData, isLoading: tagsLoading } = useKeyopollsCommonApiTagsGetTagsList(
     {
@@ -40,6 +49,7 @@ export default function PollFormSettings({ form, handleMaxChoicesSelect }: PollF
   const watchedMaxChoices = form.watch('max_choices');
   const watchedTags = form.watch('tags') || [];
   const watchedExplanation = form.watch('explanation');
+  const watchedCorrectRankingOrder = form.watch('correct_ranking_order') || [];
 
   // Get available tag suggestions
   const availableTags = tagsData?.data.tags || [];
@@ -144,6 +154,92 @@ export default function PollFormSettings({ form, handleMaxChoicesSelect }: PollF
   const handleSuggestionClick = (tagName: string) => {
     selectTag(tagName);
   };
+
+  // Ranking drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    // Create new ranking order based on the drag operation
+    const newRankingOrder = [...watchedCorrectRankingOrder];
+    const draggedItem = newRankingOrder[draggedIndex];
+
+    // Remove dragged item
+    newRankingOrder.splice(draggedIndex, 1);
+
+    // Insert at new position
+    const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newRankingOrder.splice(insertIndex, 0, draggedItem);
+
+    // Update the ranking order
+    handleRankingOrderUpdate(newRankingOrder);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  // Move option up in ranking
+  const moveOptionUp = (index: number) => {
+    if (index === 0) return;
+
+    const newRankingOrder = [...watchedCorrectRankingOrder];
+    const temp = newRankingOrder[index];
+    newRankingOrder[index] = newRankingOrder[index - 1];
+    newRankingOrder[index - 1] = temp;
+
+    handleRankingOrderUpdate(newRankingOrder);
+  };
+
+  // Move option down in ranking
+  const moveOptionDown = (index: number) => {
+    if (index === watchedCorrectRankingOrder.length - 1) return;
+
+    const newRankingOrder = [...watchedCorrectRankingOrder];
+    const temp = newRankingOrder[index];
+    newRankingOrder[index] = newRankingOrder[index + 1];
+    newRankingOrder[index + 1] = temp;
+
+    handleRankingOrderUpdate(newRankingOrder);
+  };
+
+  // Initialize ranking order when options change
+  useEffect(() => {
+    if (watchedPollType === 'ranking' && watchedOptions.length > 0) {
+      // If ranking order is not set or doesn't match options length, initialize it
+      if (watchedCorrectRankingOrder.length !== watchedOptions.length) {
+        const initialOrder = watchedOptions.map((_, index) => index);
+        handleRankingOrderUpdate(initialOrder);
+      }
+    }
+  }, [
+    watchedOptions.length,
+    watchedPollType,
+    watchedCorrectRankingOrder.length,
+    handleRankingOrderUpdate,
+  ]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -381,10 +477,114 @@ export default function PollFormSettings({ form, handleMaxChoicesSelect }: PollF
           )}
 
           {watchedPollType === 'ranking' && (
-            <p className="text-text-muted text-sm">
-              The correct ranking will be based on the current order of your options. Users must
-              rank them in the exact same order to be marked as correct.
-            </p>
+            <div className="space-y-3">
+              <p className="text-text-muted text-sm">
+                Set the correct ranking order by dragging options or using the arrow buttons below.
+              </p>
+
+              {/* Ranking Order Management */}
+              <div className="border-border bg-surface-elevated rounded-lg border p-3">
+                <h4 className="text-text mb-2 text-sm font-medium">Correct Ranking Order</h4>
+                <div className="space-y-2">
+                  {watchedCorrectRankingOrder.map((optionIndex, rankPosition) => {
+                    const option = watchedOptions[optionIndex];
+                    if (!option) return null;
+
+                    return (
+                      <div
+                        key={rankPosition}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, rankPosition)}
+                        onDragOver={(e) => handleDragOver(e, rankPosition)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, rankPosition)}
+                        onDragEnd={handleDragEnd}
+                        className={`flex cursor-move items-center space-x-3 rounded-lg p-2 transition-colors ${
+                          dragOverIndex === rankPosition
+                            ? 'bg-primary/20 border-primary/30'
+                            : 'bg-surface hover:bg-surface-elevated'
+                        } ${
+                          draggedIndex === rankPosition ? 'opacity-50' : ''
+                        } border-border border`}
+                      >
+                        {/* Rank Number - Show actual ranking order value */}
+                        <div className="bg-primary text-background flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium">
+                          {optionIndex + 1}
+                        </div>
+
+                        {/* Drag Handle */}
+                        <svg
+                          className="text-text-muted h-4 w-4 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 8h16M4 16h16"
+                          />
+                        </svg>
+
+                        {/* Option Text */}
+                        <span className="text-text flex-1 truncate text-sm">
+                          {option.text || `Option ${String.fromCharCode(65 + optionIndex)}`}
+                        </span>
+
+                        {/* Move Buttons */}
+                        <div className="flex space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => moveOptionUp(rankPosition)}
+                            disabled={rankPosition === 0}
+                            className="text-text-muted hover:text-text rounded p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+                          >
+                            <svg
+                              className="h-3 w-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 15l7-7 7 7"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveOptionDown(rankPosition)}
+                            disabled={rankPosition === watchedCorrectRankingOrder.length - 1}
+                            className="text-text-muted hover:text-text rounded p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+                          >
+                            <svg
+                              className="h-3 w-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-text-muted mt-2 text-xs">
+                  💡 The numbers show the correct ranking order indices: [
+                  {watchedCorrectRankingOrder.join(', ')}]. Drag to reorder or use arrow buttons.
+                </p>
+              </div>
+            </div>
           )}
         </div>
       </div>

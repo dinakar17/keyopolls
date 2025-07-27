@@ -10,12 +10,18 @@ import type { PollDetailsAuthorAvatar } from './pollDetailsAuthorAvatar';
 import type { PollDetailsCommunityAvatar } from './pollDetailsCommunityAvatar';
 import type { PollDetailsCommunitySlug } from './pollDetailsCommunitySlug';
 import type { PollDetailsCorrectAnswerStats } from './pollDetailsCorrectAnswerStats';
+import type { PollDetailsCorrectRankingOrder } from './pollDetailsCorrectRankingOrder';
+import type { PollDetailsCorrectTextAnswer } from './pollDetailsCorrectTextAnswer';
 import type { PollDetailsImageUrl } from './pollDetailsImageUrl';
 import type { PollDetailsMaxChoices } from './pollDetailsMaxChoices';
+import type { PollDetailsUserAnswerCorrect } from './pollDetailsUserAnswerCorrect';
+import type { PollDetailsUserEarnedAura } from './pollDetailsUserEarnedAura';
 import type { PollDetailsUserReactions } from './pollDetailsUserReactions';
+import type { PollDetailsUserStreakInfo } from './pollDetailsUserStreakInfo';
 import type { PollDetailsUserTextResponse } from './pollDetailsUserTextResponse';
 import type { PollOptionSchema } from './pollOptionSchema';
 import type { TextResponseSchema } from './textResponseSchema';
+import type { TodoItemSchema } from './todoItemSchema';
 import type { UserVoteDetails } from './userVoteDetails';
 
 /**
@@ -29,6 +35,7 @@ export interface PollDetails {
   image_url?: PollDetailsImageUrl;
   poll_type: string;
   status: string;
+  tags?: string[];
   author_username: string;
   author_display_name: string;
   author_avatar?: PollDetailsAuthorAvatar;
@@ -43,7 +50,13 @@ export interface PollDetails {
   is_pinned: boolean;
   has_correct_answer: boolean;
   correct_answer_stats?: PollDetailsCorrectAnswerStats;
+  correct_ranking_order?: PollDetailsCorrectRankingOrder;
+  correct_text_answer?: PollDetailsCorrectTextAnswer;
+  user_answer_correct?: PollDetailsUserAnswerCorrect;
+  user_earned_aura?: PollDetailsUserEarnedAura;
+  user_streak_info?: PollDetailsUserStreakInfo;
   is_active: boolean;
+  todos?: TodoItemSchema[];
   total_votes: number;
   total_voters: number;
   option_count: number;

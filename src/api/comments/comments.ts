@@ -42,7 +42,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary Create Comment
  */
 export const keyopollsCommentsApiCreateComment = (
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   keyopollsCommentsApiCreateCommentBody: BodyType<KeyopollsCommentsApiCreateCommentBody>,
   options?: SecondParameter<typeof customInstance>,
@@ -76,7 +76,7 @@ export const getKeyopollsCommentsApiCreateCommentMutationOptions = <
     Awaited<ReturnType<typeof keyopollsCommentsApiCreateComment>>,
     TError,
     {
-      contentType: 'Poll' | 'GenericComment';
+      contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
       objectId: number;
       data: BodyType<KeyopollsCommentsApiCreateCommentBody>;
     },
@@ -87,7 +87,7 @@ export const getKeyopollsCommentsApiCreateCommentMutationOptions = <
   Awaited<ReturnType<typeof keyopollsCommentsApiCreateComment>>,
   TError,
   {
-    contentType: 'Poll' | 'GenericComment';
+    contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
     objectId: number;
     data: BodyType<KeyopollsCommentsApiCreateCommentBody>;
   },
@@ -103,7 +103,7 @@ export const getKeyopollsCommentsApiCreateCommentMutationOptions = <
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof keyopollsCommentsApiCreateComment>>,
     {
-      contentType: 'Poll' | 'GenericComment';
+      contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
       objectId: number;
       data: BodyType<KeyopollsCommentsApiCreateCommentBody>;
     }
@@ -135,7 +135,7 @@ export const useKeyopollsCommentsApiCreateComment = <
       Awaited<ReturnType<typeof keyopollsCommentsApiCreateComment>>,
       TError,
       {
-        contentType: 'Poll' | 'GenericComment';
+        contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
         objectId: number;
         data: BodyType<KeyopollsCommentsApiCreateCommentBody>;
       },
@@ -148,7 +148,7 @@ export const useKeyopollsCommentsApiCreateComment = <
   Awaited<ReturnType<typeof keyopollsCommentsApiCreateComment>>,
   TError,
   {
-    contentType: 'Poll' | 'GenericComment';
+    contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
     objectId: number;
     data: BodyType<KeyopollsCommentsApiCreateCommentBody>;
   },
@@ -163,7 +163,7 @@ export const useKeyopollsCommentsApiCreateComment = <
  * @summary Get Comments
  */
 export const keyopollsCommentsApiGetComments = (
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   params?: KeyopollsCommentsApiGetCommentsParams,
   options?: SecondParameter<typeof customInstance>,
@@ -176,7 +176,7 @@ export const keyopollsCommentsApiGetComments = (
 };
 
 export const getKeyopollsCommentsApiGetCommentsQueryKey = (
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   params?: KeyopollsCommentsApiGetCommentsParams
 ) => {
@@ -190,7 +190,7 @@ export const getKeyopollsCommentsApiGetCommentsQueryOptions = <
   TData = Awaited<ReturnType<typeof keyopollsCommentsApiGetComments>>,
   TError = ErrorType<Message>,
 >(
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   params?: KeyopollsCommentsApiGetCommentsParams,
   options?: {
@@ -231,7 +231,7 @@ export function useKeyopollsCommentsApiGetComments<
   TData = Awaited<ReturnType<typeof keyopollsCommentsApiGetComments>>,
   TError = ErrorType<Message>,
 >(
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   params: undefined | KeyopollsCommentsApiGetCommentsParams,
   options: {
@@ -254,7 +254,7 @@ export function useKeyopollsCommentsApiGetComments<
   TData = Awaited<ReturnType<typeof keyopollsCommentsApiGetComments>>,
   TError = ErrorType<Message>,
 >(
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   params?: KeyopollsCommentsApiGetCommentsParams,
   options?: {
@@ -277,7 +277,7 @@ export function useKeyopollsCommentsApiGetComments<
   TData = Awaited<ReturnType<typeof keyopollsCommentsApiGetComments>>,
   TError = ErrorType<Message>,
 >(
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   params?: KeyopollsCommentsApiGetCommentsParams,
   options?: {
@@ -296,7 +296,7 @@ export function useKeyopollsCommentsApiGetComments<
   TData = Awaited<ReturnType<typeof keyopollsCommentsApiGetComments>>,
   TError = ErrorType<Message>,
 >(
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   params?: KeyopollsCommentsApiGetCommentsParams,
   options?: {

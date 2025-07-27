@@ -5,8 +5,12 @@
  * API for Keyo Polls app
  * OpenAPI spec version: 1.0.0
  */
+import type { PollUpdateSchemaExplanation } from './pollUpdateSchemaExplanation';
+import type { PollUpdateSchemaTags } from './pollUpdateSchemaTags';
 
 export interface PollUpdateSchema {
   title: string;
   description?: string;
+  tags?: PollUpdateSchemaTags;
+  explanation?: PollUpdateSchemaExplanation;
 }

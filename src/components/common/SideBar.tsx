@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react';
 
 import Link from 'next/link';
 
-import { Bookmark, Palette, Settings, Users, X } from 'lucide-react';
+import { List, Palette, Settings, Users, X } from 'lucide-react';
 
 import { useProfileStore } from '@/stores/useProfileStore';
 
@@ -73,11 +73,17 @@ const SideBar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
       requiresAuth: true,
     },
     {
-      icon: <Bookmark size={18} />,
-      title: 'Bookmarks',
-      path: '/account/bookmarks',
+      icon: <List size={18} />,
+      title: 'Lists',
+      path: '/account/lists',
       requiresAuth: true,
     },
+    // {
+    //   icon: <CheckSquare size={18} />,
+    //   title: 'Todos',
+    //   path: '/account/todos',
+    //   requiresAuth: true,
+    // },
     {
       icon: <Palette size={18} />,
       title: 'Appearance',

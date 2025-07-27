@@ -152,7 +152,8 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
       target.closest('a') ||
       target.closest('[data-media-item]') ||
       target.closest('[data-interactive]') ||
-      target.closest('[data-header-link]')
+      target.closest('[data-header-link]') ||
+      target.closest('[data-tag]')
     ) {
       return;
     }
@@ -164,6 +165,12 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
     }
 
     router.push(`/polls/${currentPoll.id}`);
+  };
+
+  // Handle tag click
+  const handleTagClick = (tag: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/?tag=${encodeURIComponent(tag)}`);
   };
 
   // Handle comments button click
@@ -283,6 +290,23 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
         onClick={handlePollClick}
       >
         <div className="min-w-0 flex-1">
+          {/* Tags - Horizontal scrollview */}
+          {currentPoll.tags && currentPoll.tags.length > 0 && (
+            <div className="mb-3" data-tag="true">
+              <div className="scrollbar-hide flex gap-2 overflow-x-auto">
+                {currentPoll.tags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={(e) => handleTagClick(tag, e)}
+                    className="bg-primary/10 text-primary hover:bg-primary/20 flex-shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Community/User Info */}
           <div className="mb-1 flex items-start justify-between">
             <div className="flex items-center gap-2">

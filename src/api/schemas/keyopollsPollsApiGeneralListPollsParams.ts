@@ -28,9 +28,9 @@ export type KeyopollsPollsApiGeneralListPollsParams = {
    */
   author_id?: number | null;
   /**
-   * Filter by tag name
+   * Filter by multiple tag slugs (AND operation)
    */
-  tag?: string | null;
+  tags?: string[] | null;
   /**
    * Search in poll title and description
    */

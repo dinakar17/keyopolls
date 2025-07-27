@@ -15,4 +15,6 @@ export type ContentTypeEnum = (typeof ContentTypeEnum)[keyof typeof ContentTypeE
 export const ContentTypeEnum = {
   Poll: 'Poll',
   GenericComment: 'GenericComment',
+  Article: 'Article',
+  PollTodo: 'PollTodo',
 } as const;

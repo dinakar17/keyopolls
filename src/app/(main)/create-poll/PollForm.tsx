@@ -33,6 +33,7 @@ interface PollFormProps {
   handleMaxChoicesSelect: (choices: number) => void;
   handleCorrectAnswerToggle: (enabled: boolean) => void;
   handleOptionCorrectToggle: (index: number, isCorrect: boolean) => void;
+  handleRankingOrderUpdate: (newRankingOrder: number[]) => void;
 }
 
 export default function PollForm({
@@ -46,6 +47,7 @@ export default function PollForm({
   removeImage,
   handleMaxChoicesSelect,
   handleOptionCorrectToggle,
+  handleRankingOrderUpdate,
 }: PollFormProps) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -197,7 +199,9 @@ export default function PollForm({
           placeholder={
             watchedPollType === 'text_input'
               ? 'What question would you like to ask?'
-              : 'What would you like to ask?'
+              : watchedPollType === 'ranking'
+                ? 'What would you like people to rank?'
+                : 'What would you like to ask?'
           }
           className="placeholder-text-muted text-text w-full resize-none overflow-hidden border-none bg-transparent text-xl font-medium outline-none"
           style={{ minHeight: '50px' }}
@@ -213,7 +217,11 @@ export default function PollForm({
           ref={descriptionRef}
           value={watchedDescription}
           onChange={handleDescriptionChange}
-          placeholder="Provide additional context or instructions for your poll"
+          placeholder={
+            watchedPollType === 'ranking'
+              ? 'Provide context about what should be ranked and criteria to consider'
+              : 'Provide additional context or instructions for your poll'
+          }
           className="text-text-secondary placeholder-text-muted w-full resize-none overflow-hidden border-none bg-transparent text-sm outline-none"
           style={{ minHeight: '20px' }}
           rows={2}
@@ -224,7 +232,7 @@ export default function PollForm({
       </div>
 
       {/* Todos Section */}
-      <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
+      <div className="border-border bg-surface hidden space-y-3 rounded-lg border p-3">
         <div>
           <h3 className="text-text text-sm font-medium">Add Todos (Optional)</h3>
           <p className="text-text-muted text-xs">
@@ -347,17 +355,56 @@ export default function PollForm({
         </div>
       )}
 
+      {/* Ranking Instructions */}
+      {watchedPollType === 'ranking' && (
+        <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
+          <div className="flex items-start space-x-2">
+            <svg
+              className="text-primary mt-0.5 h-5 w-5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div>
+              <h4 className="text-text mb-1 text-sm font-medium">Ranking Poll Instructions</h4>
+              <p className="text-text-secondary text-sm">
+                Users will drag and drop options to rank them from 1st to last. Set the correct
+                ranking order in the settings below.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Poll Options (only for non-text-input polls) */}
       {watchedPollType !== 'text_input' && (
         <div className="space-y-2">
           {fields.map((field, index) => (
             <div key={field.id} className="group">
               <div className="border-border hover:border-border-subtle bg-surface hover:bg-surface-elevated flex items-center space-x-2 rounded-lg border p-3 transition-colors">
+                {/* Ranking indicator for ranking polls */}
+                {watchedPollType === 'ranking' && (
+                  <div className="bg-primary/10 text-primary flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium">
+                    {index + 1}
+                  </div>
+                )}
+
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center space-x-2">
                     <textarea
                       {...form.register(`options.${index}.text`)}
-                      placeholder={`Option ${String.fromCharCode(65 + index)}`}
+                      placeholder={
+                        watchedPollType === 'ranking'
+                          ? `Item ${index + 1} to rank`
+                          : `Option ${String.fromCharCode(65 + index)}`
+                      }
                       className="text-text placeholder-text-muted w-full resize-none overflow-hidden border-none bg-transparent text-sm outline-none"
                       style={{ minHeight: '20px' }}
                       rows={1}
@@ -368,7 +415,7 @@ export default function PollForm({
                       }}
                     />
 
-                    {/* Correct Answer Checkbox */}
+                    {/* Correct Answer Checkbox - Hide for ranking */}
                     {watchedPollType !== 'ranking' && (
                       <label className="flex cursor-pointer items-center space-x-1">
                         <input
@@ -477,7 +524,9 @@ export default function PollForm({
                           </svg>
                         </div>
                         <div className="bg-primary text-background absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium">
-                          {String.fromCharCode(65 + index)}
+                          {watchedPollType === 'ranking'
+                            ? index + 1
+                            : String.fromCharCode(65 + index)}
                         </div>
                         <button
                           type="button"
@@ -509,7 +558,11 @@ export default function PollForm({
                             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002 2z"
                           />
                         </svg>
-                        <span className="text-xs">{String.fromCharCode(65 + index)}</span>
+                        <span className="text-xs">
+                          {watchedPollType === 'ranking'
+                            ? index + 1
+                            : String.fromCharCode(65 + index)}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -518,7 +571,7 @@ export default function PollForm({
             </div>
           )}
 
-          {fields.length < 4 && (
+          {fields.length < 10 && (
             <button
               type="button"
               onClick={addOption}
@@ -532,7 +585,9 @@ export default function PollForm({
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              <span className="text-sm">Add another option</span>
+              <span className="text-sm">
+                {watchedPollType === 'ranking' ? 'Add another item to rank' : 'Add another option'}
+              </span>
             </button>
           )}
 
@@ -541,7 +596,11 @@ export default function PollForm({
       )}
 
       {/* Pass remaining settings to separate component */}
-      <PollFormSettings form={form} handleMaxChoicesSelect={handleMaxChoicesSelect} />
+      <PollFormSettings
+        form={form}
+        handleMaxChoicesSelect={handleMaxChoicesSelect}
+        handleRankingOrderUpdate={handleRankingOrderUpdate}
+      />
     </div>
   );
 }

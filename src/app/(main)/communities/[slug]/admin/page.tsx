@@ -183,7 +183,7 @@ const CommunityAdminPage = () => {
           <h2 className="text-text mb-2 text-xl font-bold">Access Denied</h2>
           <p className="text-text-secondary">You don't have permission to access admin tools.</p>
           <button
-            onClick={() => router.push(`/communities/${slug}`)}
+            onClick={() => router.replace(`/communities/${slug}`)}
             className="bg-primary text-background mt-4 rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
           >
             Back to Community

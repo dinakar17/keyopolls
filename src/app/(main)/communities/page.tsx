@@ -60,10 +60,11 @@ const Communities = () => {
         page_size: 20,
         sort_by: 'updated_at',
         order: 'desc',
+        include_inactive: false,
       },
       {
         request: {
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+          headers: { Authorization: `Bearer ${accessToken}` },
         },
         query: {
           enabled: isAuthenticated() && !isSearchMode,
@@ -80,10 +81,12 @@ const Communities = () => {
     refetch,
   } = useKeyopollsCommunitiesApiGeneralListCommunities(
     {
+      my_communities: false,
       page: allCommunitiesPage,
       page_size: 20,
       sort_by: 'member_count',
       order: 'desc',
+      include_inactive: false,
     },
     {
       request: {

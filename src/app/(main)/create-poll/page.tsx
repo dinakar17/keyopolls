@@ -18,6 +18,15 @@ import PollForm from './PollForm';
 
 const STORAGE_KEY = 'createPollFormData';
 
+// Validation error type
+interface ValidationErrors {
+  title?: string;
+  options?: string;
+  tags?: string;
+  correctAnswer?: string;
+  explanation?: string;
+}
+
 export default function CreatePoll() {
   const router = useRouter();
   const { accessToken } = useProfileStore();
@@ -36,6 +45,8 @@ export default function CreatePoll() {
   const [hasImages, setHasImages] = useState(false);
   const [rulesDrawerOpen, setRulesDrawerOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [isFormValid, setIsFormValid] = useState(false);
   const [optionImages, setOptionImages] = useState<{
     [key: number]: { file: File; preview: string };
   }>({});
@@ -85,6 +96,7 @@ export default function CreatePoll() {
       requires_aura: savedData.requires_aura || 0,
       has_correct_answer: savedData.has_correct_answer || false,
       correct_text_answer: savedData.correct_text_answer || '',
+      correct_ranking_order: savedData.correct_ranking_order || [],
       tags: savedData.tags || [],
       todos: savedData.todos || [],
       options: savedData.options || [
@@ -98,6 +110,7 @@ export default function CreatePoll() {
   const form = useForm<PollFormData>({
     resolver: zodResolver(pollCreateSchema),
     defaultValues: getInitialValues(),
+    mode: 'onChange', // Enable real-time validation
   });
 
   // Watch form values
@@ -108,7 +121,127 @@ export default function CreatePoll() {
   const watchedExplanation = form.watch('explanation');
   const watchedHasCorrectAnswer = form.watch('has_correct_answer');
   const watchedCorrectTextAnswer = form.watch('correct_text_answer');
+  const watchedCorrectRankingOrder = form.watch('correct_ranking_order');
   const watchedTags = form.watch('tags');
+  const watchedMaxChoices = form.watch('max_choices');
+
+  // Strip HTML tags for character count
+  const stripHtmlTags = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '');
+  };
+
+  // Real-time validation function
+  const validateForm = () => {
+    const errors: ValidationErrors = {};
+    let isValid = true;
+
+    // 1. Validate Title (compulsory)
+    if (!watchedTitle || watchedTitle.trim().length < 20) {
+      errors.title = 'Title must be at least 20 characters';
+      isValid = false;
+    } else if (watchedTitle.length > 300) {
+      errors.title = 'Title must be less than 300 characters';
+      isValid = false;
+    }
+
+    // 2. Validate Options (at least 2 for choice-based polls)
+    if (watchedPollType !== 'text_input') {
+      const validOptions = watchedOptions.filter((option) => option.text.trim());
+      if (validOptions.length < 2) {
+        errors.options = 'At least 2 options with text are required';
+        isValid = false;
+      }
+    }
+
+    // 3. Validate Tags (at least one is necessary)
+    if (!watchedTags || watchedTags.length === 0) {
+      errors.tags = 'At least one tag is required';
+      isValid = false;
+    } else {
+      // Check for duplicates
+      const uniqueTags = new Set(watchedTags.map((tag) => tag.toLowerCase().trim()));
+      if (uniqueTags.size !== watchedTags.length) {
+        errors.tags = 'Tags must be unique';
+        isValid = false;
+      }
+      // Check tag validity
+      for (const tag of watchedTags) {
+        if (
+          !tag ||
+          tag.trim().length === 0 ||
+          tag.length > 50 ||
+          !/^[a-zA-Z0-9\s\-_]+$/.test(tag)
+        ) {
+          errors.tags = 'Invalid tag format';
+          isValid = false;
+          break;
+        }
+      }
+    }
+
+    // 4. Validate Correct Answer (mandatory)
+    if (watchedPollType === 'text_input') {
+      if (!watchedCorrectTextAnswer || watchedCorrectTextAnswer.trim() === '') {
+        errors.correctAnswer = 'Correct text answer is required';
+        isValid = false;
+      } else if (watchedCorrectTextAnswer.includes(' ')) {
+        errors.correctAnswer = 'Correct text answer must be a single word/number without spaces';
+        isValid = false;
+      }
+    } else if (watchedPollType === 'ranking') {
+      // For ranking, check if we have correct_ranking_order set
+      if (!watchedCorrectRankingOrder || watchedCorrectRankingOrder.length < 2) {
+        errors.correctAnswer = 'Please set the correct ranking order with at least 2 options';
+        isValid = false;
+      } else if (watchedCorrectRankingOrder.length !== watchedOptions.length) {
+        errors.correctAnswer = 'Ranking order must include all options';
+        isValid = false;
+      }
+    } else {
+      // For single and multiple choice
+      const correctOptions = watchedOptions.filter((option) => option.is_correct);
+      if (correctOptions.length === 0) {
+        errors.correctAnswer = 'At least one correct answer must be selected';
+        isValid = false;
+      } else if (watchedPollType === 'multiple') {
+        // For multiple choice, max choices must match the number of correct answers
+        if (watchedMaxChoices !== correctOptions.length) {
+          errors.correctAnswer = `Max choices (${watchedMaxChoices}) must match the number of correct answers (${correctOptions.length})`;
+          isValid = false;
+        }
+      }
+    }
+
+    // 5. Validate Explanation (mandatory, at least 250 characters)
+    if (!watchedExplanation || watchedExplanation.trim() === '') {
+      errors.explanation = 'Explanation is required';
+      isValid = false;
+    } else {
+      const plainText = stripHtmlTags(watchedExplanation);
+      if (plainText.length < 250) {
+        errors.explanation = `Explanation must be at least 250 characters (current: ${plainText.length})`;
+        isValid = false;
+      }
+    }
+
+    setValidationErrors(errors);
+    setIsFormValid(isValid);
+  };
+
+  // Run validation whenever watched values change
+  useEffect(() => {
+    validateForm();
+  }, [
+    watchedTitle,
+    watchedOptions,
+    watchedTags,
+    watchedExplanation,
+    watchedCorrectTextAnswer,
+    watchedCorrectRankingOrder,
+    watchedPollType,
+    watchedMaxChoices,
+    watchedHasCorrectAnswer,
+  ]);
 
   // Save to localStorage when key fields change
   useEffect(() => {
@@ -136,6 +269,7 @@ export default function CreatePoll() {
   useEffect(() => {
     form.setValue('has_correct_answer', false);
     form.setValue('correct_text_answer', '');
+    form.setValue('correct_ranking_order', []);
     // Reset is_correct for all options
     watchedOptions.forEach((_, index) => {
       form.setValue(`options.${index}.is_correct`, false);
@@ -147,6 +281,7 @@ export default function CreatePoll() {
     if (watchedPollType === 'text_input') {
       // Clear all options for text input polls
       form.setValue('options', []);
+      form.setValue('correct_ranking_order', []);
       // Keep only the first image (index 0) for text input if it exists
       setOptionImages((prev) => {
         const textInputImage = prev[0];
@@ -161,6 +296,10 @@ export default function CreatePoll() {
         { text: '', order: 0, is_correct: false },
         { text: '', order: 1, is_correct: false },
       ]);
+      // Initialize ranking order for ranking polls
+      if (watchedPollType === 'ranking') {
+        form.setValue('correct_ranking_order', [0, 1]);
+      }
       // For single/multiple choice, we can keep standalone images (index -1) or option images
       // No need to clear images when switching from text input to choice-based
     }
@@ -199,7 +338,7 @@ export default function CreatePoll() {
   };
 
   // Handle poll type change
-  const handlePollTypeChange = (pollType: 'single' | 'multiple' | 'text_input') => {
+  const handlePollTypeChange = (pollType: 'single' | 'multiple' | 'text_input' | 'ranking') => {
     form.setValue('poll_type', pollType);
     // Clear any existing error when changing poll type
     setErrorMessage(null);
@@ -220,10 +359,16 @@ export default function CreatePoll() {
     if (!enabled) {
       // Clear all correct answer data
       form.setValue('correct_text_answer', '');
+      form.setValue('correct_ranking_order', []);
       watchedOptions.forEach((_, index) => {
         form.setValue(`options.${index}.is_correct`, false);
       });
     }
+  };
+
+  // Handle ranking order update
+  const handleRankingOrderUpdate = (newRankingOrder: number[]) => {
+    form.setValue('correct_ranking_order', newRankingOrder);
   };
 
   // Handle option correct answer toggle
@@ -237,31 +382,6 @@ export default function CreatePoll() {
       });
     }
     form.setValue(`options.${index}.is_correct`, isCorrect);
-  };
-
-  // Check if all options have images when any option has an image
-  const validateImages = () => {
-    if (!hasImages) return true; // No images, validation passes
-
-    if (watchedPollType === 'text_input') {
-      // For text input, we only need to check if there's an image at index 0
-      return true; // Text input images are always valid if present
-    }
-
-    // For choice-based polls, validate that all options with text have images
-    // OR there's a standalone question image (index -1)
-    const hasStandaloneImage = optionImages[-1];
-    if (hasStandaloneImage) {
-      return true; // Standalone image is always valid
-    }
-
-    const validOptions = watchedOptions.filter((option) => option.text.trim());
-    for (let i = 0; i < validOptions.length; i++) {
-      if (!optionImages[i]) {
-        return false; // Missing image for this option
-      }
-    }
-    return true;
   };
 
   // Validate correct answers
@@ -300,11 +420,6 @@ export default function CreatePoll() {
     }
 
     return true;
-  };
-
-  // Strip HTML tags for character count
-  const stripHtmlTags = (html: string): string => {
-    return html.replace(/<[^>]*>/g, '');
   };
 
   // Handle form submission
@@ -358,22 +473,12 @@ export default function CreatePoll() {
           setErrorMessage('Please add at least 2 options with text.');
           return;
         }
+      }
 
-        // Validate images if any are present
-        if (!validateImages()) {
-          const hasStandaloneImage = optionImages[-1];
-          if (hasStandaloneImage) {
-            // If there's a standalone image, it's always valid
-            // This case shouldn't happen with current validation logic
-          } else if (watchedPollType === 'text_input') {
-            setErrorMessage('Please add or remove the question image.');
-          } else {
-            setErrorMessage(
-              'Please add images to all options, add a standalone question image, or remove all images.'
-            );
-          }
-          return;
-        }
+      // set has_correct_answer to true if any option is marked as correct
+      if (watchedPollType !== 'text_input') {
+        const hasCorrectAnswer = data.options.some((option) => option.is_correct);
+        form.setValue('has_correct_answer', hasCorrectAnswer);
       }
 
       // Clean and normalize tags before submission
@@ -437,8 +542,12 @@ export default function CreatePoll() {
 
         <button
           onClick={form.handleSubmit(onSubmit)}
-          disabled={isPending}
-          className="bg-primary text-background rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={isPending || !isFormValid}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            isFormValid && !isPending
+              ? 'bg-primary text-background hover:opacity-90'
+              : 'cursor-not-allowed bg-gray-300 text-gray-500'
+          }`}
         >
           {isPending ? 'Posting...' : 'Post'}
         </button>
@@ -457,8 +566,45 @@ export default function CreatePoll() {
           handleMaxChoicesSelect={handleMaxChoicesSelect}
           handleCorrectAnswerToggle={handleCorrectAnswerToggle}
           handleOptionCorrectToggle={handleOptionCorrectToggle}
+          handleRankingOrderUpdate={handleRankingOrderUpdate}
         />
       </form>
+
+      {/* Real-time Validation Errors */}
+      {Object.keys(validationErrors).length > 0 && (
+        <div className="mx-auto mb-32 max-w-2xl">
+          <div className="rounded-lg border border-orange-400 bg-orange-100 p-3 shadow-lg">
+            <div className="flex items-start space-x-2">
+              <svg
+                className="mt-0.5 h-5 w-5 flex-shrink-0 text-orange-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div className="flex-1">
+                <h4 className="mb-1 text-sm font-medium text-orange-800">
+                  Please fix the following issues:
+                </h4>
+                <ul className="space-y-1 text-sm text-orange-700">
+                  {Object.entries(validationErrors).map(([key, error]) => (
+                    <li key={key} className="flex items-start space-x-1">
+                      <span className="mt-0.5 text-orange-600">•</span>
+                      <span>{error}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Message - Fixed above bottom selector */}
       {errorMessage && (
@@ -517,6 +663,13 @@ export default function CreatePoll() {
                 shortLabel: 'Multiple',
                 icon: '☐',
                 description: 'Multiple options',
+              },
+              {
+                value: 'ranking' as const,
+                label: 'Ranking',
+                shortLabel: 'Ranking',
+                icon: '📊',
+                description: 'Rank in order',
               },
               {
                 value: 'text_input' as const,

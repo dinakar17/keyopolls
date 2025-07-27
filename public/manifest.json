@@ -32,7 +32,7 @@
     {
       "purpose": "any",
       "sizes": "180x180",
-      "src": "icon-180.png",
+      "src": "icon-512-maskable.png",
       "type": "image/png"
     }
   ],

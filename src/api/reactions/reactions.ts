@@ -329,7 +329,7 @@ export function useKeyopollsCommonApiReactionGetReactions<
  * @summary Share Content
  */
 export const keyopollsCommonApiReactionShareContent = (
-  contentType: 'Poll' | 'GenericComment',
+  contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo',
   objectId: number,
   shareRequestSchema: BodyType<ShareRequestSchema>,
   options?: SecondParameter<typeof customInstance>,
@@ -355,7 +355,7 @@ export const getKeyopollsCommonApiReactionShareContentMutationOptions = <
     Awaited<ReturnType<typeof keyopollsCommonApiReactionShareContent>>,
     TError,
     {
-      contentType: 'Poll' | 'GenericComment';
+      contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
       objectId: number;
       data: BodyType<ShareRequestSchema>;
     },
@@ -365,7 +365,11 @@ export const getKeyopollsCommonApiReactionShareContentMutationOptions = <
 }): UseMutationOptions<
   Awaited<ReturnType<typeof keyopollsCommonApiReactionShareContent>>,
   TError,
-  { contentType: 'Poll' | 'GenericComment'; objectId: number; data: BodyType<ShareRequestSchema> },
+  {
+    contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
+    objectId: number;
+    data: BodyType<ShareRequestSchema>;
+  },
   TContext
 > => {
   const mutationKey = ['keyopollsCommonApiReactionShareContent'];
@@ -377,7 +381,11 @@ export const getKeyopollsCommonApiReactionShareContentMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof keyopollsCommonApiReactionShareContent>>,
-    { contentType: 'Poll' | 'GenericComment'; objectId: number; data: BodyType<ShareRequestSchema> }
+    {
+      contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
+      objectId: number;
+      data: BodyType<ShareRequestSchema>;
+    }
   > = (props) => {
     const { contentType, objectId, data } = props ?? {};
 
@@ -405,7 +413,7 @@ export const useKeyopollsCommonApiReactionShareContent = <
       Awaited<ReturnType<typeof keyopollsCommonApiReactionShareContent>>,
       TError,
       {
-        contentType: 'Poll' | 'GenericComment';
+        contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
         objectId: number;
         data: BodyType<ShareRequestSchema>;
       },
@@ -417,7 +425,11 @@ export const useKeyopollsCommonApiReactionShareContent = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof keyopollsCommonApiReactionShareContent>>,
   TError,
-  { contentType: 'Poll' | 'GenericComment'; objectId: number; data: BodyType<ShareRequestSchema> },
+  {
+    contentType: 'Poll' | 'GenericComment' | 'Article' | 'PollTodo';
+    objectId: number;
+    data: BodyType<ShareRequestSchema>;
+  },
   TContext
 > => {
   const mutationOptions = getKeyopollsCommonApiReactionShareContentMutationOptions(options);

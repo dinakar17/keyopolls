@@ -5,10 +5,12 @@
  * API for Keyo Polls app
  * OpenAPI spec version: 1.0.0
  */
+import type { TagsListFiltersSchemaCommunityId } from './tagsListFiltersSchemaCommunityId';
 import type { TagsListFiltersSchemaSearch } from './tagsListFiltersSchemaSearch';
 
 export interface TagsListFiltersSchema {
   search?: TagsListFiltersSchemaSearch;
+  community_id?: TagsListFiltersSchemaCommunityId;
   page?: number;
   per_page?: number;
   order_by?: string;

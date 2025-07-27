@@ -6,7 +6,9 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ToggleBookmarkSchemaFolderId } from './toggleBookmarkSchemaFolderId';
+import type { ToggleBookmarkSchemaIsTodo } from './toggleBookmarkSchemaIsTodo';
 import type { ToggleBookmarkSchemaNotes } from './toggleBookmarkSchemaNotes';
+import type { ToggleBookmarkSchemaTodoDueDate } from './toggleBookmarkSchemaTodoDueDate';
 
 /**
  * Schema for toggling bookmark
@@ -14,4 +16,6 @@ import type { ToggleBookmarkSchemaNotes } from './toggleBookmarkSchemaNotes';
 export interface ToggleBookmarkSchema {
   folder_id?: ToggleBookmarkSchemaFolderId;
   notes?: ToggleBookmarkSchemaNotes;
+  is_todo?: ToggleBookmarkSchemaIsTodo;
+  todo_due_date?: ToggleBookmarkSchemaTodoDueDate;
 }

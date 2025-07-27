@@ -136,7 +136,7 @@ export const useKeyopollsPollsApiOperationsCreatePoll = <
   return useMutation(mutationOptions, queryClient);
 };
 /**
- * Update poll title and description only
+ * Update poll title, description, explanation, and tags
  * @summary Update Poll
  */
 export const keyopollsPollsApiOperationsUpdatePoll = (

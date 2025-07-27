@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import {
   Calendar,
+  CheckCircle,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -130,26 +131,26 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'creator':
-        return <Crown className="h-4 w-4 text-yellow-600" />;
+        return <Crown className="text-warning h-4 w-4" />;
       case 'admin':
-        return <Shield className="h-4 w-4 text-red-600" />;
+        return <Shield className="text-error h-4 w-4" />;
       case 'moderator':
-        return <Shield className="h-4 w-4 text-blue-600" />;
+        return <Shield className="text-primary h-4 w-4" />;
       default:
-        return <Users className="h-4 w-4 text-gray-600" />;
+        return <Users className="text-text-secondary h-4 w-4" />;
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'creator':
-        return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20';
+        return 'text-warning bg-warning/10';
       case 'admin':
-        return 'text-red-600 bg-red-50 dark:bg-red-900/20';
+        return 'text-error bg-error/10';
       case 'moderator':
-        return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20';
+        return 'text-primary bg-primary/10';
       default:
-        return 'text-gray-600 bg-gray-50 dark:bg-gray-900/20';
+        return 'text-text-secondary bg-surface-elevated';
     }
   };
 
@@ -159,7 +160,7 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
         return (
           <button
             onClick={() => router.push(`/communities/${community.slug}/admin`)}
-            className="bg-surface border-border text-text hover:bg-surface-elevated flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
+            className="bg-background border-border text-text hover:bg-surface-elevated flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
           >
             <Settings className="h-4 w-4" />
             Manage
@@ -170,7 +171,7 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
         <button
           onClick={handleLeaveCommunity}
           disabled={isToggling}
-          className="rounded-md bg-red-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+          className="bg-error text-background rounded-md px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {isToggling ? 'Leaving...' : 'Leave'}
         </button>
@@ -204,10 +205,10 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
   ].filter((moderator, index, array) => array.findIndex((m) => m.id === moderator.id) === index);
 
   return (
-    <div className="p-4">
+    <div className="mx-auto max-w-2xl">
       {/* Banner and Avatar Section */}
       <div className="relative mb-6">
-        <div className="relative h-32 overflow-hidden rounded-lg">
+        <div className="relative h-32 overflow-hidden rounded-xl">
           {community.banner ? (
             <div
               className="absolute inset-0 bg-cover bg-center"
@@ -235,7 +236,7 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
       </div>
 
       {/* Community Info */}
-      <div className="mb-8 pt-8">
+      <div className="mb-6 px-4 pt-8">
         <div className="mb-3 flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <h1 className="text-text text-xl leading-tight font-bold">{community.name}</h1>
@@ -290,41 +291,57 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
       </div>
 
       {/* 1x1 Call Booking Banner */}
-      <div className="mb-8 rounded-xl border border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50 p-6 dark:border-purple-700 dark:from-purple-900/20 dark:to-blue-900/20">
+      <div className="border-accent/20 from-accent/5 to-primary/5 mx-4 mb-6 rounded-xl border bg-gradient-to-r p-6">
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 rounded-lg bg-purple-500 p-3">
-            <Video className="h-6 w-6 text-white" />
+          <div className="bg-accent flex-shrink-0 rounded-lg p-3">
+            <Video className="text-background h-6 w-6" />
           </div>
           <div className="flex-1">
             <h3 className="text-text mb-2 flex items-center gap-2 text-lg font-semibold">
               1-on-1 Calls with Moderators
-              <span className="rounded-full bg-yellow-400 px-2 py-1 text-xs font-bold text-yellow-900">
+              <span className="bg-warning text-background rounded-full px-2 py-1 text-xs font-bold">
                 COMING SOON
               </span>
             </h3>
-            <p className="text-text-secondary mb-4 text-sm">
-              Book personalized sessions with community moderators for guidance, mentorship, or
-              detailed discussions about topics you're passionate about.
+            <p className="text-text-secondary mb-3 text-sm leading-relaxed">
+              Book personalized sessions with verified community moderators. All our moderators are
+              experts in their respective fields and have been carefully vetted by our team.
             </p>
 
-            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {/* Trust indicators */}
+            <div className="text-text-secondary mb-4 flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1">
+                <CheckCircle className="text-success h-4 w-4" />
+                <span>Verified experts</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Shield className="text-success h-4 w-4" />
+                <span>Secure platform</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Star className="text-success h-4 w-4" />
+                <span>Quality guaranteed</span>
+              </div>
+            </div>
+
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-purple-600" />
-                <span className="text-text-secondary text-sm">15-60 min sessions</span>
+                <Clock className="text-accent h-4 w-4" />
+                <span className="text-text-secondary text-xs">15-60 min sessions</span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-purple-600" />
-                <span className="text-text-secondary text-sm">Flexible scheduling</span>
+                <Calendar className="text-accent h-4 w-4" />
+                <span className="text-text-secondary text-xs">Flexible scheduling</span>
               </div>
               <div className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-purple-600" />
-                <span className="text-text-secondary text-sm">Expert guidance</span>
+                <Star className="text-accent h-4 w-4" />
+                <span className="text-text-secondary text-xs">Expert guidance</span>
               </div>
             </div>
 
             <button
               disabled
-              className="cursor-not-allowed rounded-lg bg-purple-500/50 px-4 py-2 text-sm font-medium text-white opacity-60"
+              className="bg-accent/30 text-accent cursor-not-allowed rounded-lg px-4 py-2 text-sm font-medium opacity-60"
             >
               Book a Call - Coming Soon
             </button>
@@ -333,7 +350,7 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
       </div>
 
       {/* Moderators Section */}
-      <div className="mb-8">
+      <div className="px-4">
         <h2 className="text-text mb-4 flex items-center gap-2 text-lg font-semibold">
           <Shield className="text-primary h-5 w-5" />
           Community Team
@@ -343,10 +360,10 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="bg-surface border-border flex items-center gap-3 rounded-lg border p-4">
+                <div className="border-border-subtle flex items-center gap-3 border-b py-3">
                   <div className="bg-surface-elevated h-12 w-12 rounded-full"></div>
-                  <div className="flex-1">
-                    <div className="bg-surface-elevated mb-2 h-4 w-32 rounded"></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="bg-surface-elevated mb-1 h-4 w-32 rounded"></div>
                     <div className="bg-surface-elevated h-3 w-24 rounded"></div>
                   </div>
                   <div className="bg-surface-elevated h-6 w-20 rounded-full"></div>
@@ -355,11 +372,13 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
             ))}
           </div>
         ) : allModerators.length > 0 ? (
-          <div className="space-y-3">
-            {allModerators.map((moderator) => (
+          <div>
+            {allModerators.map((moderator, index) => (
               <div
                 key={moderator.id}
-                className="bg-surface border-border hover:bg-surface-elevated flex items-center gap-4 rounded-lg border p-4 transition-colors"
+                className={`hover:bg-surface-elevated/30 flex items-center gap-3 py-3 transition-colors ${
+                  index !== allModerators.length - 1 ? 'border-border-subtle border-b' : ''
+                }`}
               >
                 {/* Avatar */}
                 <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full">
@@ -381,8 +400,10 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
                 {/* Moderator Info */}
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-2">
-                    <h3 className="text-text truncate font-medium">{moderator.display_name}</h3>
-                    <span className="text-text-muted text-sm">@{moderator.username}</span>
+                    <h3 className="text-text truncate text-sm font-medium">
+                      {moderator.display_name}
+                    </h3>
+                    <span className="text-text-muted text-xs">@{moderator.username}</span>
                   </div>
                   <div className="text-text-secondary flex items-center gap-3 text-xs">
                     <span>{moderator.total_aura} aura</span>
@@ -393,28 +414,30 @@ const AboutContent: React.FC<AboutContentProps> = ({ community, onCommunityUpdat
                 </div>
 
                 {/* Role Badge */}
-                <div
-                  className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${getRoleColor(moderator.role || '')}`}
-                >
-                  {getRoleIcon(moderator.role || '')}
-                  <span className="capitalize">{moderator.role || 'member'}</span>
-                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${getRoleColor(moderator.role || '')}`}
+                  >
+                    {getRoleIcon(moderator.role || '')}
+                    <span className="capitalize">{moderator.role || 'member'}</span>
+                  </div>
 
-                {/* Book Call Button (Coming Soon) */}
-                <button
-                  disabled
-                  className="cursor-not-allowed rounded-lg bg-purple-500/20 px-3 py-2 text-xs font-medium text-purple-600 opacity-60 transition-colors hover:bg-purple-500/30"
-                  title="1-on-1 calls coming soon"
-                >
-                  <Calendar className="h-4 w-4" />
-                </button>
+                  {/* Book Call Button (Coming Soon) */}
+                  <button
+                    disabled
+                    className="bg-accent/10 text-accent/60 hover:bg-accent/20 cursor-not-allowed rounded-full p-2 transition-colors"
+                    title="1-on-1 calls coming soon"
+                  >
+                    <Calendar className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         ) : (
           <div className="py-8 text-center">
             <Shield className="text-text-muted mx-auto mb-3 h-12 w-12" />
-            <p className="text-text-secondary">No moderators found for this community.</p>
+            <p className="text-text-secondary text-sm">No moderators found for this community.</p>
           </div>
         )}
       </div>

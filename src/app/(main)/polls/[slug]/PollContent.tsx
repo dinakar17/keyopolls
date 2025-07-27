@@ -152,7 +152,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
       poll_id: poll.id,
       votes: rankedOptions.map((optionId, index) => ({
         option_id: optionId,
-        rank: index + 1,
+        rank: index,
       })),
     };
 
@@ -329,7 +329,12 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
           ))}
 
         {/* Description */}
-        {poll.description && <p className="text-text-secondary mb-4 text-sm">{poll.description}</p>}
+        {poll.description && <MarkdownDisplay content={poll.description} className="mb-4" />}
+
+        {/* Todos */}
+        {/* {poll.todos && poll.todos.length > 0 && <TodoList todos={poll.todos} className="mb-4" />} */}
+
+        {/* Poll Type Specific Content */}
 
         {/* Poll Content - Text Input vs Options */}
         {poll.poll_type === 'text_input' ? (
@@ -481,7 +486,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                   } ${
                     isVoted && showResults
                       ? 'border-primary'
-                      : option.is_correct && showResults && poll.has_correct_answer
+                      : option.is_correct && showResults
                         ? 'border-success'
                         : 'border-border'
                   }`}

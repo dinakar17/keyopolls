@@ -79,11 +79,8 @@ const pollOptionSchema = z.object({
 
 export const pollCreateSchema = z
   .object({
-    title: z.string().min(20, 'Title must be at least 20 characters').max(200, 'Title too long'),
-    description: z
-      .string()
-      .min(50, 'Description must be at least 50 characters')
-      .max(1000, 'Description too long'),
+    title: z.string().min(20, 'Title must be at least 20 characters').max(300, 'Title too long'),
+    description: z.string().optional(),
     explanation: z.string().min(250, 'Explanation must be at least 250 characters'),
     poll_type: z.enum(['single', 'multiple', 'ranking', 'text_input'], {
       required_error: 'Poll type is required',

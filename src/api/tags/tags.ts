@@ -33,12 +33,14 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 Features:
 - Search by tag name or description
+- Filter by community ID to get tags used in specific community
 - Pagination with configurable page size
 - Multiple sorting options
 - Returns usage count for each tag
 
 Query Parameters:
 - search: Search term for tag name or description
+- community_id: Filter tags used in a specific community
 - page: Page number (default: 1)
 - per_page: Items per page (default: 20, max: 100)
 - order_by: Sort field (created_at, name, usage_count with - for desc)

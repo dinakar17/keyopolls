@@ -499,6 +499,8 @@ const PollHeader: React.FC<PollHeaderProps> = ({ poll, refetchPoll }) => {
           id: poll.id,
           title: poll.title,
           description: poll.description,
+          tags: poll.tags || [],
+          explanation: poll.explanation,
         }}
         refetch={refetchPoll}
       />
