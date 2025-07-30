@@ -12,6 +12,14 @@ export type KeyopollsPollsApiGeneralListPollsParams = {
    */
   community_id?: number | null;
   /**
+   * Filter by community slug
+   */
+  community_slug?: string | null;
+  /**
+   * Filter by folder ID (for lists)
+   */
+  folder_id?: number | null;
+  /**
    * Filter by category ID (1 = for-you feed)
    */
   category_id?: number | null;

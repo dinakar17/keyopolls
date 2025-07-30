@@ -5,8 +5,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Archive, BarChart3, CheckCircle, ChevronDown, Clock, Tag, TrendingUp } from 'lucide-react';
 
 import { useKeyopollsPollsApiGeneralListPolls } from '@/api/polls/polls';
-import { CommunityDetails, PollDetails } from '@/api/schemas';
+import { PollDetails } from '@/api/schemas';
 import { useKeyopollsCommonApiTagsGetTagsList } from '@/api/tags/tags';
+import BottomNavigation from '@/components/common/BottomNavigation';
+import CreateButton from '@/components/common/CreateButton';
 import Poll from '@/components/common/Poll';
 import {
   Drawer,
@@ -28,11 +30,18 @@ interface FilterOption {
 }
 
 interface PollsContentProps {
-  community: CommunityDetails;
-  onCreatePoll: () => void;
+  communitySlug: string;
+  isModerator?: boolean;
+  folderId: number | null;
+  onCreatePoll: (folderId: number | null) => void;
 }
 
-const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) => {
+const PollsContent: React.FC<PollsContentProps> = ({
+  communitySlug,
+  onCreatePoll,
+  folderId,
+  isModerator,
+}) => {
   const { accessToken } = useProfileStore();
 
   // Filter State
@@ -54,13 +63,13 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
   // Fetch tags for the community
   const { data: tagsData } = useKeyopollsCommonApiTagsGetTagsList(
     {
-      community_id: community.id,
+      community_slug: communitySlug,
       per_page: 50,
       order_by: '-usage_count',
     },
     {
       query: {
-        enabled: !!community.id,
+        enabled: !!communitySlug && !folderId,
         refetchOnWindowFocus: false,
       },
     }
@@ -94,7 +103,8 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
     error: pollsError,
   } = useKeyopollsPollsApiGeneralListPolls(
     {
-      community_id: community.id,
+      community_slug: communitySlug,
+      folder_id: folderId,
       page: currentPage,
       page_size: 20,
       sort: sortFilter,
@@ -107,7 +117,7 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       },
       query: {
-        enabled: !!community.id,
+        enabled: !!communitySlug,
         refetchOnWindowFocus: false,
       },
     }
@@ -338,14 +348,10 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
     </div>
   );
 
-  const membership = community.membership_details;
-  const permissions = community.user_permissions;
-  const isMember = membership?.is_active;
-
   return (
     <>
       {/* Filters Section */}
-      <div className="border-border-subtle border-b px-4 py-3">
+      <div className="border-border-subtle border-b">
         <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
           <div className="flex-shrink-0">
             <FilterDrawer
@@ -433,7 +439,7 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
               <p className="text-text-secondary mx-auto mb-6 max-w-sm text-sm">
                 {selectedTags.length > 0
                   ? 'No polls found with the selected tags. Try removing some filters.'
-                  : isMember
+                  : isModerator
                     ? 'Be the first to create a poll and start the conversation!'
                     : 'Join the community to participate in polls and discussions.'}
               </p>
@@ -445,10 +451,10 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
                   Clear Tag Filters
                 </button>
               )}
-              {isMember && permissions?.can_post && selectedTags.length === 0 && (
+              {isModerator && selectedTags.length === 0 && (
                 <button
                   className="bg-primary text-background rounded-md px-6 py-2 text-sm font-medium transition-opacity hover:opacity-90"
-                  onClick={onCreatePoll}
+                  onClick={() => onCreatePoll(folderId)}
                 >
                   Create First Poll
                 </button>
@@ -488,6 +494,9 @@ const PollsContent: React.FC<PollsContentProps> = ({ community, onCreatePoll }) 
             <p className="text-sm">You've seen all polls! 🎉</p>
           </div>
         )}
+        {/* Floating Create Poll Button */}
+        {isModerator && <CreateButton path="/create-poll" onClick={() => onCreatePoll(folderId)} />}
+        <BottomNavigation />
       </div>
     </>
   );

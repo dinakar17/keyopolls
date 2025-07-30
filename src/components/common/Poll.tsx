@@ -11,6 +11,7 @@ import {
   ChartNoAxesColumnIncreasing,
   Edit3,
   Flag,
+  FolderPlus,
   MessageCircle,
   MoreVertical,
   Trash2,
@@ -35,6 +36,9 @@ import { toast } from '@/components/ui/toast';
 import { useProfileStore } from '@/stores/useProfileStore';
 import { formatDate, formatNumber } from '@/utils';
 
+import MarkdownDisplay from './MarkdownDisplay';
+import PollListManager from './PollListManager';
+
 interface PollProps {
   poll: PollDetails;
   isLastPoll?: boolean;
@@ -53,6 +57,7 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
   const [mediaViewerIndex, setMediaViewerIndex] = useState(0);
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [listManagerOpen, setListManagerOpen] = useState(false);
 
   const [pollData] = useState<PollDetails | null>(null);
 
@@ -179,11 +184,11 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
     router.push(`/polls/${currentPoll.id}?create-comment=true`);
   };
 
-  // Handle insights click
-  // const handleInsightsClick = (e: React.MouseEvent) => {
-  //   e.stopPropagation();
-  //   router.push(`/polls/${currentPoll.id}/insights`);
-  // };
+  // Handle add to list button click
+  const handleAddToListClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setListManagerOpen(true);
+  };
 
   // Handle edit poll
   const handleEditPoll = () => {
@@ -369,6 +374,19 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
                     <DrawerTitle>Poll Options</DrawerTitle>
                   </DrawerHeader>
                   <div className="space-y-2 p-4">
+                    {/* Add to List Option */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuDrawerOpen(false);
+                        setListManagerOpen(true);
+                      }}
+                      className="hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
+                    >
+                      <FolderPlus size={18} className="text-text-secondary" />
+                      <span className="text-text font-medium">Add to List</span>
+                    </button>
+
                     {isAuthor && (
                       <button
                         type="button"
@@ -413,9 +431,7 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
             <h2 className="text-text leading-relaxed font-semibold">{currentPoll.title}</h2>
           </div>
           {pollImages.length === 0 && poll.description && (
-            <p className="text-text-secondary mb-4 text-sm">
-              {currentPoll.description || 'No description provided.'}
-            </p>
+            <MarkdownDisplay content={poll.description} />
           )}
 
           {/* Image Display */}
@@ -475,6 +491,15 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
               )}
             </button>
 
+            {/* Add to List Button */}
+            <button
+              className="text-text-muted group flex items-center rounded-full p-2 transition-all hover:bg-blue-500/10 hover:text-blue-500"
+              onClick={handleAddToListClick}
+              title="Add to list"
+            >
+              <FolderPlus size={14} />
+            </button>
+
             {/* Share Button */}
             <ShareButton
               contentType="Poll"
@@ -529,6 +554,15 @@ const Poll: React.FC<PollProps> = ({ poll, isLastPoll, lastPollElementCallback, 
           </div>
         </div>
       </article>
+
+      {/* Poll List Manager Modal */}
+      <PollListManager
+        pollId={currentPoll.id}
+        pollListId={currentPoll.poll_list_id || undefined}
+        isOpen={listManagerOpen}
+        onClose={() => setListManagerOpen(false)}
+        triggerElement={null}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

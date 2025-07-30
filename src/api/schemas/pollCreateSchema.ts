@@ -20,6 +20,7 @@ export interface PollCreateSchema {
   description?: PollCreateSchemaDescription;
   poll_type: string;
   community_id: number;
+  folder_id: number;
   explanation?: PollCreateSchemaExplanation;
   todos?: PollCreateSchemaTodos;
   allow_multiple_votes?: boolean;

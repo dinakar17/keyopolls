@@ -35,7 +35,6 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
   const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(-1);
 
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch tags for suggestions
@@ -57,7 +56,18 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
   useEffect(() => {
     if (isOpen) {
       setTitle(poll.title);
-      setDescription(poll.description);
+
+      // Parse description from JSON string if it exists, otherwise use as plain text
+      try {
+        const parsedDescription = poll.description ? JSON.parse(poll.description) : '';
+        setDescription(
+          typeof parsedDescription === 'string' ? parsedDescription : poll.description
+        );
+      } catch {
+        // If parsing fails, treat as plain text
+        setDescription(poll.description || '');
+      }
+
       setTags(poll.tags || []);
 
       // Parse explanation from JSON string if it exists
@@ -83,20 +93,12 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
     autoResize(e.target);
   };
 
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDescription(e.target.value);
-    autoResize(e.target);
-  };
-
   // Auto-resize on content load
   useEffect(() => {
     if (isOpen && titleRef.current) {
       autoResize(titleRef.current);
     }
-    if (isOpen && descriptionRef.current) {
-      autoResize(descriptionRef.current);
-    }
-  }, [isOpen, title, description]);
+  }, [isOpen, title]);
 
   // Tag suggestion logic
   const availableTags = tagsData?.data.tags || [];
@@ -228,7 +230,16 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
       return;
     }
 
-    // Check if anything has changed
+    // Get original values for comparison
+    const originalDescription = (() => {
+      try {
+        const parsed = poll.description ? JSON.parse(poll.description) : '';
+        return typeof parsed === 'string' ? parsed : poll.description;
+      } catch {
+        return poll.description || '';
+      }
+    })();
+
     const originalExplanation = (() => {
       try {
         const parsed = poll.explanation ? JSON.parse(poll.explanation) : '';
@@ -238,9 +249,10 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
       }
     })();
 
+    // Check if anything has changed
     const hasChanges =
       title.trim() !== poll.title ||
-      description.trim() !== poll.description ||
+      description.trim() !== originalDescription ||
       JSON.stringify(tags.sort()) !== JSON.stringify((poll.tags || []).sort()) ||
       explanation.trim() !== originalExplanation;
 
@@ -255,7 +267,7 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
         pollId: poll.id,
         data: {
           title: title.trim(),
-          description: description.trim(),
+          description: JSON.stringify(description.trim()),
           tags: tags,
           explanation: JSON.stringify(explanation.trim()),
         },
@@ -296,25 +308,25 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
       className="bg-text/60 fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={handleOverlayClick}
     >
-      <div className="bg-surface border-border max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border shadow-2xl">
+      <div className="bg-background border-border max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border">
         {/* Header */}
-        <div className="border-border bg-surface sticky top-0 z-10 flex items-center justify-between border-b px-8 py-6">
-          <h2 className="text-text text-xl font-semibold">Edit Poll</h2>
+        <div className="border-border bg-background sticky top-0 z-10 flex items-center justify-between border-b px-6 py-4">
+          <h2 className="text-text text-lg font-semibold">Edit Poll</h2>
           <button
             onClick={handleClose}
             disabled={isPending}
-            className="text-text-muted hover:bg-surface-elevated hover:text-text flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-text-muted hover:text-text hover:bg-surface-elevated flex h-8 w-8 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8">
-          <div className="space-y-8">
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="space-y-6">
             {/* Title Field */}
-            <div className="group">
-              <label className="text-text mb-3 block text-sm font-medium">
+            <div>
+              <label className="text-text mb-2 block text-sm font-medium">
                 Poll Title <span className="text-error">*</span>
               </label>
               <div className="relative">
@@ -325,7 +337,7 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
                   disabled={isPending}
                   maxLength={200}
                   rows={1}
-                  className="border-border text-text placeholder-text-muted focus:border-border disabled:bg-surface-elevated w-full resize-none border-0 border-b-2 bg-transparent px-0 py-3 text-lg font-medium transition-all duration-200 focus:ring-0 focus:outline-none disabled:cursor-not-allowed"
+                  className="border-border text-text placeholder-text-muted focus:border-primary w-full resize-none border-0 border-b bg-transparent px-0 py-2 text-lg font-medium focus:ring-0 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Enter your poll title..."
                   style={{
                     lineHeight: '1.4',
@@ -334,7 +346,6 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
                   }}
                   required
                 />
-                <div className="bg-primary absolute bottom-1.5 left-0 h-0.5 w-0 transition-all duration-300 group-focus-within:w-full"></div>
               </div>
               <div className="mt-2 flex items-center justify-between">
                 <div className="text-text-secondary text-xs">
@@ -351,48 +362,32 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
             </div>
 
             {/* Description Field */}
-            <div className="group">
-              <label className="text-text mb-3 block text-sm font-medium">
-                Description
-                <span className="text-text-secondary ml-2 text-xs font-normal">(Optional)</span>
-              </label>
-              <div className="relative">
-                <textarea
-                  ref={descriptionRef}
-                  value={description}
-                  onChange={handleDescriptionChange}
-                  disabled={isPending}
-                  rows={3}
-                  maxLength={1000}
-                  className="border-border text-text placeholder-text-muted focus:border-border disabled:bg-surface-elevated w-full resize-none border-0 border-b-2 bg-transparent px-0 py-3 text-base transition-all duration-200 focus:ring-0 focus:outline-none disabled:cursor-not-allowed"
-                  placeholder="Add more context or details about your poll..."
-                  style={{
-                    lineHeight: '1.5',
-                    minHeight: '4.5rem',
-                    overflow: 'hidden',
-                  }}
-                />
-                <div
-                  className="bg-primary absolute bottom-2 left-0 h-0.5 w-0 transition-all duration-300 group-focus-within:w-full"
-                  style={{ marginBottom: '-2px' }}
-                ></div>
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-text text-sm font-medium">
+                  Description
+                  <span className="text-text-secondary ml-2 text-xs font-normal">(Optional)</span>
+                </h3>
+                <p className="text-text-muted text-xs">
+                  Add more context or details about your poll using markdown formatting
+                </p>
               </div>
-              <div className="mt-2 flex items-center justify-between">
-                <div className="text-text-secondary text-xs">
-                  Provide additional context to help voters understand your poll
-                </div>
-                <div
-                  className={`text-xs transition-colors ${
-                    description.length > 900 ? 'text-warning' : 'text-text-muted'
-                  }`}
-                >
-                  {description.length}/1000
-                </div>
-              </div>
+
+              <MarkdownEditor
+                value={description}
+                onChange={setDescription}
+                placeholder="Add more context or details about your poll. You can use **bold**, *italic*, and other markdown formatting..."
+                showCharacterCount={true}
+                height="150px"
+                required={false}
+                showModeToggle={true}
+                disabled={isPending}
+                className="w-full"
+              />
             </div>
 
             {/* Tags Section */}
-            <div className="border-border bg-surface space-y-3 rounded-lg border p-4">
+            <div className="space-y-3">
               <div>
                 <h3 className="text-text text-sm font-medium">Tags</h3>
                 <p className="text-text-muted text-xs">
@@ -400,7 +395,7 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
                 </p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {/* Tag Display */}
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -439,13 +434,13 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
                           ? 'Type to search existing tags or create new ones...'
                           : 'Add another tag...'
                       }
-                      className="border-border bg-surface-elevated text-text placeholder-text-muted focus:border-primary w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      className="bg-surface border-border text-text placeholder-text-muted focus:border-primary w-full rounded-md border px-3 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
                       maxLength={50}
                     />
 
                     {/* Tag Suggestions Dropdown */}
                     {showTagSuggestions && (
-                      <div className="border-border bg-surface absolute top-full right-0 left-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border shadow-lg">
+                      <div className="bg-surface border-border absolute right-0 left-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-md border shadow-lg">
                         {tagsLoading && (
                           <div className="flex items-center justify-center p-3">
                             <div className="text-text-muted text-sm">Loading tags...</div>
@@ -454,7 +449,7 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
 
                         {!tagsLoading && filteredSuggestions.length > 0 && (
                           <>
-                            <div className="border-border bg-surface-elevated text-text-muted border-b px-3 py-2 text-xs font-medium">
+                            <div className="text-text-muted bg-surface-elevated border-border border-b px-3 py-2 text-xs font-medium">
                               Existing Tags
                             </div>
                             {filteredSuggestions.map((tag, index) => (
@@ -529,7 +524,7 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
             </div>
 
             {/* Explanation Field */}
-            <div className="border-border bg-surface space-y-3 rounded-lg border p-4">
+            <div className="space-y-3">
               <div>
                 <h3 className="text-text text-sm font-medium">
                   Explanation <span className="text-error">*</span>
@@ -555,19 +550,19 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-10 flex gap-4">
+          <div className="mt-8 flex gap-3">
             <button
               type="button"
               onClick={handleClose}
               disabled={isPending}
-              className="border-border text-text hover:border-border-subtle hover:bg-surface-elevated flex-1 rounded-xl border-2 px-6 py-3 text-base font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+              className="text-text border-border hover:bg-surface-elevated flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending || !title.trim() || !explanation.trim()}
-              className="bg-primary text-background focus:ring-primary/20 flex-1 rounded-xl px-6 py-3 text-base font-medium transition-all duration-200 hover:opacity-90 focus:ring-4 disabled:cursor-not-allowed disabled:opacity-50"
+              className="bg-primary text-background flex-1 rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? (
                 <div className="flex items-center justify-center gap-2">

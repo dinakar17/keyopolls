@@ -291,7 +291,7 @@ const Communities = () => {
     showJoinButton?: boolean;
   }) => {
     const handleClick = () => {
-      router.push(`/communities/${community.slug}`);
+      router.push(`/communities/${community.slug}/lists`);
     };
 
     const getRoleIcon = (role?: string) => {

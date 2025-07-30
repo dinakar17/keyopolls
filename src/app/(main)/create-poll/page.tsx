@@ -30,7 +30,7 @@ interface ValidationErrors {
 export default function CreatePoll() {
   const router = useRouter();
   const { accessToken } = useProfileStore();
-  const { communityDetails, clearCommunityDetails } = useCommunityStore();
+  const { communityDetails, clearCommunityDetails, folderId } = useCommunityStore();
 
   const { mutate: createPoll, isPending } = useKeyopollsPollsApiOperationsCreatePoll({
     request: {
@@ -496,7 +496,7 @@ export default function CreatePoll() {
       createPoll(
         {
           data: {
-            data: cleanedData,
+            data: { ...cleanedData, folder_id: Number(folderId) },
             option_images: hasImages ? Object.values(optionImages).map((img) => img.file) : [],
           },
         },

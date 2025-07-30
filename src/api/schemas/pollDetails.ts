@@ -14,6 +14,7 @@ import type { PollDetailsCorrectRankingOrder } from './pollDetailsCorrectRanking
 import type { PollDetailsCorrectTextAnswer } from './pollDetailsCorrectTextAnswer';
 import type { PollDetailsImageUrl } from './pollDetailsImageUrl';
 import type { PollDetailsMaxChoices } from './pollDetailsMaxChoices';
+import type { PollDetailsPollListId } from './pollDetailsPollListId';
 import type { PollDetailsUserAnswerCorrect } from './pollDetailsUserAnswerCorrect';
 import type { PollDetailsUserEarnedAura } from './pollDetailsUserEarnedAura';
 import type { PollDetailsUserReactions } from './pollDetailsUserReactions';
@@ -44,6 +45,7 @@ export interface PollDetails {
   community_name: string;
   community_slug?: PollDetailsCommunitySlug;
   community_avatar?: PollDetailsCommunityAvatar;
+  poll_list_id?: PollDetailsPollListId;
   allow_multiple_votes: boolean;
   max_choices?: PollDetailsMaxChoices;
   requires_aura: number;

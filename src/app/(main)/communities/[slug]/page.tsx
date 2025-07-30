@@ -284,7 +284,13 @@ const CommunityPage = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'polls':
-        return <PollsContent community={community} onCreatePoll={handleCreatePoll} />;
+        return (
+          <PollsContent
+            communitySlug={community.slug || ''}
+            folderId={0}
+            onCreatePoll={handleCreatePoll}
+          />
+        );
       case 'lists':
         return <QuizzesContent />;
       // case 'battles':
@@ -300,7 +306,13 @@ const CommunityPage = () => {
       case 'about':
         return <AboutContent community={community} onCommunityUpdate={refetch} />;
       default:
-        return <PollsContent community={community} onCreatePoll={handleCreatePoll} />;
+        return (
+          <PollsContent
+            communitySlug={community.slug || ''}
+            folderId={0}
+            onCreatePoll={handleCreatePoll}
+          />
+        );
     }
   };
 

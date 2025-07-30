@@ -6,11 +6,13 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { TagsListFiltersSchemaCommunityId } from './tagsListFiltersSchemaCommunityId';
+import type { TagsListFiltersSchemaCommunitySlug } from './tagsListFiltersSchemaCommunitySlug';
 import type { TagsListFiltersSchemaSearch } from './tagsListFiltersSchemaSearch';
 
 export interface TagsListFiltersSchema {
   search?: TagsListFiltersSchemaSearch;
   community_id?: TagsListFiltersSchemaCommunityId;
+  community_slug?: TagsListFiltersSchemaCommunitySlug;
   page?: number;
   per_page?: number;
   order_by?: string;

@@ -9,6 +9,7 @@
 export type KeyopollsCommonApiTagsGetTagsListParams = {
   search?: string | null;
   community_id?: number | null;
+  community_slug?: string | null;
   page?: number;
   per_page?: number;
   order_by?: string;
