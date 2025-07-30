@@ -89,7 +89,7 @@ export default function CreatePoll() {
       title: savedData.title || '',
       description: savedData.description || '',
       poll_type: savedData.poll_type || 'single',
-      explanation: JSON.stringify(savedData.explanation || ''),
+      explanation: savedData.explanation || '',
       community_id: 0,
       allow_multiple_votes: savedData.allow_multiple_votes || false,
       max_choices: savedData.max_choices || 4,
@@ -245,6 +245,7 @@ export default function CreatePoll() {
     watchedPollType,
     watchedMaxChoices,
     watchedHasCorrectAnswer,
+    form,
   ]);
 
   // Save to localStorage when key fields change
@@ -507,7 +508,7 @@ export default function CreatePoll() {
             clearCommunityDetails();
             router.replace(`/polls/${response.data.id}`);
           },
-          onError: (error: any) => {
+          onError: (error) => {
             setErrorMessage(error.response?.data?.message || 'An unexpected error occurred');
             console.error('Poll creation error:', error);
           },

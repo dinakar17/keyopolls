@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { UseFormReturn, useFieldArray } from 'react-hook-form';
 
 import { CommunityDetails } from '@/api/schemas';
+import MarkdownEditor from '@/components/common/MarkdownEditor';
 import {
   Drawer,
   DrawerClose,
@@ -50,7 +51,6 @@ export default function PollForm({
   handleRankingOrderUpdate,
 }: PollFormProps) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -85,12 +85,6 @@ export default function PollForm({
   const handleTitleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     form.setValue('title', e.target.value);
     autoResize(titleRef);
-  };
-
-  // Handle description change with auto-resize
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    form.setValue('description', e.target.value);
-    autoResize(descriptionRef);
   };
 
   // Add new option
@@ -210,25 +204,28 @@ export default function PollForm({
         {formErrors.title && <p className="text-error mt-1 text-sm">{formErrors.title.message}</p>}
       </div>
 
-      {/* Description */}
-      <div>
-        <textarea
-          {...form.register('description')}
-          ref={descriptionRef}
-          value={watchedDescription}
-          onChange={handleDescriptionChange}
+      {/* Description with MarkdownEditor */}
+      <div className="space-y-2">
+        <MarkdownEditor
+          value={watchedDescription || ''}
+          onChange={(value) => {
+            form.setValue('description', value);
+            form.trigger('description');
+          }}
+          label=""
           placeholder={
             watchedPollType === 'ranking'
-              ? 'Provide context about what should be ranked and criteria to consider'
-              : 'Provide additional context or instructions for your poll'
+              ? 'Provide context about what should be ranked and criteria to consider...'
+              : 'Provide additional context or instructions for your poll...'
           }
-          className="text-text-secondary placeholder-text-muted w-full resize-none overflow-hidden border-none bg-transparent text-sm outline-none"
-          style={{ minHeight: '20px' }}
-          rows={2}
+          minCharacters={0}
+          showCharacterCount={false}
+          error={formErrors.description?.message}
+          height="120px"
+          required={false}
+          showModeToggle={true}
+          className="w-full"
         />
-        {formErrors.description && (
-          <p className="text-error mt-1 text-sm">{formErrors.description.message}</p>
-        )}
       </div>
 
       {/* Todos Section */}

@@ -270,11 +270,12 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
                 className="flex cursor-pointer flex-col items-center transition-opacity hover:opacity-80"
                 onClick={handleOpenInfoModal}
               >
-                <div className="flex items-start space-x-2">
+                <div className="flex items-start space-x-3">
                   <Image src="/logo.svg" alt="Pulse Logo" width={24} height={24} priority />
                   <span className="text-primary text-lg font-bold">Pulse</span>
                 </div>
-                <p className="text-text-muted text-xs font-medium">Learn, build, grow</p>
+                <p className="text-text-muted text-xs font-medium">Learn in minutes not hours.</p>
+                <p className="text-text-muted text-xs font-medium">The Last Min Prep App.</p>
               </div>
 
               {/* Right side - Empty space for balance */}

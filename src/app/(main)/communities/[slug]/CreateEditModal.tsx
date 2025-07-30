@@ -9,6 +9,7 @@ import {
   useKeyopollsPollsApiListsUpdatePollList,
 } from '@/api/poll-lists/poll-lists';
 import { PollListDetailsSchema } from '@/api/schemas';
+import toast from '@/components/ui/toast';
 import { useProfileStore } from '@/stores/useProfileStore';
 
 interface CreateEditModalProps {
@@ -49,11 +50,12 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     mutation: {
       onSuccess: () => {
         onSuccess();
+        toast.success('Poll list created successfully');
         onClose();
         resetForm();
       },
       onError: (error) => {
-        console.error('Error creating list:', error);
+        toast.error(`${error.response?.data?.message || 'An unexpected error occurred'}`);
       },
     },
   });
@@ -67,8 +69,12 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     mutation: {
       onSuccess: () => {
         onSuccess();
+        toast.success('Poll list updated successfully');
         onClose();
         resetForm();
+      },
+      onError: (error) => {
+        toast.error(`${error.response?.data?.message || 'An unexpected error occurred'}`);
       },
     },
   });

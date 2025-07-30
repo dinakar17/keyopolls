@@ -25,7 +25,45 @@ export default function MarkdownDisplay({
   showCodeLineNumbers = false,
   maxWidth = 'none',
 }: MarkdownDisplayProps) {
-  if (!content?.trim()) {
+  // Parse content to handle both JSON strings and regular strings
+  const parseContent = (rawContent: string): string => {
+    if (!rawContent) return '';
+
+    // Trim the content first
+    const trimmed = rawContent.trim();
+
+    // If empty after trimming, return empty string
+    if (!trimmed) return '';
+
+    // Check if it looks like a JSON string (starts and ends with quotes)
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      try {
+        // Try to parse as JSON string
+        const parsed = JSON.parse(trimmed);
+        // If parsed successfully and result is a string, use it
+        if (typeof parsed === 'string') {
+          return parsed;
+        }
+        // If parsed but not a string, fall back to original
+        return trimmed;
+      } catch {
+        // If JSON parsing fails, treat as regular string
+        // Remove the outer quotes manually in case it's a malformed JSON string
+        if (trimmed.length >= 2) {
+          return trimmed.slice(1, -1);
+        }
+        return trimmed;
+      }
+    }
+
+    // For regular strings, return as-is
+    return trimmed;
+  };
+
+  const parsedContent = parseContent(content);
+
+  // If no content after parsing, return null
+  if (!parsedContent) {
     return null;
   }
 
@@ -55,7 +93,7 @@ export default function MarkdownDisplay({
     return processed;
   };
 
-  const processedContent = processContent(content);
+  const processedContent = processContent(parsedContent);
 
   const getCodeTheme = () => {
     if (theme === 'dark') return oneDark;

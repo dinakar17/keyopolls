@@ -30,6 +30,7 @@ import { useKeyopollsCommunitiesApiGeneralGetCommunity } from '@/api/communities
 import { useKeyopollsCommunitiesApiOperationsToggleCommunityMembership } from '@/api/communities/communities';
 import { useKeyopollsPollsApiListsGetPollLists } from '@/api/poll-lists/poll-lists';
 import { PollListDetailsSchema } from '@/api/schemas';
+import BottomNavigation from '@/components/common/BottomNavigation';
 import { toast } from '@/components/ui/toast';
 import { useCommunityStore } from '@/stores/useCommunityStore';
 import { useProfileStore } from '@/stores/useProfileStore';
@@ -821,7 +822,7 @@ const UnifiedFolderPage = () => {
                 {isRootLevel ? (
                   <>
                     <List className="text-primary h-6 w-6" />
-                    Poll Lists
+                    Lists
                   </>
                 ) : (
                   <>
@@ -831,9 +832,7 @@ const UnifiedFolderPage = () => {
                 )}
               </h2>
               <p className="text-text-secondary text-sm">
-                {isRootLevel
-                  ? 'Organize and explore poll collections'
-                  : 'Browse contents of this folder'}
+                {isRootLevel ? 'Explore collections' : 'Browse contents of this folder'}
               </p>
             </div>
             {isModerator && (
@@ -1030,6 +1029,7 @@ const UnifiedFolderPage = () => {
         parentId={currentParentId}
         communitySlug={slug || ''}
       />
+      <BottomNavigation />
     </div>
   );
 };

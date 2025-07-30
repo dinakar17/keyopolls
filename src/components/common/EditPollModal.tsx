@@ -24,9 +24,9 @@ interface EditPollModalProps {
 
 const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, refetch }) => {
   const { accessToken } = useProfileStore();
-  const [title, setTitle] = useState(poll.title);
-  const [description, setDescription] = useState(poll.description);
-  const [tags, setTags] = useState<string[]>(poll.tags || []);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [explanation, setExplanation] = useState('');
 
   // Tags input state
@@ -52,32 +52,39 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
     }
   );
 
+  // Helper function to safely parse JSON strings from backend
+  const parseFieldValue = (value: string | null | undefined): string => {
+    if (!value) return '';
+
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+
+    // Check if it looks like a JSON string (starts and ends with quotes)
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      try {
+        // Try to parse as JSON string
+        const parsed = JSON.parse(trimmed);
+        return typeof parsed === 'string' ? parsed : trimmed;
+      } catch {
+        // If JSON parsing fails, manually remove outer quotes
+        if (trimmed.length >= 2) {
+          return trimmed.slice(1, -1);
+        }
+        return trimmed;
+      }
+    }
+
+    // For regular strings, return as-is
+    return trimmed;
+  };
+
   // Reset form when poll changes or modal opens
   useEffect(() => {
-    if (isOpen) {
-      setTitle(poll.title);
-
-      // Parse description from JSON string if it exists, otherwise use as plain text
-      try {
-        const parsedDescription = poll.description ? JSON.parse(poll.description) : '';
-        setDescription(
-          typeof parsedDescription === 'string' ? parsedDescription : poll.description
-        );
-      } catch {
-        // If parsing fails, treat as plain text
-        setDescription(poll.description || '');
-      }
-
+    if (isOpen && poll) {
+      setTitle(poll.title || '');
+      setDescription(parseFieldValue(poll.description) || '');
       setTags(poll.tags || []);
-
-      // Parse explanation from JSON string if it exists
-      try {
-        const parsedExplanation = poll.explanation ? JSON.parse(poll.explanation) : '';
-        setExplanation(typeof parsedExplanation === 'string' ? parsedExplanation : '');
-      } catch {
-        // If parsing fails, treat as plain text
-        setExplanation(poll.explanation || '');
-      }
+      setExplanation(parseFieldValue(poll.explanation) || '');
     }
   }, [isOpen, poll]);
 
@@ -96,7 +103,11 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
   // Auto-resize on content load
   useEffect(() => {
     if (isOpen && titleRef.current) {
-      autoResize(titleRef.current);
+      setTimeout(() => {
+        if (titleRef.current) {
+          autoResize(titleRef.current);
+        }
+      }, 100);
     }
   }, [isOpen, title]);
 
@@ -231,23 +242,8 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
     }
 
     // Get original values for comparison
-    const originalDescription = (() => {
-      try {
-        const parsed = poll.description ? JSON.parse(poll.description) : '';
-        return typeof parsed === 'string' ? parsed : poll.description;
-      } catch {
-        return poll.description || '';
-      }
-    })();
-
-    const originalExplanation = (() => {
-      try {
-        const parsed = poll.explanation ? JSON.parse(poll.explanation) : '';
-        return typeof parsed === 'string' ? parsed : '';
-      } catch {
-        return poll.explanation || '';
-      }
-    })();
+    const originalDescription = parseFieldValue(poll.description) || '';
+    const originalExplanation = parseFieldValue(poll.explanation) || '';
 
     // Check if anything has changed
     const hasChanges =
@@ -262,14 +258,15 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
       return;
     }
 
+    // Send the data as plain strings - backend will handle storage format
     updatePoll(
       {
         pollId: poll.id,
         data: {
           title: title.trim(),
-          description: JSON.stringify(description.trim()),
+          description: description.trim(),
           tags: tags,
-          explanation: JSON.stringify(explanation.trim()),
+          explanation: explanation.trim(),
         },
       },
       {
@@ -335,7 +332,7 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
                   value={title}
                   onChange={handleTitleChange}
                   disabled={isPending}
-                  maxLength={200}
+                  maxLength={500}
                   rows={1}
                   className="border-border text-text placeholder-text-muted focus:border-primary w-full resize-none border-0 border-b bg-transparent px-0 py-2 text-lg font-medium focus:ring-0 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Enter your poll title..."
@@ -353,16 +350,16 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
                 </div>
                 <div
                   className={`text-xs transition-colors ${
-                    title.length > 180 ? 'text-error' : 'text-text-muted'
+                    title.length > 450 ? 'text-error' : 'text-text-muted'
                   }`}
                 >
-                  {title.length}/200
+                  {title.length}/500
                 </div>
               </div>
             </div>
 
             {/* Description Field */}
-            <div className="space-y-3">
+            <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
               <div>
                 <h3 className="text-text text-sm font-medium">
                   Description
@@ -375,9 +372,13 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
 
               <MarkdownEditor
                 value={description}
-                onChange={setDescription}
+                onChange={(value) => {
+                  setDescription(value);
+                }}
+                label=""
                 placeholder="Add more context or details about your poll. You can use **bold**, *italic*, and other markdown formatting..."
-                showCharacterCount={true}
+                minCharacters={0}
+                showCharacterCount={false}
                 height="150px"
                 required={false}
                 showModeToggle={true}
@@ -387,7 +388,7 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
             </div>
 
             {/* Tags Section */}
-            <div className="space-y-3">
+            <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
               <div>
                 <h3 className="text-text text-sm font-medium">Tags</h3>
                 <p className="text-text-muted text-xs">
@@ -434,13 +435,13 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
                           ? 'Type to search existing tags or create new ones...'
                           : 'Add another tag...'
                       }
-                      className="bg-surface border-border text-text placeholder-text-muted focus:border-primary w-full rounded-md border px-3 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      className="border-border bg-surface-elevated text-text placeholder-text-muted focus:border-primary w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
                       maxLength={50}
                     />
 
                     {/* Tag Suggestions Dropdown */}
                     {showTagSuggestions && (
-                      <div className="bg-surface border-border absolute right-0 left-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-md border shadow-lg">
+                      <div className="bg-surface border-border absolute right-0 left-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border shadow-lg">
                         {tagsLoading && (
                           <div className="flex items-center justify-center p-3">
                             <div className="text-text-muted text-sm">Loading tags...</div>
@@ -524,7 +525,7 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
             </div>
 
             {/* Explanation Field */}
-            <div className="space-y-3">
+            <div className="border-border bg-surface space-y-3 rounded-lg border p-3">
               <div>
                 <h3 className="text-text text-sm font-medium">
                   Explanation <span className="text-error">*</span>
@@ -536,7 +537,10 @@ const EditPollModal: React.FC<EditPollModalProps> = ({ isOpen, onClose, poll, re
 
               <MarkdownEditor
                 value={explanation}
-                onChange={setExplanation}
+                onChange={(value) => {
+                  setExplanation(value);
+                }}
+                label=""
                 placeholder="Explain the context, background, or reasoning for your poll. Include relevant details to help users understand the topic better..."
                 minCharacters={250}
                 showCharacterCount={true}
