@@ -10,6 +10,7 @@ import {
   CodeToggle,
   ConditionalContents,
   CreateLink,
+  InsertCodeBlock,
   InsertTable,
   InsertThematicBreak,
   ListsToggle,
@@ -163,6 +164,7 @@ export default function MarkdownEditor({
                         <CreateLink />
                         <ListsToggle />
                         <Separator />
+                        <InsertCodeBlock /> {/* Add this line */}
                         <InsertTable />
                         <InsertThematicBreak />
                         <Separator />
