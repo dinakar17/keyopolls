@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -31,6 +31,9 @@ export default function CreatePoll() {
   const router = useRouter();
   const { accessToken } = useProfileStore();
   const { communityDetails, clearCommunityDetails, folderId } = useCommunityStore();
+
+  const searchParams = useSearchParams();
+  const urlfolderId = searchParams.get('folderId');
 
   const { mutate: createPoll, isPending } = useKeyopollsPollsApiOperationsCreatePoll({
     request: {
@@ -497,7 +500,10 @@ export default function CreatePoll() {
       createPoll(
         {
           data: {
-            data: { ...cleanedData, folder_id: Number(folderId) },
+            data: {
+              ...cleanedData,
+              folder_id: urlfolderId ? parseInt(urlfolderId, 10) : Number(folderId) || 0,
+            },
             option_images: hasImages ? Object.values(optionImages).map((img) => img.file) : [],
           },
         },

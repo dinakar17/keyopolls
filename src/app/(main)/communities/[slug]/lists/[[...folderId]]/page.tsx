@@ -445,7 +445,7 @@ const UnifiedFolderPage = () => {
     (folderId: number | null) => {
       setCommunityDetails(community || null);
       setFolderId(folderId ? folderId.toString() : null);
-      router.push(`/create-poll`);
+      router.push(`/create-poll?community=${slug}&folderId=${folderId || ''}`);
     },
     [community, setCommunityDetails, setFolderId, router]
   );

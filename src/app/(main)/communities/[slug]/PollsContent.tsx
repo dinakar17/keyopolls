@@ -495,7 +495,12 @@ const PollsContent: React.FC<PollsContentProps> = ({
           </div>
         )}
         {/* Floating Create Poll Button */}
-        {isModerator && <CreateButton path="/create-poll" onClick={() => onCreatePoll(folderId)} />}
+        {isModerator && (
+          <CreateButton
+            path={`/create-poll?community=${communitySlug}&folderId=${folderId || ''}`}
+            onClick={() => onCreatePoll(folderId)}
+          />
+        )}
         <BottomNavigation />
       </div>
     </>

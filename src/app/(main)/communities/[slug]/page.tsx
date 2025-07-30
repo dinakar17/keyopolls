@@ -166,7 +166,7 @@ const CommunityPage = () => {
       return;
     }
     setCommunityDetails(community);
-    router.push('/create-poll');
+    router.push(`/create-poll?community=${community.slug}&folderId=0`);
   };
 
   const handleShare = async () => {
