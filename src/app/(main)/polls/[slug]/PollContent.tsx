@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-import { ArrowDown, ArrowUp, Info, Send } from 'lucide-react';
+import { ArrowDown, ArrowUp, Eye, EyeOff, Info, Send } from 'lucide-react';
 
 import { useKeyopollsPollsApiGeneralCastVote } from '@/api/polls/polls';
 import { CastVoteSchema, PollDetails } from '@/api/schemas';
@@ -25,7 +25,7 @@ interface PollContentProps {
 
 const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => {
   const router = useRouter();
-  const { accessToken } = useProfileStore();
+  const { accessToken, hideAnswerByDefault, setHideAnswerByDefault } = useProfileStore();
 
   // State for managing votes and UI
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
@@ -33,6 +33,13 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
   const [textInput, setTextInput] = useState('');
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [mediaViewerIndex, setMediaViewerIndex] = useState(0);
+
+  // State for mock voting experience when hideAnswerByDefault is enabled
+  const [mockSelectedOptions, setMockSelectedOptions] = useState<number[]>([]);
+  const [mockRankedOptions, setMockRankedOptions] = useState<number[]>([]);
+  const [mockTextInput, setMockTextInput] = useState('');
+  const [isMockVoting, setIsMockVoting] = useState(false);
+  const [hasVotedInSession, setHasVotedInSession] = useState(false);
 
   // Local state for UI manipulation of reactions
   const [localUserReactions, setLocalUserReactions] = useState(poll?.user_reactions || {});
@@ -57,6 +64,8 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
         // Update poll data with response from cast vote API
         if (response.data) {
           onPollDataUpdate(response.data);
+          // Mark that user has voted in this session
+          setHasVotedInSession(true);
           // Clear text input after successful submission
           if (response.data.poll_type === 'text_input') {
             setTextInput('');
@@ -82,10 +91,69 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
         ? poll.options.filter((option) => option.image_url).map((option) => option.image_url!)
         : [];
 
-  const handleSingleChoiceToggle = (optionId: number) => {
-    if (!poll || poll.user_has_voted || !poll.user_can_vote) return;
+  // Determine if we should show mock voting interface
+  const shouldShowMockVoting = poll.user_has_voted && !hasVotedInSession && hideAnswerByDefault;
 
-    setSelectedOptions([optionId]); // Single choice, so replace with new selection
+  // Mock voting handlers
+  const handleMockSingleChoiceToggle = (optionId: number) => {
+    setMockSelectedOptions([optionId]);
+    setIsMockVoting(true);
+  };
+
+  const handleMockMultipleChoiceToggle = (optionId: number) => {
+    setMockSelectedOptions((prev) => {
+      const isSelected = prev.includes(optionId);
+      const newSelection = isSelected ? prev.filter((id) => id !== optionId) : [...prev, optionId];
+
+      if (poll.max_choices && newSelection.length > poll.max_choices) {
+        return prev;
+      }
+
+      return newSelection;
+    });
+    setIsMockVoting(true);
+  };
+
+  const handleMockRankingOptionClick = (optionId: number) => {
+    setMockRankedOptions((prev) => {
+      if (prev.includes(optionId)) {
+        return prev.filter((id) => id !== optionId);
+      }
+      return [...prev, optionId];
+    });
+    setIsMockVoting(true);
+  };
+
+  const handleMockTextInputChange = (value: string) => {
+    setMockTextInput(value);
+    setIsMockVoting(true);
+  };
+
+  const handleMockVoteSubmit = () => {
+    // Show results temporarily by setting isMockVoting to false and temporarily disabling hideAnswerByDefault
+    setIsMockVoting(false);
+
+    // Temporarily show results even when hideAnswerByDefault is true
+    const originalHideAnswer = hideAnswerByDefault;
+    if (hideAnswerByDefault) {
+      setHideAnswerByDefault(false);
+    }
+
+    // Auto-hide after 3 seconds and restore original setting
+    setTimeout(() => {
+      setMockSelectedOptions([]);
+      setMockRankedOptions([]);
+      setMockTextInput('');
+      if (originalHideAnswer) {
+        setHideAnswerByDefault(true);
+      }
+    }, 3000);
+  };
+
+  // Real voting handlers (for when user can actually vote)
+  const handleSingleChoiceToggle = (optionId: number) => {
+    if (!poll || !poll.user_can_vote || poll.user_has_voted) return;
+    setSelectedOptions([optionId]);
   };
 
   const handleSingleChoiceSubmit = () => {
@@ -109,7 +177,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
   };
 
   const handleMultipleChoiceToggle = (optionId: number) => {
-    if (!poll || poll.user_has_voted || !poll.user_can_vote) return;
+    if (!poll || !poll.user_can_vote || poll.user_has_voted) return;
 
     setSelectedOptions((prev) => {
       const isSelected = prev.includes(optionId);
@@ -135,7 +203,7 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
   };
 
   const handleRankingOptionClick = (optionId: number) => {
-    if (!poll || poll.user_has_voted || !poll.user_can_vote) return;
+    if (!poll || !poll.user_can_vote || poll.user_has_voted) return;
 
     setRankedOptions((prev) => {
       if (prev.includes(optionId)) {
@@ -186,7 +254,11 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
   const handleTextInputKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleTextInputSubmit();
+      if (shouldShowMockVoting) {
+        handleMockVoteSubmit();
+      } else {
+        handleTextInputSubmit();
+      }
     }
 
     // Prevent spaces
@@ -197,7 +269,8 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
   };
 
   const getRankForOption = (optionId: number): number | null => {
-    const index = rankedOptions.indexOf(optionId);
+    const targetArray = shouldShowMockVoting && isMockVoting ? mockRankedOptions : rankedOptions;
+    const index = targetArray.indexOf(optionId);
     return index === -1 ? null : index + 1;
   };
 
@@ -271,13 +344,21 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
 
   const canInteract = poll.user_can_vote && !poll.user_has_voted && poll.is_active;
 
-  // Show vote button immediately for all option-based polls when user can interact
+  // Show vote button for real voting OR mock voting
   const showVoteButton =
-    canInteract &&
-    (poll.poll_type === 'single' || poll.poll_type === 'multiple' || poll.poll_type === 'ranking');
+    (canInteract &&
+      (poll.poll_type === 'single' ||
+        poll.poll_type === 'multiple' ||
+        poll.poll_type === 'ranking')) ||
+    (shouldShowMockVoting && isMockVoting && poll.poll_type !== 'text_input');
 
-  // Updated condition: only show results if user has voted
-  const showResults = poll.user_has_voted;
+  // Show results logic - fixed
+  const showResults =
+    poll.user_has_voted &&
+    (hasVotedInSession || // Always show if user just voted in this session
+      !hideAnswerByDefault); // Only show if hideAnswerByDefault is disabled
+  // Note: We don't show results during mock voting or when hideAnswerByDefault is true
+  // The temporary reveal after mock voting happens by clearing isMockVoting state
 
   return (
     <>
@@ -285,6 +366,30 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
       <div className="px-4">
         {/* Title */}
         <h1 className="text-text mb-3 text-lg font-semibold">{poll.title}</h1>
+
+        {/* Hide Answer Toggle - Only show if user has voted AND hasn't voted in this session */}
+        {poll.user_has_voted && !hasVotedInSession && (
+          <div className="border-border bg-surface-elevated mb-3 flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center gap-2">
+              {hideAnswerByDefault ? <EyeOff size={16} /> : <Eye size={16} />}
+              <span className="text-text-secondary text-sm">
+                {hideAnswerByDefault ? 'Answers hidden by default' : 'Answers shown by default'}
+              </span>
+            </div>
+            <button
+              onClick={() => setHideAnswerByDefault(!hideAnswerByDefault)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                hideAnswerByDefault ? 'bg-primary' : 'bg-border'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  hideAnswerByDefault ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+        )}
 
         {/* Image Display - For all poll types with images */}
         {pollImages.length > 0 &&
@@ -330,9 +435,6 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
 
         {/* Description */}
         {poll.description && <MarkdownDisplay content={poll.description} className="mb-4" />}
-
-        {/* Todos */}
-        {/* {poll.todos && poll.todos.length > 0 && <TodoList todos={poll.todos} className="mb-4" />} */}
 
         {/* Poll Type Specific Content */}
 
@@ -430,17 +532,27 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                   <input
                     ref={textInputRef}
                     type="text"
-                    value={textInput}
-                    onChange={(e) => setTextInput(e.target.value)}
+                    value={shouldShowMockVoting ? mockTextInput : textInput}
+                    onChange={(e) => {
+                      if (shouldShowMockVoting) {
+                        handleMockTextInputChange(e.target.value);
+                      } else {
+                        setTextInput(e.target.value);
+                      }
+                    }}
                     onKeyPress={handleTextInputKeyPress}
                     placeholder="Enter your response (no spaces allowed)"
-                    disabled={!canInteract || isPending}
+                    disabled={(!canInteract && !shouldShowMockVoting) || isPending}
                     maxLength={50}
                     className="border-border focus:border-primary w-full rounded-lg border px-4 py-3 pr-12 font-mono transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button
-                    onClick={handleTextInputSubmit}
-                    disabled={!textInput.trim() || !canInteract || isPending}
+                    onClick={shouldShowMockVoting ? handleMockVoteSubmit : handleTextInputSubmit}
+                    disabled={
+                      shouldShowMockVoting
+                        ? !mockTextInput.trim()
+                        : !textInput.trim() || !canInteract || isPending
+                    }
                     className="text-primary hover:text-primary/80 absolute top-1/2 right-3 -translate-y-1/2 disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     <Send size={18} />
@@ -448,8 +560,10 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-text-secondary">{textInput.length}/50 characters</span>
-                  {textInput.includes(' ') && (
+                  <span className="text-text-secondary">
+                    {shouldShowMockVoting ? mockTextInput.length : textInput.length}/50 characters
+                  </span>
+                  {(shouldShowMockVoting ? mockTextInput : textInput).includes(' ') && (
                     <span className="text-error">Spaces not allowed</span>
                   )}
                 </div>
@@ -469,7 +583,14 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
           /* Option-based polls */
           <div className="mb-4 space-y-2">
             {poll.options?.map((option) => {
-              const isSelected = selectedOptions.includes(option.id);
+              // Determine selection state based on context
+              const isSelected =
+                shouldShowMockVoting && isMockVoting
+                  ? poll.poll_type === 'ranking'
+                    ? mockRankedOptions.includes(option.id)
+                    : mockSelectedOptions.includes(option.id)
+                  : selectedOptions.includes(option.id);
+
               const rank = getRankForOption(option.id);
               const isVoted = isUserVotedOption(option.id);
               const percentage = showResults
@@ -482,9 +603,11 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                 <div
                   key={option.id}
                   className={`relative overflow-hidden rounded-lg border transition-all duration-200 ${
-                    canInteract ? 'hover:border-primary/50 cursor-pointer' : 'cursor-default'
+                    canInteract || shouldShowMockVoting
+                      ? 'hover:border-primary/50 cursor-pointer'
+                      : 'cursor-default'
                   } ${
-                    isVoted && showResults
+                    (isVoted && showResults) || isSelected
                       ? 'border-primary'
                       : option.is_correct && showResults
                         ? 'border-success'
@@ -495,14 +618,23 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                       handleUnauthenticatedClick();
                       return;
                     }
-                    if (!canInteract) return;
 
-                    if (poll.poll_type === 'single') {
-                      handleSingleChoiceToggle(option.id);
-                    } else if (poll.poll_type === 'multiple') {
-                      handleMultipleChoiceToggle(option.id);
-                    } else if (poll.poll_type === 'ranking') {
-                      handleRankingOptionClick(option.id);
+                    if (shouldShowMockVoting) {
+                      if (poll.poll_type === 'single') {
+                        handleMockSingleChoiceToggle(option.id);
+                      } else if (poll.poll_type === 'multiple') {
+                        handleMockMultipleChoiceToggle(option.id);
+                      } else if (poll.poll_type === 'ranking') {
+                        handleMockRankingOptionClick(option.id);
+                      }
+                    } else {
+                      if (poll.poll_type === 'single') {
+                        handleSingleChoiceToggle(option.id);
+                      } else if (poll.poll_type === 'multiple') {
+                        handleMultipleChoiceToggle(option.id);
+                      } else if (poll.poll_type === 'ranking') {
+                        handleRankingOptionClick(option.id);
+                      }
                     }
                   }}
                 >
@@ -546,10 +678,12 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                       {poll.poll_type === 'multiple' && (
                         <div
                           className={`h-4 w-4 rounded border-2 ${
-                            isSelected || isVoted ? 'border-primary bg-primary' : 'border-border'
+                            isSelected || (isVoted && showResults)
+                              ? 'border-primary bg-primary'
+                              : 'border-border'
                           }`}
                         >
-                          {(isSelected || isVoted) && (
+                          {(isSelected || (isVoted && showResults)) && (
                             <svg
                               className="text-background ml-0.5 h-3 w-3"
                               fill="currentColor"
@@ -576,7 +710,9 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                         </div>
                       )}
 
-                      <span className={`text-text ${isVoted && showResults ? 'font-medium' : ''}`}>
+                      <span
+                        className={`text-text ${(isVoted && showResults) || isSelected ? 'font-medium' : ''}`}
+                      >
                         {option.text}
                       </span>
                     </div>
@@ -605,52 +741,98 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
           </div>
         )}
 
-        {/* Vote Button - Shows immediately for all option-based polls */}
+        {/* Vote Button - Shows for real voting OR mock voting */}
         {showVoteButton && (
           <div className="mb-4">
             {poll.poll_type === 'single' && (
               <button
-                onClick={handleSingleChoiceSubmit}
-                disabled={selectedOptions.length === 0 || isPending}
+                onClick={shouldShowMockVoting ? handleMockVoteSubmit : handleSingleChoiceSubmit}
+                disabled={
+                  shouldShowMockVoting
+                    ? mockSelectedOptions.length === 0
+                    : selectedOptions.length === 0 || isPending
+                }
                 className="bg-primary text-background w-full rounded-full px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isPending
+                {isPending && !shouldShowMockVoting
                   ? 'Voting...'
-                  : selectedOptions.length === 0
+                  : (
+                        shouldShowMockVoting
+                          ? mockSelectedOptions.length === 0
+                          : selectedOptions.length === 0
+                      )
                     ? 'Select an option to vote'
-                    : 'Vote'}
+                    : shouldShowMockVoting
+                      ? 'Reveal Results'
+                      : 'Vote'}
               </button>
             )}
 
             {poll.poll_type === 'multiple' && (
               <button
-                onClick={handleMultipleChoiceSubmit}
-                disabled={selectedOptions.length === 0 || isPending}
+                onClick={shouldShowMockVoting ? handleMockVoteSubmit : handleMultipleChoiceSubmit}
+                disabled={
+                  shouldShowMockVoting
+                    ? mockSelectedOptions.length === 0
+                    : selectedOptions.length === 0 || isPending
+                }
                 className="bg-primary text-background w-full rounded-full px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isPending
+                {isPending && !shouldShowMockVoting
                   ? 'Voting...'
-                  : selectedOptions.length === 0
+                  : (
+                        shouldShowMockVoting
+                          ? mockSelectedOptions.length === 0
+                          : selectedOptions.length === 0
+                      )
                     ? 'Select options to vote'
-                    : `Vote (${selectedOptions.length} selected)`}
+                    : shouldShowMockVoting
+                      ? 'Reveal Results'
+                      : `Vote (${selectedOptions.length} selected)`}
               </button>
             )}
 
             {poll.poll_type === 'ranking' && (
               <button
-                onClick={handleRankingSubmit}
-                disabled={rankedOptions.length !== poll.options?.length || isPending}
+                onClick={shouldShowMockVoting ? handleMockVoteSubmit : handleRankingSubmit}
+                disabled={
+                  shouldShowMockVoting
+                    ? mockRankedOptions.length !== poll.options?.length
+                    : rankedOptions.length !== poll.options?.length || isPending
+                }
                 className="bg-primary text-background w-full rounded-full px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isPending
+                {isPending && !shouldShowMockVoting
                   ? 'Submitting...'
-                  : rankedOptions.length === 0
-                    ? 'Click options in order of preference'
-                    : rankedOptions.length === poll.options?.length
-                      ? 'Submit Ranking'
-                      : `Rank all options (${rankedOptions.length}/${poll.options?.length})`}
+                  : shouldShowMockVoting
+                    ? mockRankedOptions.length === 0
+                      ? 'Click options in order of preference'
+                      : mockRankedOptions.length === poll.options?.length
+                        ? 'Reveal Results'
+                        : `Rank all options (${mockRankedOptions.length}/${poll.options?.length})`
+                    : rankedOptions.length === 0
+                      ? 'Click options in order of preference'
+                      : rankedOptions.length === poll.options?.length
+                        ? 'Submit Ranking'
+                        : `Rank all options (${rankedOptions.length}/${poll.options?.length})`}
               </button>
             )}
+          </div>
+        )}
+
+        {/* Message when in mock voting mode */}
+        {shouldShowMockVoting && isMockVoting && (
+          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <div className="flex items-start gap-2">
+              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium">Mock voting mode</p>
+                <p className="mt-1 text-xs text-blue-700">
+                  You've already voted on this poll. Click "Reveal Results" to see the actual
+                  results temporarily.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -666,6 +848,21 @@ const PollContent: React.FC<PollContentProps> = ({ poll, onPollDataUpdate }) => 
                   <li>• The author's explanation will be revealed</li>
                   <li>• You can join the discussion in comments</li>
                 </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Message when answers are hidden - Only for polls voted before this session */}
+        {poll.user_has_voted && !hasVotedInSession && hideAnswerByDefault && !isMockVoting && (
+          <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+            <div className="flex items-start gap-2">
+              <EyeOff className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-600" />
+              <div className="text-sm text-yellow-800">
+                <p className="font-medium">Results are hidden by your preference</p>
+                <p className="mt-1 text-xs text-yellow-700">
+                  Click on options to enter mock voting mode and temporarily reveal results.
+                </p>
               </div>
             </div>
           </div>

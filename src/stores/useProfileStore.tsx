@@ -17,6 +17,10 @@ interface ProfileStore {
   initializeProfile: () => Promise<void>;
   refreshProfile: () => void;
 
+  // User preferences (Polls related)
+  hideAnswerByDefault: boolean;
+  setHideAnswerByDefault: (value: boolean) => void;
+
   // Helper getters
   isAuthenticated: () => boolean;
   hasProfile: () => boolean;
@@ -27,6 +31,7 @@ interface ProfileStore {
 interface PersistedProfileState {
   profileData: ProfileDetailsSchema | undefined;
   accessToken: string | undefined;
+  hideAnswerByDefault: boolean; // Add this to the persisted state type
 }
 
 const ACCESS_TOKEN_COOKIE = 'auth_token';
@@ -40,6 +45,10 @@ const isValidToken = (token: any): token is string => {
 export const useProfileStore = create<ProfileStore>()(
   persist(
     (set, get) => ({
+      // User preferences
+      hideAnswerByDefault: false,
+      setHideAnswerByDefault: (value: boolean) => set({ hideAnswerByDefault: value }),
+
       // Profile data and token
       profileData: undefined,
       accessToken: undefined,
@@ -90,6 +99,8 @@ export const useProfileStore = create<ProfileStore>()(
           profileData: undefined,
           accessToken: undefined,
           isInitialized: true,
+          // Reset user preferences to defaults
+          hideAnswerByDefault: false,
         });
       },
 
@@ -121,6 +132,8 @@ export const useProfileStore = create<ProfileStore>()(
           profileData: storedState?.profileData || undefined,
           accessToken: finalToken,
           isInitialized: true,
+          // Restore user preferences from localStorage
+          hideAnswerByDefault: storedState?.hideAnswerByDefault ?? false,
         });
 
         // Update cookie if we got token from localStorage
@@ -156,11 +169,13 @@ export const useProfileStore = create<ProfileStore>()(
     {
       name: PROFILE_STORAGE_NAME,
       storage: createJSONStorage(() => localStorage),
-      // Persist both profile data AND token in localStorage
+      // Persist profile data, token, AND user preferences in localStorage
       partialize: (state) => ({
         profileData: state.profileData,
         // Store token in localStorage as well (dual storage with cookies)
         accessToken: state.accessToken,
+        // Include user preferences in persisted state
+        hideAnswerByDefault: state.hideAnswerByDefault,
       }),
     }
   )
