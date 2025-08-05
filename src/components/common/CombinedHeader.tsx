@@ -228,12 +228,12 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
     <>
       {/* Combined Header */}
       <header
-        className={`bg-background sticky top-0 z-20 mt-1 transition-transform duration-300 ease-in-out ${
+        className={`bg-background sticky top-0 z-20 my-1 transition-transform duration-300 ease-in-out ${
           isVisible ? 'transform-none' : '-translate-y-full'
         }`}
       >
         {/* Top Header Row */}
-        <div className="border-border-subtle border-b">
+        <div className="border-border-subtle border-b py-1">
           <div className="mx-auto max-w-2xl px-4">
             <div className="flex h-14 items-center justify-between">
               {/* Left side - Profile Avatar or Menu Button */}
@@ -275,7 +275,9 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
                   <span className="text-primary text-lg font-bold">Pulse</span>
                 </div>
                 <p className="text-text-muted text-xs font-medium">Learn in minutes not hours.</p>
-                <p className="text-text-muted text-xs font-medium">The Last Min Prep App.</p>
+                <p className="text-text-muted text-xs font-medium">
+                  Time to Think, Talk, and Learn
+                </p>
               </div>
 
               {/* Right side - Empty space for balance */}
