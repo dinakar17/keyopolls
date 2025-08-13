@@ -36,11 +36,17 @@ import type {
   KeyopollsArticlesApiCreateArticleBody,
   KeyopollsArticlesApiListArticlesParams,
   KeyopollsArticlesApiUpdateArticleBody,
+  KeyopollsChatsApiServicesCreateServiceBody,
+  KeyopollsChatsApiServicesGetServicesParams,
+  KeyopollsChatsApiServicesUpdateServiceBody,
+  KeyopollsChatsApiServicesUpdateServiceParams,
   LoginResponseSchema,
   LoginSchema,
   Message,
   SendOTPResponseSchema,
   SendOTPSchema,
+  ServiceResponseSchema,
+  ServicesListResponseSchema,
   UsernameAvailabilitySchema,
   VerifyOTPResponseSchema,
   VerifyOTPSchema,
@@ -1411,6 +1417,758 @@ export const useKeyopollsCommunitiesApiAdminChangeMemberRole = <
   TContext
 > => {
   const mutationOptions = getKeyopollsCommunitiesApiAdminChangeMemberRoleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+/**
+ * Get a paginated list of services with optional filtering.
+
+Features:
+- Search by service name or description
+- Filter by community, creator, service type, broadcast, or status
+- Pagination support
+- Includes service attachments
+
+Query Parameters:
+- search: Search term for name or description
+- community_id: Filter by community
+- creator_id: Filter by service creator
+- service_type: Filter by service type (dm, live_chat, audio_call, video_call,
+  custom)
+- status: Filter by status (active, inactive, draft)
+- page: Page number (default: 1)
+- per_page: Items per page (default: 20, max: 100)
+ * @summary Get Services
+ */
+export const keyopollsChatsApiServicesGetServices = (
+  params?: KeyopollsChatsApiServicesGetServicesParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  return customInstance<ServicesListResponseSchema>(
+    { url: `/api/services/services`, method: 'GET', params, signal },
+    options
+  );
+};
+
+export const getKeyopollsChatsApiServicesGetServicesQueryKey = (
+  params?: KeyopollsChatsApiServicesGetServicesParams
+) => {
+  return [`/api/services/services`, ...(params ? [params] : [])] as const;
+};
+
+export const getKeyopollsChatsApiServicesGetServicesQueryOptions = <
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsChatsApiServicesGetServicesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getKeyopollsChatsApiServicesGetServicesQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>
+  > = ({ signal }) => keyopollsChatsApiServicesGetServices(params, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type KeyopollsChatsApiServicesGetServicesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>
+>;
+export type KeyopollsChatsApiServicesGetServicesQueryError = ErrorType<Message>;
+
+export function useKeyopollsChatsApiServicesGetServices<
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+  TError = ErrorType<Message>,
+>(
+  params: undefined | KeyopollsChatsApiServicesGetServicesParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsChatsApiServicesGetServices<
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsChatsApiServicesGetServicesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsChatsApiServicesGetServices<
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsChatsApiServicesGetServicesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Services
+ */
+
+export function useKeyopollsChatsApiServicesGetServices<
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+  TError = ErrorType<Message>,
+>(
+  params?: KeyopollsChatsApiServicesGetServicesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetServices>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getKeyopollsChatsApiServicesGetServicesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Create a new service. Only moderators can create services.
+
+Required fields:
+- community_id: ID of the community
+- service_type: Type of service (dm, live_chat, audio_call, video_call, custom)
+- name: Service name
+- description: Service description
+- price: Price in credits (minimum 0.01)
+
+Optional fields:
+- duration_minutes: Duration for timed services (default: 10)
+- is_duration_based: Whether service has time limit (default: False)
+- status: Service status (default: active)
+- attachments: List of files to attach to the service
+ * @summary Create Service
+ */
+export const keyopollsChatsApiServicesCreateService = (
+  keyopollsChatsApiServicesCreateServiceBody: BodyType<KeyopollsChatsApiServicesCreateServiceBody>,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  const formData = new FormData();
+  if (keyopollsChatsApiServicesCreateServiceBody.attachments !== undefined) {
+    keyopollsChatsApiServicesCreateServiceBody.attachments.forEach((value) =>
+      formData.append(`attachments`, value)
+    );
+  }
+  if (keyopollsChatsApiServicesCreateServiceBody.preview_image !== undefined) {
+    formData.append(`preview_image`, keyopollsChatsApiServicesCreateServiceBody.preview_image);
+  }
+  formData.append(`data`, JSON.stringify(keyopollsChatsApiServicesCreateServiceBody.data));
+
+  return customInstance<ServiceResponseSchema>(
+    {
+      url: `/api/services/services`,
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/form-data' },
+      data: formData,
+      signal,
+    },
+    options
+  );
+};
+
+export const getKeyopollsChatsApiServicesCreateServiceMutationOptions = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesCreateService>>,
+    TError,
+    { data: BodyType<KeyopollsChatsApiServicesCreateServiceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesCreateService>>,
+  TError,
+  { data: BodyType<KeyopollsChatsApiServicesCreateServiceBody> },
+  TContext
+> => {
+  const mutationKey = ['keyopollsChatsApiServicesCreateService'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesCreateService>>,
+    { data: BodyType<KeyopollsChatsApiServicesCreateServiceBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return keyopollsChatsApiServicesCreateService(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeyopollsChatsApiServicesCreateServiceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesCreateService>>
+>;
+export type KeyopollsChatsApiServicesCreateServiceMutationBody =
+  BodyType<KeyopollsChatsApiServicesCreateServiceBody>;
+export type KeyopollsChatsApiServicesCreateServiceMutationError = ErrorType<Message>;
+
+/**
+ * @summary Create Service
+ */
+export const useKeyopollsChatsApiServicesCreateService = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keyopollsChatsApiServicesCreateService>>,
+      TError,
+      { data: BodyType<KeyopollsChatsApiServicesCreateServiceBody> },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesCreateService>>,
+  TError,
+  { data: BodyType<KeyopollsChatsApiServicesCreateServiceBody> },
+  TContext
+> => {
+  const mutationOptions = getKeyopollsChatsApiServicesCreateServiceMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+/**
+ * Update an existing service. Only the creator can update their service.
+
+Optional fields (only provided fields will be updated):
+- name: Service name
+- description: Service description
+- price: Price in credits
+- duration_minutes: Duration for timed services
+- is_duration_based: Whether service has time limit
+- status: Service status
+- is_available: Whether service is available for purchase
+- attachments: List of files to attach to the service
+- replace_attachments: If True, replace all existing attachments. If False, add to
+  existing ones.
+ * @summary Update Service
+ */
+export const keyopollsChatsApiServicesUpdateService = (
+  serviceId: string,
+  keyopollsChatsApiServicesUpdateServiceBody: BodyType<KeyopollsChatsApiServicesUpdateServiceBody>,
+  params?: KeyopollsChatsApiServicesUpdateServiceParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  const formData = new FormData();
+  if (keyopollsChatsApiServicesUpdateServiceBody.attachments !== undefined) {
+    keyopollsChatsApiServicesUpdateServiceBody.attachments.forEach((value) =>
+      formData.append(`attachments`, value)
+    );
+  }
+  if (keyopollsChatsApiServicesUpdateServiceBody.preview_image !== undefined) {
+    formData.append(`preview_image`, keyopollsChatsApiServicesUpdateServiceBody.preview_image);
+  }
+  formData.append(`data`, JSON.stringify(keyopollsChatsApiServicesUpdateServiceBody.data));
+
+  return customInstance<ServiceResponseSchema>(
+    {
+      url: `/api/services/services/update/${serviceId}`,
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/form-data' },
+      data: formData,
+      params,
+      signal,
+    },
+    options
+  );
+};
+
+export const getKeyopollsChatsApiServicesUpdateServiceMutationOptions = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesUpdateService>>,
+    TError,
+    {
+      serviceId: string;
+      data: BodyType<KeyopollsChatsApiServicesUpdateServiceBody>;
+      params?: KeyopollsChatsApiServicesUpdateServiceParams;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesUpdateService>>,
+  TError,
+  {
+    serviceId: string;
+    data: BodyType<KeyopollsChatsApiServicesUpdateServiceBody>;
+    params?: KeyopollsChatsApiServicesUpdateServiceParams;
+  },
+  TContext
+> => {
+  const mutationKey = ['keyopollsChatsApiServicesUpdateService'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesUpdateService>>,
+    {
+      serviceId: string;
+      data: BodyType<KeyopollsChatsApiServicesUpdateServiceBody>;
+      params?: KeyopollsChatsApiServicesUpdateServiceParams;
+    }
+  > = (props) => {
+    const { serviceId, data, params } = props ?? {};
+
+    return keyopollsChatsApiServicesUpdateService(serviceId, data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeyopollsChatsApiServicesUpdateServiceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesUpdateService>>
+>;
+export type KeyopollsChatsApiServicesUpdateServiceMutationBody =
+  BodyType<KeyopollsChatsApiServicesUpdateServiceBody>;
+export type KeyopollsChatsApiServicesUpdateServiceMutationError = ErrorType<Message>;
+
+/**
+ * @summary Update Service
+ */
+export const useKeyopollsChatsApiServicesUpdateService = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keyopollsChatsApiServicesUpdateService>>,
+      TError,
+      {
+        serviceId: string;
+        data: BodyType<KeyopollsChatsApiServicesUpdateServiceBody>;
+        params?: KeyopollsChatsApiServicesUpdateServiceParams;
+      },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesUpdateService>>,
+  TError,
+  {
+    serviceId: string;
+    data: BodyType<KeyopollsChatsApiServicesUpdateServiceBody>;
+    params?: KeyopollsChatsApiServicesUpdateServiceParams;
+  },
+  TContext
+> => {
+  const mutationOptions = getKeyopollsChatsApiServicesUpdateServiceMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+/**
+ * Delete a service. Only the creator can delete their service.
+
+This will permanently delete the service and all its attachments.
+Consider setting status to 'inactive' instead if you want to preserve data.
+ * @summary Delete Service
+ */
+export const keyopollsChatsApiServicesDeleteService = (
+  serviceId: string,
+  options?: SecondParameter<typeof customInstance>
+) => {
+  return customInstance<Message>(
+    { url: `/api/services/services/${serviceId}`, method: 'DELETE' },
+    options
+  );
+};
+
+export const getKeyopollsChatsApiServicesDeleteServiceMutationOptions = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesDeleteService>>,
+    TError,
+    { serviceId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesDeleteService>>,
+  TError,
+  { serviceId: string },
+  TContext
+> => {
+  const mutationKey = ['keyopollsChatsApiServicesDeleteService'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesDeleteService>>,
+    { serviceId: string }
+  > = (props) => {
+    const { serviceId } = props ?? {};
+
+    return keyopollsChatsApiServicesDeleteService(serviceId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeyopollsChatsApiServicesDeleteServiceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesDeleteService>>
+>;
+
+export type KeyopollsChatsApiServicesDeleteServiceMutationError = ErrorType<Message>;
+
+/**
+ * @summary Delete Service
+ */
+export const useKeyopollsChatsApiServicesDeleteService = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keyopollsChatsApiServicesDeleteService>>,
+      TError,
+      { serviceId: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesDeleteService>>,
+  TError,
+  { serviceId: string },
+  TContext
+> => {
+  const mutationOptions = getKeyopollsChatsApiServicesDeleteServiceMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+/**
+ * Get a single service by ID with all details and attachments.
+ * @summary Get Service
+ */
+export const keyopollsChatsApiServicesGetService = (
+  serviceId: string,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  return customInstance<ServiceResponseSchema>(
+    { url: `/api/services/services/${serviceId}`, method: 'GET', signal },
+    options
+  );
+};
+
+export const getKeyopollsChatsApiServicesGetServiceQueryKey = (serviceId: string) => {
+  return [`/api/services/services/${serviceId}`] as const;
+};
+
+export const getKeyopollsChatsApiServicesGetServiceQueryOptions = <
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+  TError = ErrorType<Message>,
+>(
+  serviceId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getKeyopollsChatsApiServicesGetServiceQueryKey(serviceId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>> = ({
+    signal,
+  }) => keyopollsChatsApiServicesGetService(serviceId, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!serviceId, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type KeyopollsChatsApiServicesGetServiceQueryResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>
+>;
+export type KeyopollsChatsApiServicesGetServiceQueryError = ErrorType<Message>;
+
+export function useKeyopollsChatsApiServicesGetService<
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+  TError = ErrorType<Message>,
+>(
+  serviceId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsChatsApiServicesGetService<
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+  TError = ErrorType<Message>,
+>(
+  serviceId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+          TError,
+          Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useKeyopollsChatsApiServicesGetService<
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+  TError = ErrorType<Message>,
+>(
+  serviceId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Service
+ */
+
+export function useKeyopollsChatsApiServicesGetService<
+  TData = Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+  TError = ErrorType<Message>,
+>(
+  serviceId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof keyopollsChatsApiServicesGetService>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getKeyopollsChatsApiServicesGetServiceQueryOptions(serviceId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Broadcast a service to all users in the community.
+Only moderators can broadcast services.
+ * @summary Broadcast Service
+ */
+export const keyopollsChatsApiServicesBroadcastService = (
+  serviceId: string,
+  action: string,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal
+) => {
+  return customInstance<Message>(
+    { url: `/api/services/services/${serviceId}/broadcast/${action}`, method: 'POST', signal },
+    options
+  );
+};
+
+export const getKeyopollsChatsApiServicesBroadcastServiceMutationOptions = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesBroadcastService>>,
+    TError,
+    { serviceId: string; action: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesBroadcastService>>,
+  TError,
+  { serviceId: string; action: string },
+  TContext
+> => {
+  const mutationKey = ['keyopollsChatsApiServicesBroadcastService'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keyopollsChatsApiServicesBroadcastService>>,
+    { serviceId: string; action: string }
+  > = (props) => {
+    const { serviceId, action } = props ?? {};
+
+    return keyopollsChatsApiServicesBroadcastService(serviceId, action, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeyopollsChatsApiServicesBroadcastServiceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesBroadcastService>>
+>;
+
+export type KeyopollsChatsApiServicesBroadcastServiceMutationError = ErrorType<Message>;
+
+/**
+ * @summary Broadcast Service
+ */
+export const useKeyopollsChatsApiServicesBroadcastService = <
+  TError = ErrorType<Message>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keyopollsChatsApiServicesBroadcastService>>,
+      TError,
+      { serviceId: string; action: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof keyopollsChatsApiServicesBroadcastService>>,
+  TError,
+  { serviceId: string; action: string },
+  TContext
+> => {
+  const mutationOptions = getKeyopollsChatsApiServicesBroadcastServiceMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

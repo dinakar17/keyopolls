@@ -7,8 +7,20 @@
  */
 import type { ProfileUpdateSchemaAbout } from './profileUpdateSchemaAbout';
 import type { ProfileUpdateSchemaDisplayName } from './profileUpdateSchemaDisplayName';
+import type { ProfileUpdateSchemaHeadline } from './profileUpdateSchemaHeadline';
+import type { ProfileUpdateSchemaInstagram } from './profileUpdateSchemaInstagram';
+import type { ProfileUpdateSchemaLinkedin } from './profileUpdateSchemaLinkedin';
+import type { ProfileUpdateSchemaSubstack } from './profileUpdateSchemaSubstack';
+import type { ProfileUpdateSchemaTwitter } from './profileUpdateSchemaTwitter';
+import type { ProfileUpdateSchemaYoutube } from './profileUpdateSchemaYoutube';
 
 export interface ProfileUpdateSchema {
   display_name?: ProfileUpdateSchemaDisplayName;
   about?: ProfileUpdateSchemaAbout;
+  headline?: ProfileUpdateSchemaHeadline;
+  twitter?: ProfileUpdateSchemaTwitter;
+  linkedin?: ProfileUpdateSchemaLinkedin;
+  substack?: ProfileUpdateSchemaSubstack;
+  instagram?: ProfileUpdateSchemaInstagram;
+  youtube?: ProfileUpdateSchemaYoutube;
 }

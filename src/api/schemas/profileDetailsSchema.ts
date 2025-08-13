@@ -8,7 +8,13 @@
 import type { ProfileDetailsSchemaAbout } from './profileDetailsSchemaAbout';
 import type { ProfileDetailsSchemaAvatar } from './profileDetailsSchemaAvatar';
 import type { ProfileDetailsSchemaBanner } from './profileDetailsSchemaBanner';
+import type { ProfileDetailsSchemaHeadline } from './profileDetailsSchemaHeadline';
+import type { ProfileDetailsSchemaInstagram } from './profileDetailsSchemaInstagram';
 import type { ProfileDetailsSchemaIsOwner } from './profileDetailsSchemaIsOwner';
+import type { ProfileDetailsSchemaLinkedin } from './profileDetailsSchemaLinkedin';
+import type { ProfileDetailsSchemaSubstack } from './profileDetailsSchemaSubstack';
+import type { ProfileDetailsSchemaTwitter } from './profileDetailsSchemaTwitter';
+import type { ProfileDetailsSchemaYoutube } from './profileDetailsSchemaYoutube';
 
 export interface ProfileDetailsSchema {
   id: number;
@@ -17,6 +23,12 @@ export interface ProfileDetailsSchema {
   about?: ProfileDetailsSchemaAbout;
   avatar?: ProfileDetailsSchemaAvatar;
   banner?: ProfileDetailsSchemaBanner;
+  headline?: ProfileDetailsSchemaHeadline;
+  twitter?: ProfileDetailsSchemaTwitter;
+  linkedin?: ProfileDetailsSchemaLinkedin;
+  substack?: ProfileDetailsSchemaSubstack;
+  instagram?: ProfileDetailsSchemaInstagram;
+  youtube?: ProfileDetailsSchemaYoutube;
   email: string;
   aura_polls: number;
   aura_comments: number;

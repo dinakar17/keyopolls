@@ -1,95 +1,47 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-import {
-  AlertCircle,
-  BookOpen,
-  Briefcase,
-  Camera,
-  ChefHat,
-  Coffee,
-  Film,
-  Gamepad2,
-  Globe,
-  GraduationCap,
-  Hammer,
-  Heart,
-  Home,
-  Laptop,
-  Menu,
-  Microscope,
-  Music,
-  Palette,
-  Plane,
-  Settings,
-  Target,
-  TreePine,
-  Trophy,
-  Users,
-  Vote,
-  X,
-  Zap,
-} from 'lucide-react';
+import { Briefcase, Menu, Target, Users, Wallet, X, Zap } from 'lucide-react';
 
+import { useKeyopollsTransactionsApiGetCreditsSummary } from '@/api/transactions/transactions';
 import SideBar from '@/components/common/SideBar';
-import { type Category, getUserOrderedCategories } from '@/constants/categories';
 import { useProfileStore } from '@/stores/useProfileStore';
-
-// Icon mapping for poll categories
-const iconMap = {
-  Home,
-  Laptop,
-  Gamepad2,
-  Trophy,
-  Film,
-  Coffee,
-  GraduationCap,
-  Briefcase,
-
-  Heart,
-  Palette,
-  Microscope,
-  Vote,
-  ChefHat,
-  Plane,
-  Camera,
-  Music,
-  BookOpen,
-  TreePine,
-  Hammer,
-  Globe,
-  Users,
-  AlertCircle,
-};
 
 interface CombinedHeaderProps {
   activeCategory?: string;
   onCategoryChange?: (categoryId: string) => void;
 }
 
-const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCategoryChange }) => {
+const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
+  const router = useRouter();
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  // Refs for scroll positioning
-  const categoriesScrollRef = useRef<HTMLDivElement>(null);
-  const categoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-
-  // Add ref to track if initial scroll positioning is done
-  const hasInitialScrollPositioned = useRef(false);
 
   // Get user data from store
-  const { profileData, isAuthenticated } = useProfileStore();
+  const { profileData, isAuthenticated, accessToken } = useProfileStore();
 
   // Check if user is authenticated
   const userIsAuthenticated = isAuthenticated();
+
+  // Fetch credits summary
+  const { data: summaryData, isLoading: summaryLoading } =
+    useKeyopollsTransactionsApiGetCreditsSummary({
+      request: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    });
+
+  // Extract credits data
+  const creditsSummary = summaryData?.data;
 
   // User profile data with fallbacks
   const userProfile = {
@@ -99,75 +51,13 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
     totalAura: profileData?.total_aura || 0,
   };
 
-  // Load categories on mount and listen for storage changes
-  useEffect(() => {
-    const loadCategories = () => {
-      const orderedCategories = getUserOrderedCategories();
-      setCategories(orderedCategories);
-    };
-
-    // Initial load
-    loadCategories();
-
-    // Listen for storage changes (when user updates order in edit page)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user_categories_order') {
-        loadCategories();
-      }
-    };
-
-    // Listen for custom event when categories are updated within the same tab
-    const handleCategoriesUpdate = () => {
-      loadCategories();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('categoriesOrderUpdated', handleCategoriesUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('categoriesOrderUpdated', handleCategoriesUpdate);
-    };
-  }, []);
-
-  // Effect to scroll to active category on initial load and when activeCategory changes
-  useEffect(() => {
-    if (categories.length > 0 && activeCategory && categoriesScrollRef.current) {
-      // Use a small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        scrollToActiveCategory();
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, [categories, activeCategory]);
-
-  // Function to scroll to active category
-  const scrollToActiveCategory = () => {
-    if (!activeCategory) return;
-    const categoryElement = categoryRefs.current[activeCategory];
-    if (categoryElement && categoriesScrollRef.current) {
-      const container = categoriesScrollRef.current;
-      const containerRect = container.getBoundingClientRect();
-      const elementRect = categoryElement.getBoundingClientRect();
-
-      const scrollLeft =
-        container.scrollLeft +
-        elementRect.left -
-        containerRect.left -
-        containerRect.width / 2 +
-        elementRect.width / 2;
-
-      container.scrollTo({
-        left: scrollLeft,
-        behavior: hasInitialScrollPositioned.current ? 'smooth' : 'auto', // No animation on initial load
-      });
-
-      // Mark that initial positioning is done
-      if (!hasInitialScrollPositioned.current) {
-        hasInitialScrollPositioned.current = true;
-      }
-    }
+  // Helper function to format amount
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(Math.abs(amount));
   };
 
   // Handle scroll to show/hide header
@@ -188,21 +78,6 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
-  // Haptic feedback function
-  const triggerHaptic = () => {
-    if ('vibrate' in navigator) {
-      navigator.vibrate(10); // Very short vibration
-    }
-  };
-
-  // Handle category change - simplified to only handle manual selection
-  const handleCategoryChange = (categorySlug: string) => {
-    // Scroll to selected category
-    scrollToActiveCategory();
-    triggerHaptic();
-    onCategoryChange?.(categorySlug);
-  };
-
   // Handle opening sidebar
   const handleOpenSidebar = () => {
     setIsProfileDrawerOpen(true);
@@ -218,10 +93,9 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
     setIsInfoModalOpen(false);
   };
 
-  // Get icon component
-  const getIconComponent = (iconName: string, size: number = 20) => {
-    const IconComponent = iconMap[iconName as keyof typeof iconMap];
-    return IconComponent ? <IconComponent size={size} /> : <Home size={size} />;
+  // Handle credits click
+  const handleCreditsClick = () => {
+    router.push('/account/credits');
   };
 
   return (
@@ -280,11 +154,32 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
                 </p>
               </div>
 
-              {/* Right side - Empty space for balance */}
+              {/* Right side - Credits or Login */}
               <div className="flex items-center">
                 {userIsAuthenticated ? (
-                  // Empty space for balance when authenticated
-                  <div className="w-8"></div>
+                  // Show credits summary when authenticated
+                  <div
+                    className="flex cursor-pointer flex-col items-end text-right transition-opacity hover:opacity-80"
+                    onClick={handleCreditsClick}
+                  >
+                    {summaryLoading ? (
+                      <div className="h-4 w-12 animate-pulse rounded bg-gray-200" />
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-1">
+                          <Wallet className="text-text-secondary h-3 w-3" />
+                          <span className="text-text text-xs font-medium">
+                            {formatAmount(creditsSummary?.total_credits || 0)}
+                          </span>
+                        </div>
+                        {creditsSummary?.total_earned && creditsSummary.total_earned > 0 && (
+                          <div className="text-text-secondary text-xs">
+                            Earned: {formatAmount(creditsSummary.total_earned)}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 ) : (
                   // Show login link for unauthenticated users
                   <Link href="/auth">
@@ -297,78 +192,6 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = ({ activeCategory, onCateg
             </div>
           </div>
         </div>
-
-        {/* Categories Row - Only show if categories are available */}
-        {categories.length > 0 && activeCategory && (
-          <div className="border-border-subtle border-b">
-            <div className="mx-auto max-w-2xl pl-4">
-              <div
-                ref={categoriesScrollRef}
-                className="scrollbar-hide flex items-center overflow-x-auto scroll-smooth py-3"
-                style={{
-                  WebkitOverflowScrolling: 'touch',
-                }}
-              >
-                {/* Categories */}
-                <div className="flex items-center space-x-6">
-                  {categories.map((category) => (
-                    <div
-                      key={category.slug}
-                      className="flex-shrink-0 cursor-pointer"
-                      ref={(el) => {
-                        if (el) categoryRefs.current[category.slug] = el;
-                      }}
-                    >
-                      <button
-                        onClick={() => handleCategoryChange(category.slug)}
-                        className={`relative flex items-center px-1 py-2 whitespace-nowrap transition-all duration-200 ${
-                          activeCategory === category.slug
-                            ? 'text-text'
-                            : 'text-text-muted hover:text-text'
-                        }`}
-                      >
-                        <span
-                          className="mr-2"
-                          style={{
-                            color:
-                              activeCategory === category.slug ? category.icon_color : undefined,
-                          }}
-                        >
-                          {getIconComponent(category.icon)}
-                        </span>
-                        <span className="text-sm font-medium">{category.name}</span>
-
-                        {/* Underline indicator */}
-                        <div
-                          className={`absolute right-0 -bottom-1 left-0 h-0.5 transition-all duration-200 ${
-                            activeCategory === category.slug
-                              ? 'scale-x-100 opacity-100'
-                              : 'scale-x-0 opacity-0'
-                          }`}
-                          style={{
-                            backgroundColor:
-                              activeCategory === category.slug ? category.icon_color : undefined,
-                          }}
-                        />
-                      </button>
-                    </div>
-                  ))}
-
-                  {/* Edit Categories Button - Only show for authenticated users */}
-                  {userIsAuthenticated && (
-                    <div className="ml-4 flex-shrink-0">
-                      <Link href="/account/edit-categories">
-                        <button className="text-text-muted hover:text-text hover:bg-surface-elevated rounded-full p-2 transition-colors">
-                          <Settings size={18} />
-                        </button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Info Modal - Simplified */}

@@ -9,11 +9,13 @@ import {
   AlertTriangle,
   ArrowLeft,
   BarChart3,
+  Briefcase,
   ChevronRight,
   Crown,
   Flag,
   Settings,
   Shield,
+  User,
   Users,
 } from 'lucide-react';
 
@@ -28,6 +30,7 @@ interface AdminOption {
   href: string;
   variant: 'default' | 'warning' | 'danger';
   disabled?: boolean;
+  roles: ('creator' | 'admin' | 'moderator')[];
 }
 
 const CommunityAdminPage = () => {
@@ -54,9 +57,28 @@ const CommunityAdminPage = () => {
   // Check if user has admin permissions
   const isCreator = membership?.role === 'creator';
   const isAdmin = membership?.role === 'admin';
-  const canManage = isCreator || isAdmin;
+  const isModerator = membership?.role === 'moderator';
+  const canManage = isCreator || isAdmin || isModerator;
 
   const adminOptions: AdminOption[] = [
+    {
+      id: 'manage-profile',
+      title: 'Manage Profile',
+      description: 'Update your profile settings and preferences',
+      icon: <User size={20} />,
+      href: `/communities/${slug}/admin/manage-profile`,
+      variant: 'default',
+      roles: ['creator', 'admin', 'moderator'],
+    },
+    {
+      id: 'manage-services',
+      title: 'Manage Services',
+      description: 'Configure and manage community services',
+      icon: <Briefcase size={20} />,
+      href: `/communities/${slug}/admin/manage-services`,
+      variant: 'default',
+      roles: ['creator', 'admin', 'moderator'],
+    },
     {
       id: 'edit-details',
       title: 'Edit Community Details',
@@ -64,6 +86,7 @@ const CommunityAdminPage = () => {
       icon: <Settings size={20} />,
       href: `/communities/${slug}/admin/edit-community-details`,
       variant: 'default',
+      roles: ['creator', 'admin'],
     },
     {
       id: 'manage-members',
@@ -72,6 +95,7 @@ const CommunityAdminPage = () => {
       icon: <Users size={20} />,
       href: `/communities/${slug}/admin/members`,
       variant: 'default',
+      roles: ['creator', 'admin'],
     },
     {
       id: 'moderation',
@@ -80,6 +104,7 @@ const CommunityAdminPage = () => {
       icon: <Shield size={20} />,
       href: `/communities/${slug}/admin/moderation`,
       variant: 'default',
+      roles: ['creator', 'admin'],
     },
     {
       id: 'analytics',
@@ -88,6 +113,7 @@ const CommunityAdminPage = () => {
       icon: <BarChart3 size={20} />,
       href: `/communities/${slug}/admin/analytics`,
       variant: 'default',
+      roles: ['creator', 'admin'],
     },
     {
       id: 'reports',
@@ -96,6 +122,7 @@ const CommunityAdminPage = () => {
       icon: <Flag size={20} />,
       href: `/communities/${slug}/admin/reports`,
       variant: 'warning',
+      roles: ['creator', 'admin'],
     },
     ...(isCreator
       ? [
@@ -106,10 +133,16 @@ const CommunityAdminPage = () => {
             icon: <AlertTriangle size={20} />,
             href: `/communities/${slug}/admin/danger`,
             variant: 'danger' as const,
+            roles: ['creator'] as ('creator' | 'admin' | 'moderator')[],
           },
         ]
       : []),
   ];
+
+  // Filter options based on user role
+  const filteredAdminOptions = adminOptions.filter((option) =>
+    option.roles.includes(membership?.role as 'creator' | 'admin' | 'moderator')
+  );
 
   const handleOptionClick = (option: AdminOption) => {
     if (option.disabled) return;
@@ -143,6 +176,13 @@ const CommunityAdminPage = () => {
       default:
         return 'text-primary bg-primary/10';
     }
+  };
+
+  const getRoleIcon = () => {
+    if (isCreator) return <Crown className="text-warning h-3 w-3" />;
+    if (isAdmin) return <Shield className="text-primary h-3 w-3" />;
+    if (isModerator) return <Users className="text-secondary h-3 w-3" />;
+    return null;
   };
 
   if (isLoading) {
@@ -230,11 +270,7 @@ const CommunityAdminPage = () => {
                 <span>{community.name}</span>
                 <span>•</span>
                 <div className="flex items-center gap-1">
-                  {isCreator ? (
-                    <Crown className="text-warning h-3 w-3" />
-                  ) : (
-                    <Shield className="text-primary h-3 w-3" />
-                  )}
+                  {getRoleIcon()}
                   <span className="capitalize">{membership?.role}</span>
                 </div>
               </div>
@@ -244,7 +280,7 @@ const CommunityAdminPage = () => {
 
         {/* Admin Options Grid */}
         <div className="grid gap-4 md:grid-cols-2">
-          {adminOptions.map((option) => (
+          {filteredAdminOptions.map((option) => (
             <div
               key={option.id}
               onClick={() => handleOptionClick(option)}
