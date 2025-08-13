@@ -45,7 +45,7 @@ const SERVICE_ICONS = {
 };
 
 // Service type labels
-export const SERVICE_LABELS = {
+const SERVICE_LABELS = {
   [ServiceTypeEnum.dm]: 'Direct Message',
   [ServiceTypeEnum.live_chat]: 'Live Chat',
   [ServiceTypeEnum.audio_call]: 'Audio Call',

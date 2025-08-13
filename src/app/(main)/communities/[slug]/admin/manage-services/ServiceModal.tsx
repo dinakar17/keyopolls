@@ -10,10 +10,19 @@ import {
   useKeyopollsChatsApiServicesCreateService,
   useKeyopollsChatsApiServicesUpdateService,
 } from '@/api/default/default';
-import { ServiceItemSchema } from '@/api/schemas';
+import { ServiceItemSchema, ServiceTypeEnum } from '@/api/schemas';
 import { toast } from '@/components/ui/toast';
 
-import { SERVICE_LABELS } from './page';
+const SERVICE_LABELS = {
+  [ServiceTypeEnum.dm]: 'Direct Message',
+  [ServiceTypeEnum.live_chat]: 'Live Chat',
+  [ServiceTypeEnum.audio_call]: 'Audio Call',
+  [ServiceTypeEnum.video_call]: 'Video Call',
+  [ServiceTypeEnum.custom]: 'Custom Service',
+  [ServiceTypeEnum.group_chat]: 'Group Chat',
+  [ServiceTypeEnum.group_audio_call]: 'Group Audio Call',
+  [ServiceTypeEnum.group_video_call]: 'Group Video Call',
+};
 
 interface ServiceModalProps {
   isOpen: boolean;
