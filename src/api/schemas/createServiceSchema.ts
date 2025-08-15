@@ -5,6 +5,8 @@
  * API for Keyo Polls app
  * OpenAPI spec version: 1.0.0
  */
+import type { CreateServiceSchemaMaxMessagesADay } from './createServiceSchemaMaxMessagesADay';
+import type { CreateServiceSchemaReplyTime } from './createServiceSchemaReplyTime';
 
 export interface CreateServiceSchema {
   community_slug: string;
@@ -15,4 +17,7 @@ export interface CreateServiceSchema {
   duration_minutes?: number;
   is_duration_based?: boolean;
   status?: string;
+  attachments_required?: boolean;
+  max_messages_a_day?: CreateServiceSchemaMaxMessagesADay;
+  reply_time?: CreateServiceSchemaReplyTime;
 }

@@ -5,19 +5,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 
-import {
-  Archive,
-  ArrowLeft,
-  Crown,
-  Info,
-  MoreVertical,
-  Phone,
-  Star,
-  Trash2,
-  Video,
-  VolumeX,
-  X,
-} from 'lucide-react';
+import { ArrowLeft, Crown, MessageSquare, Phone, Video, X } from 'lucide-react';
 
 import {
   useKeyopollsChatsApiMessagesGetMentorDetails,
@@ -34,7 +22,8 @@ const ChatDetailPage = () => {
   const { accessToken } = useProfileStore();
 
   const [showMentorInfo, setShowMentorInfo] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showComingSoonPopup, setShowComingSoonPopup] = useState(false);
+  const [comingSoonFeature, setComingSoonFeature] = useState('');
 
   // Get mentor details for header
   const { data: mentorData } = useKeyopollsChatsApiMessagesGetMentorDetails(String(chatId), {
@@ -70,7 +59,7 @@ const ChatDetailPage = () => {
   );
 
   const getLastSeenText = (lastSeen: string | null | undefined): string => {
-    if (!lastSeen) return 'Never seen';
+    if (!lastSeen) return '';
 
     const now = new Date();
     const diffMs = now.getTime() - new Date(lastSeen).getTime();
@@ -86,11 +75,21 @@ const ChatDetailPage = () => {
     return `Last seen ${new Date(lastSeen).toLocaleDateString()}`;
   };
 
-  const handleCall = (type: 'voice' | 'video') => {
-    if (mentorData?.data) {
-      console.log(`Initiating ${type} call with ${mentorData.data.display_name}`);
-    } else {
-      console.log(`Mentor data is unavailable. Cannot initiate ${type} call.`);
+  const handleFeatureClick = (feature: 'voice' | 'video' | 'live-chat') => {
+    setComingSoonFeature(feature);
+    setShowComingSoonPopup(true);
+  };
+
+  const getFeatureDisplayName = (feature: string) => {
+    switch (feature) {
+      case 'voice':
+        return 'Voice Call';
+      case 'video':
+        return 'Video Call';
+      case 'live-chat':
+        return 'Live Chat';
+      default:
+        return 'Feature';
     }
   };
 
@@ -160,58 +159,23 @@ const ChatDetailPage = () => {
 
         <div className="flex items-center gap-1">
           <button
-            onClick={() => handleCall('voice')}
+            onClick={() => handleFeatureClick('voice')}
             className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors"
           >
             <Phone className="h-5 w-5" />
           </button>
           <button
-            onClick={() => handleCall('video')}
+            onClick={() => handleFeatureClick('video')}
             className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors"
           >
             <Video className="h-5 w-5" />
           </button>
-
-          <div className="relative">
-            <button
-              onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="text-text-secondary hover:text-text hover:bg-surface-elevated rounded-full p-2 transition-colors"
-            >
-              <MoreVertical className="h-5 w-5" />
-            </button>
-
-            {showMoreMenu && (
-              <div className="bg-surface border-border absolute top-full right-0 z-10 mt-1 w-48 rounded-lg border shadow-lg">
-                <button
-                  onClick={() => {
-                    setShowMentorInfo(true);
-                    setShowMoreMenu(false);
-                  }}
-                  className="hover:bg-surface-elevated flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors"
-                >
-                  <Info className="h-4 w-4" />
-                  Mentor info
-                </button>
-                <button className="hover:bg-surface-elevated flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors">
-                  <Star className="h-4 w-4" />
-                  Pin chat
-                </button>
-                <button className="hover:bg-surface-elevated flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors">
-                  <VolumeX className="h-4 w-4" />
-                  Mute notifications
-                </button>
-                <button className="hover:bg-surface-elevated flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors">
-                  <Archive className="h-4 w-4" />
-                  Archive chat
-                </button>
-                <hr className="border-border" />
-                <button className="hover:bg-surface-elevated text-error flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors">
-                  <Trash2 className="h-4 w-4" />
-                  Delete chat
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => handleFeatureClick('live-chat')}
+            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors"
+          >
+            <MessageSquare className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
@@ -301,7 +265,7 @@ const ChatDetailPage = () => {
 
                 <button
                   onClick={() => {
-                    handleCall('voice');
+                    handleFeatureClick('voice');
                     setShowMentorInfo(false);
                   }}
                   className="border-border bg-surface hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg border p-3 transition-colors"
@@ -312,7 +276,7 @@ const ChatDetailPage = () => {
 
                 <button
                   onClick={() => {
-                    handleCall('video');
+                    handleFeatureClick('video');
                     setShowMentorInfo(false);
                   }}
                   className="border-border bg-surface hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg border p-3 transition-colors"
@@ -320,15 +284,74 @@ const ChatDetailPage = () => {
                   <Video className="text-primary h-5 w-5" />
                   <span className="text-text text-sm font-medium">Video Call</span>
                 </button>
+
+                <button
+                  onClick={() => {
+                    handleFeatureClick('live-chat');
+                    setShowMentorInfo(false);
+                  }}
+                  className="border-border bg-surface hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg border p-3 transition-colors"
+                >
+                  <MessageSquare className="text-primary h-5 w-5" />
+                  <span className="text-text text-sm font-medium">Live Chat</span>
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Click outside handler for dropdowns */}
-      {showMoreMenu && (
-        <div className="fixed inset-0 z-10" onClick={() => setShowMoreMenu(false)} />
+      {/* Coming Soon Popup */}
+      {showComingSoonPopup && (
+        <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-surface border-border mx-4 w-full max-w-md rounded-xl border shadow-xl">
+            {/* Header */}
+            <div className="border-border flex items-center justify-between border-b p-4">
+              <h2 className="text-text text-lg font-semibold">Coming Soon!</h2>
+              <button
+                onClick={() => setShowComingSoonPopup(false)}
+                className="text-text-muted hover:text-text hover:bg-surface-elevated rounded-full p-1.5 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 text-center">
+              <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                {comingSoonFeature === 'voice' && <Phone className="h-8 w-8" />}
+                {comingSoonFeature === 'video' && <Video className="h-8 w-8" />}
+                {comingSoonFeature === 'live-chat' && <MessageSquare className="h-8 w-8" />}
+              </div>
+
+              <h3 className="text-text mb-2 text-xl font-semibold">
+                {getFeatureDisplayName(comingSoonFeature)} is Coming Soon!
+              </h3>
+
+              <p className="text-text-secondary mb-6 text-sm leading-relaxed">
+                This exciting feature is currently in development. It's as simple as choosing the
+                available slot and booking using credits available in your wallet.
+              </p>
+
+              <div className="bg-surface-elevated mb-4 rounded-lg p-4">
+                <h4 className="text-text mb-2 text-sm font-semibold">How it will work:</h4>
+                <ul className="text-text-secondary space-y-1 text-left text-xs">
+                  <li>• Browse available time slots</li>
+                  <li>• Select your preferred slot</li>
+                  <li>• Pay with wallet credits</li>
+                  <li>• Connect instantly</li>
+                </ul>
+              </div>
+
+              <button
+                onClick={() => setShowComingSoonPopup(false)}
+                className="bg-primary text-background w-full rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

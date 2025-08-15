@@ -8,7 +8,6 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Clock,
-  DollarSign,
   Edit,
   Eye,
   FileText,
@@ -16,13 +15,14 @@ import {
   Paperclip,
   Phone,
   Plus,
-  Radio,
+  Reply,
   Trash2,
+  Upload,
   Video,
+  Wifi,
 } from 'lucide-react';
 
 import {
-  useKeyopollsChatsApiServicesBroadcastService,
   useKeyopollsChatsApiServicesDeleteService,
   useKeyopollsChatsApiServicesGetServices,
 } from '@/api/default/default';
@@ -30,6 +30,7 @@ import { ServiceItemSchema, ServiceTypeEnum } from '@/api/schemas';
 import { toast } from '@/components/ui/toast';
 import { useProfileStore } from '@/stores/useProfileStore';
 
+import ServiceAttachmentsViewer from './ServiceAttachmentsViewer';
 import ServiceModal from './ServiceModal';
 
 // Service type icons mapping
@@ -66,7 +67,14 @@ const ManageServices = () => {
   const [editingService, setEditingService] = useState<ServiceItemSchema | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [broadcastFilter, setBroadcastFilter] = useState('all');
+  const [serviceTypeFilter, setServiceTypeFilter] = useState('all');
+
+  // Helper function to determine service_type for API based on filter
+  const getServiceTypeForAPI = useCallback((filter: string) => {
+    if (filter === 'all') return undefined;
+    if (filter === 'custom_no_input' || filter === 'custom_input_required') return 'custom';
+    return filter;
+  }, []);
 
   // API hooks
   const {
@@ -79,7 +87,7 @@ const ManageServices = () => {
       community_slug: communitySlug,
       search: searchQuery || undefined,
       status: statusFilter !== 'all' ? statusFilter : undefined,
-      is_broadcasted: broadcastFilter !== 'all' ? broadcastFilter === 'broadcasted' : undefined,
+      service_type: getServiceTypeForAPI(serviceTypeFilter),
     },
     {
       request: {
@@ -93,14 +101,24 @@ const ManageServices = () => {
     }
   );
 
-  const { mutate: broadcastService, isPending: isBroadcasting } =
-    useKeyopollsChatsApiServicesBroadcastService({
-      request: {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      },
-    });
+  // Filter services on the frontend for custom service subcategories
+  const filteredServices = useMemo(() => {
+    const allServices = servicesData?.data?.services || [];
+
+    if (serviceTypeFilter === 'custom_no_input') {
+      return allServices.filter(
+        (service) => service.service_type === 'custom' && !service.attachments_required
+      );
+    }
+
+    if (serviceTypeFilter === 'custom_input_required') {
+      return allServices.filter(
+        (service) => service.service_type === 'custom' && service.attachments_required
+      );
+    }
+
+    return allServices;
+  }, [servicesData, serviceTypeFilter]);
 
   const { mutate: deleteService, isPending: isDeletingService } =
     useKeyopollsChatsApiServicesDeleteService({
@@ -110,35 +128,6 @@ const ManageServices = () => {
         },
       },
     });
-
-  // Broadcast/Unbroadcast service
-  const handleBroadcastToggle = useCallback(
-    (service: ServiceItemSchema) => {
-      const action = service.is_broadcasted ? 'unbroadcast' : 'broadcast';
-      const actionText = service.is_broadcasted ? 'unbroadcast' : 'broadcast';
-
-      if (!confirm(`Are you sure you want to ${actionText} "${service.name}"?`)) {
-        return;
-      }
-
-      broadcastService(
-        {
-          serviceId: service.id,
-          action: action,
-        },
-        {
-          onSuccess: () => {
-            toast.success(`Service ${actionText}ed successfully!`);
-            refetchServices();
-          },
-          onError: (error) => {
-            toast.error(error.response?.data?.message || `Failed to ${actionText} service`);
-          },
-        }
-      );
-    },
-    [broadcastService, refetchServices]
-  );
 
   const handleDeleteService = useCallback(
     (service: ServiceItemSchema) => {
@@ -188,8 +177,8 @@ const ManageServices = () => {
 
   // Filtered services
   const services = useMemo(() => {
-    return servicesData?.data?.services || [];
-  }, [servicesData]);
+    return filteredServices;
+  }, [filteredServices]);
 
   const getServiceIcon = useCallback((serviceType: ServiceTypeEnum) => {
     const IconComponent = SERVICE_ICONS[serviceType] || FileText;
@@ -251,13 +240,20 @@ const ManageServices = () => {
             </select>
 
             <select
-              value={broadcastFilter}
-              onChange={(e) => setBroadcastFilter(e.target.value)}
+              value={serviceTypeFilter}
+              onChange={(e) => setServiceTypeFilter(e.target.value)}
               className="border-border focus:border-primary bg-background text-text focus:ring-primary/20 rounded-md border px-3 py-2 text-sm focus:ring-1 focus:outline-none"
             >
-              <option value="all">All</option>
-              <option value="broadcasted">Live</option>
-              <option value="not_broadcasted">Draft</option>
+              <option value="all">All Services</option>
+              <option value="dm">Direct Message</option>
+              <option value="live_chat">Live Chat</option>
+              <option value="audio_call">Audio Call</option>
+              <option value="video_call">Video Call</option>
+              <option value="custom_no_input">Community Posts</option>
+              <option value="custom_input_required">Custom Services</option>
+              <option value="group_chat">Group Chat</option>
+              <option value="group_audio_call">Group Audio Call</option>
+              <option value="group_video_call">Group Video Call</option>
             </select>
           </div>
 
@@ -322,8 +318,9 @@ const ManageServices = () => {
                         <h3 className="text-text truncate text-sm font-medium">{service.name}</h3>
                         <div className="flex gap-1">
                           {service.is_broadcasted && (
-                            <span className="bg-success/10 text-success rounded-full px-2 py-0.5 text-xs font-medium">
-                              Live
+                            <span className="bg-success/10 text-success flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium">
+                              <Wifi className="h-3 w-3" />
+                              Broadcasted
                             </span>
                           )}
                           <span
@@ -342,13 +339,30 @@ const ManageServices = () => {
                       <div className="text-text-secondary flex items-center gap-4 text-xs">
                         <span>{SERVICE_LABELS[service.service_type]}</span>
                         <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          <span>{service.price}</span>
+                          <span>{service.price === 0 ? 'Free' : `${service.price} credits`}</span>
                         </div>
                         {service.is_duration_based && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             <span>{service.duration_minutes}m</span>
+                          </div>
+                        )}
+                        {service.service_type === 'dm' && service.max_messages_a_day && (
+                          <div className="flex items-center gap-1">
+                            <MessageCircle className="h-3 w-3" />
+                            <span>{service.max_messages_a_day}/day</span>
+                          </div>
+                        )}
+                        {service.service_type === 'dm' && service.reply_time && (
+                          <div className="flex items-center gap-1">
+                            <Reply className="h-3 w-3" />
+                            <span>{service.reply_time}d reply</span>
+                          </div>
+                        )}
+                        {service.service_type === 'custom' && service.attachments_required && (
+                          <div className="flex items-center gap-1">
+                            <Upload className="h-3 w-3" />
+                            <span>Files required</span>
                           </div>
                         )}
                         {service.attachments && service.attachments?.length > 0 && (
@@ -369,18 +383,6 @@ const ManageServices = () => {
                       title="Edit service"
                     >
                       <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleBroadcastToggle(service)}
-                      disabled={isBroadcasting}
-                      className={`rounded-full p-2 transition-colors disabled:opacity-50 ${
-                        service.is_broadcasted
-                          ? 'text-warning hover:text-warning hover:bg-warning/10'
-                          : 'text-text-muted hover:text-success hover:bg-success/10'
-                      }`}
-                      title={service.is_broadcasted ? 'Unbroadcast service' : 'Broadcast service'}
-                    >
-                      <Radio className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteService(service)}
@@ -413,15 +415,36 @@ const ManageServices = () => {
                   </div>
                 )}
 
+                {/* Service Attachments */}
+                {service.attachments && service.attachments.length > 0 && (
+                  <div className="mb-3">
+                    <ServiceAttachmentsViewer
+                      attachments={service.attachments}
+                      maxHeight="150px"
+                      className="text-xs"
+                    />
+                  </div>
+                )}
+
                 {/* Stats */}
                 <div className="text-text-secondary flex items-center gap-6 text-xs">
-                  <div className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
-                    <span>{service.total_purchases || 0} purchases</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-success font-medium">${service.total_revenue || 0}</span>
-                  </div>
+                  {service.price === 0 ? (
+                    <div className="flex items-center gap-1">
+                      <span className="text-success font-medium">Free Service</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        <span>{service.total_purchases || 0} purchases</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-success font-medium">
+                          ${service.total_revenue || 0}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

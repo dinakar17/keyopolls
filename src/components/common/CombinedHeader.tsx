@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { Briefcase, Menu, Target, Users, Wallet, X, Zap } from 'lucide-react';
+import { Menu, MessageSquare, Mic, Target, Users, Video, Wallet, X } from 'lucide-react';
 
 import { useKeyopollsTransactionsApiGetCreditsSummary } from '@/api/transactions/transactions';
 import SideBar from '@/components/common/SideBar';
@@ -51,12 +51,11 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
     totalAura: profileData?.total_aura || 0,
   };
 
-  // Helper function to format amount
-  const formatAmount = (amount: number) => {
+  // Helper function to format credits amount (no currency symbol)
+  const formatCredits = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(Math.abs(amount));
   };
 
@@ -148,9 +147,8 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
                   <Image src="/logo.svg" alt="Pulse Logo" width={24} height={24} priority />
                   <span className="text-primary text-lg font-bold">Pulse</span>
                 </div>
-                <p className="text-text-muted text-xs font-medium">Learn in minutes not hours.</p>
                 <p className="text-text-muted text-xs font-medium">
-                  Time to Think, Talk, and Learn
+                  A place you've always been looking for
                 </p>
               </div>
 
@@ -168,15 +166,18 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
                       <>
                         <div className="flex items-center gap-1">
                           <Wallet className="text-text-secondary h-3 w-3" />
-                          <span className="text-text text-xs font-medium">
-                            {formatAmount(creditsSummary?.total_credits || 0)}
-                          </span>
+                          {creditsSummary?.total_credits !== undefined && (
+                            <span className="text-text text-xs font-medium">
+                              {formatCredits(creditsSummary?.total_credits)} credits
+                            </span>
+                          )}
                         </div>
-                        {creditsSummary?.total_earned && creditsSummary.total_earned > 0 && (
-                          <div className="text-text-secondary text-xs">
-                            Earned: {formatAmount(creditsSummary.total_earned)}
-                          </div>
-                        )}
+                        {creditsSummary?.total_earned !== undefined &&
+                          Number(creditsSummary.total_earned) > 0 && (
+                            <div className="text-text-secondary text-xs">
+                              Earned: {formatCredits(creditsSummary.total_earned)} credits
+                            </div>
+                          )}
                       </>
                     )}
                   </div>
@@ -194,7 +195,7 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
         </div>
       </header>
 
-      {/* Info Modal - Simplified */}
+      {/* Info Modal - Updated with new platform description */}
       {isInfoModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-background border-border w-full max-w-sm rounded-lg border shadow-lg">
@@ -209,37 +210,41 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
               </button>
             </div>
 
-            {/* Modal Content - Clear but Concise */}
+            {/* Modal Content - Updated platform description */}
             <div className="space-y-3 p-4">
               {/* What is Pulse */}
               <div className="mb-4 text-center">
                 <div className="bg-primary/10 mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full">
                   <Users size={16} className="text-primary" />
                 </div>
-                <h3 className="text-text text-sm font-medium">Micro-learning platform</h3>
+                <h3 className="text-text text-sm font-medium">
+                  Connect with experienced professionals
+                </h3>
                 <p className="text-text-secondary text-xs">
-                  Learn from professionals in bite-sized lessons
+                  Guaranteed interaction with people who've been there and done that
                 </p>
               </div>
 
-              {/* How it works */}
+              {/* How to interact */}
               <div className="space-y-2">
                 <div className="flex items-center space-x-3">
-                  <Zap size={14} className="flex-shrink-0 text-yellow-600" />
+                  <MessageSquare size={14} className="flex-shrink-0 text-blue-600" />
+                  <span className="text-text-secondary text-xs">DMs & live chat with experts</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Mic size={14} className="flex-shrink-0 text-green-600" />
+                  <span className="text-text-secondary text-xs">1-on-1 audio & video calls</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Video size={14} className="flex-shrink-0 text-purple-600" />
                   <span className="text-text-secondary text-xs">
-                    Answer polls & review flashcards daily
+                    Join webinars & group sessions
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Target size={14} className="text-success flex-shrink-0" />
+                  <Target size={14} className="flex-shrink-0 text-orange-600" />
                   <span className="text-text-secondary text-xs">
-                    Build Aura points & learning streaks
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Briefcase size={14} className="text-info flex-shrink-0" />
-                  <span className="text-text-secondary text-xs">
-                    Apply for jobs in your interest areas
+                    Find relevant people in your field
                   </span>
                 </div>
               </div>

@@ -8,14 +8,12 @@ import {
   ArrowLeft,
   Check,
   Crown,
+  ExternalLink,
   Gift,
-  MessageCircle,
   Package,
-  Phone,
   Plus,
   Star,
   Users,
-  Video,
   Wallet,
   X,
   Zap,
@@ -32,6 +30,7 @@ const PRICING_TIERS = [
     description: 'Perfect for getting started',
     price: 0,
     credits: 4,
+    bonusCredits: 0,
     period: 'one-time',
     popular: false,
     features: [
@@ -52,6 +51,7 @@ const PRICING_TIERS = [
     description: 'Great for regular users',
     price: 299,
     credits: 30,
+    bonusCredits: 0,
     period: 'month',
     popular: false,
     features: [
@@ -72,11 +72,12 @@ const PRICING_TIERS = [
     name: 'Pro Plan',
     description: 'Most popular choice',
     price: 499,
-    credits: 55,
+    credits: 50,
+    bonusCredits: 5,
     period: 'month',
     popular: true,
     features: [
-      '55 credits per month',
+      '50 credits per month',
       '5 bonus credits included',
       'Message any mentor',
       'Audio & video calls',
@@ -95,11 +96,12 @@ const PRICING_TIERS = [
     name: 'Premium Plan',
     description: 'For power users',
     price: 899,
-    credits: 105,
+    credits: 90,
+    bonusCredits: 15,
     period: 'month',
     popular: false,
     features: [
-      '105 credits per month',
+      '90 credits per month',
       '15 bonus credits included',
       'Unlimited mentor messages',
       'Audio & video calls',
@@ -123,6 +125,7 @@ const CREDIT_PACKAGES = [
     id: 'pack_small',
     name: 'Starter Pack',
     credits: 10,
+    bonusCredits: 0,
     price: 99,
     originalPrice: 100,
     savings: 1,
@@ -135,6 +138,7 @@ const CREDIT_PACKAGES = [
     id: 'pack_medium',
     name: 'Value Pack',
     credits: 25,
+    bonusCredits: 3,
     price: 225,
     originalPrice: 250,
     savings: 25,
@@ -147,6 +151,7 @@ const CREDIT_PACKAGES = [
     id: 'pack_large',
     name: 'Power Pack',
     credits: 50,
+    bonusCredits: 8,
     price: 425,
     originalPrice: 500,
     savings: 75,
@@ -159,6 +164,7 @@ const CREDIT_PACKAGES = [
     id: 'pack_mega',
     name: 'Mega Pack',
     credits: 100,
+    bonusCredits: 20,
     price: 800,
     originalPrice: 1000,
     savings: 200,
@@ -174,7 +180,7 @@ const FAQ_DATA = [
   {
     question: 'How do credits work?',
     answer:
-      'Credits are used to interact with mentors. 1 credit = ₹10. Different services cost different amounts of credits - messages, calls, and live sessions each have their own pricing.',
+      'Credits are your universal currency on Pulse. Use them flexibly to interact with mentors through messages, calls, live sessions, and other premium features. Each mentor sets their own rates.',
   },
   {
     question: 'Do unused credits roll over?',
@@ -187,9 +193,14 @@ const FAQ_DATA = [
       'Absolutely! Credit packages are perfect for when you need extra credits beyond your monthly allocation. They work alongside any subscription plan.',
   },
   {
+    question: 'What are bonus credits?',
+    answer:
+      'Bonus credits are extra credits you receive when purchasing higher-tier subscriptions or larger credit packages. They give you more value for your money.',
+  },
+  {
     question: 'Can I upgrade or downgrade my plan?',
     answer:
-      'Absolutely! You can change your plan at any time. Upgrades take effect immediately, while downgrades take effect at the start of your next billing cycle.',
+      'Yes! You can change your plan at any time. For detailed information about billing cycles and plan changes, please check our Terms of Service.',
   },
   {
     question: 'What happens if I run out of credits?',
@@ -197,9 +208,9 @@ const FAQ_DATA = [
       'You can purchase additional credit packs or upgrade to a higher plan. Your conversations and progress are never lost.',
   },
   {
-    question: 'Is there a refund policy?',
+    question: 'What is your refund policy?',
     answer:
-      'We offer a 7-day money-back guarantee for all paid plans. Credits used during this period will be deducted from any refund.',
+      'We offer refunds according to our terms and conditions. For complete details about refunds, cancellations, and other policies, please visit our Terms of Service and Privacy Policy pages.',
   },
 ];
 
@@ -212,12 +223,15 @@ interface SubscriptionPlan {
   buttonVariant: string;
   badge: string | null;
   badgeColor: string | null;
+  credits: number;
+  bonusCredits: number;
 }
 
 interface CreditPackage {
   id: string;
   name: string;
   credits: number;
+  bonusCredits: number;
   price: number;
   originalPrice?: number;
   savings?: number;
@@ -282,7 +296,7 @@ const PricingPage = () => {
       // Simulate API call for credit package purchase
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast.success(`Successfully purchased ${package_.credits} credits!`);
+      toast.success(`Successfully purchased ${package_.credits + package_.bonusCredits} credits!`);
       // Don't navigate away, just show success
     } catch {
       toast.error('Failed to purchase credits. Please try again.');
@@ -345,9 +359,9 @@ const PricingPage = () => {
               <h3 className="text-text font-medium">How Credits Work</h3>
             </div>
             <p className="text-text-secondary text-sm">
-              <strong>1 Credit = ₹10</strong> • Use credits to message mentors, book calls, and
-              access premium features. Different services cost different amounts of credits based on
-              the mentor's rates.
+              Credits are your universal currency on Pulse. Use them flexibly to interact with
+              mentors and access premium features. Each mentor sets their own rates for different
+              services.
             </p>
           </div>
         </div>
@@ -424,13 +438,12 @@ const PricingPage = () => {
 
                       <div className="mt-2 flex items-center justify-center gap-1">
                         <span className="text-primary text-lg font-semibold">
-                          {tier.credits} credits
+                          {tier.credits + tier.bonusCredits} credits
                         </span>
-                        {tier.id === 'pro' && (
-                          <span className="text-success text-sm font-medium">+5 bonus</span>
-                        )}
-                        {tier.id === 'premium' && (
-                          <span className="text-success text-sm font-medium">+15 bonus</span>
+                        {tier.bonusCredits > 0 && (
+                          <span className="text-success text-sm font-medium">
+                            (+{tier.bonusCredits} bonus)
+                          </span>
                         )}
                       </div>
                     </div>
@@ -451,32 +464,6 @@ const PricingPage = () => {
                         </div>
                       ))}
                     </div>
-
-                    {/* Special highlights for paid plans */}
-                    {tier.id !== 'free' && (
-                      <div className="bg-surface-elevated mb-4 rounded-lg p-3">
-                        <div className="text-text-secondary mb-2 text-xs font-medium tracking-wide uppercase">
-                          What you can do:
-                        </div>
-                        <div className="space-y-2 text-xs">
-                          <div className="flex items-center gap-2">
-                            <MessageCircle className="h-3 w-3" />
-                            <span>~{Math.floor(tier.credits / 2)} mentor messages</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-3 w-3" />
-                            <span>~{Math.floor(tier.credits / 5)} audio calls (10 min)</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Video className="h-3 w-3" />
-                            <span>~{Math.floor(tier.credits / 7)} video calls (10 min)</span>
-                          </div>
-                        </div>
-                        <p className="text-text-muted mt-2 text-xs">
-                          *Actual usage depends on mentor rates
-                        </p>
-                      </div>
-                    )}
 
                     {/* CTA Button */}
                     <button
@@ -513,7 +500,7 @@ const PricingPage = () => {
                   <p className="text-text-secondary mx-auto max-w-2xl text-sm">
                     Need more credits? Purchase credit packages that work alongside your
                     subscription or as standalone purchases. Credits never expire and can be used
-                    anytime.
+                    flexibly for any mentor interactions.
                   </p>
                 </div>
 
@@ -543,8 +530,17 @@ const PricingPage = () => {
 
                       {/* Credits */}
                       <div className="mb-4 text-center">
-                        <div className="text-primary text-3xl font-bold">{package_.credits}</div>
-                        <div className="text-text-secondary text-sm">credits</div>
+                        <div className="text-primary text-3xl font-bold">
+                          {package_.credits + package_.bonusCredits}
+                        </div>
+                        <div className="text-text-secondary text-sm">
+                          credits
+                          {package_.bonusCredits > 0 && (
+                            <span className="text-success ml-1">
+                              (+{package_.bonusCredits} bonus)
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Pricing */}
@@ -555,37 +551,16 @@ const PricingPage = () => {
                           </span>
                         </div>
 
-                        {package_.savings > 0 && (
+                        {package_.savings && package_.savings > 0 && (
                           <div className="mt-1 flex items-center justify-center gap-2 text-sm">
                             <span className="text-text-muted line-through">
-                              {formatPrice(package_.originalPrice)}
+                              {formatPrice(package_.originalPrice!)}
                             </span>
                             <span className="text-success font-medium">
                               Save {formatPrice(package_.savings)}
                             </span>
                           </div>
                         )}
-                      </div>
-
-                      {/* Value proposition */}
-                      <div className="bg-surface-elevated mb-4 rounded-lg p-3">
-                        <div className="text-text-secondary mb-2 text-xs font-medium tracking-wide uppercase">
-                          You can do:
-                        </div>
-                        <div className="space-y-2 text-xs">
-                          <div className="flex items-center gap-2">
-                            <MessageCircle className="h-3 w-3" />
-                            <span>~{Math.floor(package_.credits / 2)} mentor messages</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-3 w-3" />
-                            <span>~{Math.floor(package_.credits / 5)} audio calls</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Video className="h-3 w-3" />
-                            <span>~{Math.floor(package_.credits / 7)} video calls</span>
-                          </div>
-                        </div>
                       </div>
 
                       {/* CTA Button */}
@@ -623,20 +598,20 @@ const PricingPage = () => {
                     </div>
                     <div className="text-center">
                       <div className="bg-warning/10 text-warning mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
-                        <Package className="h-6 w-6" />
+                        <Gift className="h-6 w-6" />
                       </div>
-                      <h4 className="text-text mb-1 font-medium">Better Value</h4>
+                      <h4 className="text-text mb-1 font-medium">Bonus Credits</h4>
                       <p className="text-text-secondary text-sm">
-                        Save money with bulk purchases compared to individual transactions
+                        Get extra bonus credits with larger packages for even more value
                       </p>
                     </div>
                     <div className="text-center">
                       <div className="bg-primary/10 text-primary mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
                         <Plus className="h-6 w-6" />
                       </div>
-                      <h4 className="text-text mb-1 font-medium">Top Up Anytime</h4>
+                      <h4 className="text-text mb-1 font-medium">Flexible Usage</h4>
                       <p className="text-text-secondary text-sm">
-                        Perfect for when you need extra credits beyond your subscription
+                        Spend credits however you want - messages, calls, or any mentor services
                       </p>
                     </div>
                   </div>
@@ -671,9 +646,9 @@ const PricingPage = () => {
                 <div className="bg-primary/10 text-primary mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
                   <Zap className="h-6 w-6" />
                 </div>
-                <h4 className="text-text mb-1 font-medium">Instant Messaging</h4>
+                <h4 className="text-text mb-1 font-medium">Flexible Credits</h4>
                 <p className="text-text-secondary text-sm">
-                  Real-time conversations with quick responses
+                  Use credits however you want for any mentor interactions
                 </p>
               </div>
             </div>
@@ -717,6 +692,29 @@ const PricingPage = () => {
                   )}
                 </div>
               ))}
+            </div>
+
+            {/* Legal links */}
+            <div className="border-border-subtle mt-6 border-t pt-4 text-center">
+              <p className="text-text-secondary mb-2 text-sm">
+                For detailed information about our policies:
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => router.push('/terms')}
+                  className="text-primary hover:text-primary/80 inline-flex items-center gap-1 text-sm transition-colors"
+                >
+                  Terms of Service
+                  <ExternalLink className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={() => router.push('/privacy-policy')}
+                  className="text-primary hover:text-primary/80 inline-flex items-center gap-1 text-sm transition-colors"
+                >
+                  Privacy Policy
+                  <ExternalLink className="h-3 w-3" />
+                </button>
+              </div>
             </div>
           </div>
 

@@ -140,12 +140,11 @@ const CreditsPage = () => {
     return filtered;
   }, [transactions, searchQuery, filterType]);
 
-  // Helper functions
-  const formatAmount = useCallback((amount: number) => {
+  // Helper functions - Updated to format credits instead of dollars
+  const formatCredits = useCallback((amount: number) => {
     return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(Math.abs(amount));
   }, []);
 
@@ -273,19 +272,20 @@ const CreditsPage = () => {
 
               <div className="mb-4">
                 <div className="text-3xl font-bold">
-                  {formatAmount(creditsSummary?.total_credits || 0)}
+                  {formatCredits(creditsSummary?.total_credits || 0)} credits
                 </div>
                 <p className="text-sm text-white/80">Available to spend</p>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  {creditsSummary?.total_earned && (creditsSummary?.total_earned ?? 0) > 0 && (
-                    <div className="flex items-center gap-1 text-sm">
-                      <TrendingUp className="h-4 w-4" />
-                      <span>Earned: {formatAmount(creditsSummary.total_earned)}</span>
-                    </div>
-                  )}
+                  {creditsSummary?.total_earned !== undefined &&
+                    (creditsSummary?.total_earned ?? 0) > 0 && (
+                      <div className="flex items-center gap-1 text-sm">
+                        <TrendingUp className="h-4 w-4" />
+                        <span>Earned: {formatCredits(creditsSummary.total_earned)} credits</span>
+                      </div>
+                    )}
                 </div>
 
                 <button
@@ -436,7 +436,7 @@ const CreditsPage = () => {
                           className={`text-sm font-semibold ${getTransactionColor(transaction.is_credit)}`}
                         >
                           {transaction.is_credit ? '+' : '-'}
-                          {formatAmount(transaction.amount)}
+                          {formatCredits(transaction.amount)} credits
                         </div>
                         {transaction.payment_reference && (
                           <p className="text-text-secondary text-xs">

@@ -5,12 +5,15 @@
  * API for Keyo Polls app
  * OpenAPI spec version: 1.0.0
  */
+import type { UpdateServiceSchemaAttachmentsRequired } from './updateServiceSchemaAttachmentsRequired';
 import type { UpdateServiceSchemaDescription } from './updateServiceSchemaDescription';
 import type { UpdateServiceSchemaDurationMinutes } from './updateServiceSchemaDurationMinutes';
 import type { UpdateServiceSchemaIsAvailable } from './updateServiceSchemaIsAvailable';
 import type { UpdateServiceSchemaIsDurationBased } from './updateServiceSchemaIsDurationBased';
+import type { UpdateServiceSchemaMaxMessagesADay } from './updateServiceSchemaMaxMessagesADay';
 import type { UpdateServiceSchemaName } from './updateServiceSchemaName';
 import type { UpdateServiceSchemaPrice } from './updateServiceSchemaPrice';
+import type { UpdateServiceSchemaReplyTime } from './updateServiceSchemaReplyTime';
 import type { UpdateServiceSchemaStatus } from './updateServiceSchemaStatus';
 
 export interface UpdateServiceSchema {
@@ -21,4 +24,7 @@ export interface UpdateServiceSchema {
   is_duration_based?: UpdateServiceSchemaIsDurationBased;
   status?: UpdateServiceSchemaStatus;
   is_available?: UpdateServiceSchemaIsAvailable;
+  attachments_required?: UpdateServiceSchemaAttachmentsRequired;
+  max_messages_a_day?: UpdateServiceSchemaMaxMessagesADay;
+  reply_time?: UpdateServiceSchemaReplyTime;
 }

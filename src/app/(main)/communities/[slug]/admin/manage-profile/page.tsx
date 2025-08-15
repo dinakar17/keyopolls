@@ -3,13 +3,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 import {
   ArrowLeft,
   Calendar,
   Camera,
-  Check,
   Edit3,
   FileText,
   Globe,
@@ -17,7 +16,6 @@ import {
   Linkedin,
   Mail,
   Twitter,
-  X,
   Youtube,
 } from 'lucide-react';
 
@@ -38,10 +36,10 @@ interface SocialLinks {
 const ManageProfilePage = () => {
   const { accessToken, profileData, setProfileData } = useProfileStore();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // Check if edit mode is enabled via query param
-  const isEditMode = searchParams.get('edit') === 'true';
+  // Single edit mode state - much simpler
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   // Form state
   const [displayName, setDisplayName] = useState('');
@@ -52,9 +50,6 @@ const ManageProfilePage = () => {
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-
-  // Edit field states
-  const [editingField, setEditingField] = useState<string | null>(null);
 
   // Refs
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -94,6 +89,25 @@ const ManageProfilePage = () => {
     }
   }, [profile]);
 
+  // Track changes to enable/disable save
+  useEffect(() => {
+    if (!profile) return;
+
+    const hasTextChanges =
+      displayName !== (profile.display_name || '') ||
+      headline !== (profile.headline || '') ||
+      about !== (profile.about || '') ||
+      socialLinks.linkedin !== (profile.linkedin || '') ||
+      socialLinks.twitter !== (profile.twitter || '') ||
+      socialLinks.substack !== (profile.substack || '') ||
+      socialLinks.instagram !== (profile.instagram || '') ||
+      socialLinks.youtube !== (profile.youtube || '');
+
+    const hasImageChanges = !!(avatarFile || bannerFile);
+
+    setHasChanges(hasTextChanges || hasImageChanges);
+  }, [profile, displayName, headline, about, socialLinks, avatarFile, bannerFile]);
+
   // Handle social links changes
   const handleSocialLinkChange = (platform: keyof SocialLinks, value: string) => {
     setSocialLinks((prev) => ({
@@ -102,12 +116,12 @@ const ManageProfilePage = () => {
     }));
   };
 
-  // Handle file uploads
+  // Handle file uploads with immediate preview
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Avatar file size must be less than 5MB');
+        toast.error('Image must be less than 5MB');
         return;
       }
       setAvatarFile(file);
@@ -121,7 +135,7 @@ const ManageProfilePage = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('Banner file size must be less than 10MB');
+        toast.error('Image must be less than 10MB');
         return;
       }
       setBannerFile(file);
@@ -140,43 +154,8 @@ const ManageProfilePage = () => {
     },
   });
 
-  // Handle field updates
-  const handleFieldUpdate = (field: string, value: string) => {
-    editProfile(
-      {
-        data: {
-          data: {
-            display_name: field === 'displayName' ? value : displayName,
-            headline: field === 'headline' ? value : headline,
-            about: field === 'about' ? value : about,
-            linkedin: field === 'linkedin' ? value : socialLinks.linkedin,
-            twitter: field === 'twitter' ? value : socialLinks.twitter,
-            substack: field === 'substack' ? value : socialLinks.substack,
-            instagram: field === 'instagram' ? value : socialLinks.instagram,
-            youtube: field === 'youtube' ? value : socialLinks.youtube,
-          },
-        },
-      },
-      {
-        onSuccess: (response) => {
-          toast.success('Profile updated successfully');
-          setProfileData(response.data);
-          setEditingField(null);
-          refetchProfile();
-        },
-        onError: (error) => {
-          const errorMessage = error.response?.data?.message || 'Failed to update profile';
-          toast.error(errorMessage);
-        },
-      }
-    );
-  };
-
-  // Handle image updates
-  const handleImageUpdate = (type: 'avatar' | 'banner') => {
-    const file = type === 'avatar' ? avatarFile : bannerFile;
-    if (!file) return;
-
+  // Save all changes at once - much simpler flow
+  const handleSaveChanges = () => {
     editProfile(
       {
         data: {
@@ -190,34 +169,48 @@ const ManageProfilePage = () => {
             instagram: socialLinks.instagram,
             youtube: socialLinks.youtube,
           },
-          ...(type === 'avatar' ? { avatar: file } : { banner: file }),
+          ...(avatarFile && { avatar: avatarFile }),
+          ...(bannerFile && { banner: bannerFile }),
         },
       },
       {
         onSuccess: (response) => {
-          toast.success(`${type === 'avatar' ? 'Profile picture' : 'Banner'} updated successfully`);
+          toast.success('Profile updated successfully');
           setProfileData(response.data);
-          if (type === 'avatar') setAvatarFile(null);
-          if (type === 'banner') setBannerFile(null);
+          setAvatarFile(null);
+          setBannerFile(null);
+          setIsEditing(false);
+          setHasChanges(false);
           refetchProfile();
         },
         onError: (error) => {
-          const errorMessage = error.response?.data?.message || 'Failed to update image';
+          const errorMessage = error.response?.data?.message || 'Failed to update profile';
           toast.error(errorMessage);
         },
       }
     );
   };
 
-  // Toggle edit mode
-  const toggleEditMode = () => {
-    const params = new URLSearchParams(searchParams);
-    if (isEditMode) {
-      params.delete('edit');
-    } else {
-      params.set('edit', 'true');
+  // Cancel editing - reset to original values
+  const handleCancelEdit = () => {
+    if (profile) {
+      setDisplayName(profile.display_name || '');
+      setHeadline(profile.headline || '');
+      setAbout(profile.about || '');
+      setSocialLinks({
+        linkedin: profile.linkedin || '',
+        twitter: profile.twitter || '',
+        substack: profile.substack || '',
+        instagram: profile.instagram || '',
+        youtube: profile.youtube || '',
+      });
+      setAvatarPreview(profile.avatar || null);
+      setBannerPreview(profile.banner || null);
+      setAvatarFile(null);
+      setBannerFile(null);
     }
-    router.push(`?${params.toString()}`);
+    setIsEditing(false);
+    setHasChanges(false);
   };
 
   // Get social link icon
@@ -235,7 +228,6 @@ const ManageProfilePage = () => {
   // Format social link URL
   const formatSocialUrl = (platform: keyof SocialLinks, value: string) => {
     if (!value) return '';
-
     const baseUrls = {
       linkedin: 'https://linkedin.com/in/',
       twitter: 'https://twitter.com/',
@@ -243,127 +235,8 @@ const ManageProfilePage = () => {
       instagram: 'https://instagram.com/',
       youtube: 'https://youtube.com/@',
     };
-
     if (value.startsWith('http')) return value;
     return baseUrls[platform] + value;
-  };
-
-  // Editable field component
-  const EditableField = ({
-    label,
-    value,
-    field,
-    placeholder,
-    maxLength = 100,
-    multiline = false,
-  }: {
-    label: string;
-    value: string;
-    field: string;
-    placeholder: string;
-    maxLength?: number;
-    multiline?: boolean;
-  }) => {
-    const [tempValue, setTempValue] = useState(value);
-    const isEditing = editingField === field;
-
-    useEffect(() => {
-      setTempValue(value);
-    }, [value]);
-
-    const handleSave = () => {
-      if (tempValue.trim() !== value) {
-        if (field.startsWith('social-')) {
-          const platform = field.replace('social-', '') as keyof SocialLinks;
-          handleSocialLinkChange(platform, tempValue.trim());
-          handleFieldUpdate(platform, tempValue.trim());
-        } else {
-          handleFieldUpdate(field, tempValue.trim());
-        }
-      }
-      setEditingField(null);
-    };
-
-    const handleCancel = () => {
-      setTempValue(value);
-      setEditingField(null);
-    };
-
-    if (!isEditMode) {
-      return (
-        <div className="py-4">
-          <div className="text-text-secondary mb-1 text-sm">{label}</div>
-          <div className="text-text text-base">
-            {value || <span className="text-text-muted italic">Not set</span>}
-          </div>
-        </div>
-      );
-    }
-
-    if (isEditing) {
-      return (
-        <div className="py-4">
-          <div className="text-text-secondary mb-2 text-sm">{label}</div>
-          <div className="flex items-center gap-2">
-            {multiline ? (
-              <textarea
-                value={tempValue}
-                onChange={(e) => setTempValue(e.target.value)}
-                placeholder={placeholder}
-                maxLength={maxLength}
-                rows={3}
-                className="border-primary text-text placeholder-text-muted flex-1 resize-none rounded-lg border-2 bg-transparent px-3 py-2 text-base focus:outline-none"
-                autoFocus
-              />
-            ) : (
-              <input
-                type="text"
-                value={tempValue}
-                onChange={(e) => setTempValue(e.target.value)}
-                placeholder={placeholder}
-                maxLength={maxLength}
-                className="border-primary text-text placeholder-text-muted flex-1 rounded-lg border-2 bg-transparent px-3 py-2 text-base focus:outline-none"
-                autoFocus
-              />
-            )}
-            <button
-              onClick={handleSave}
-              disabled={isPending}
-              className="bg-primary text-background hover:bg-primary/90 rounded-full p-2 transition-colors disabled:opacity-50"
-            >
-              <Check size={16} />
-            </button>
-            <button
-              onClick={handleCancel}
-              disabled={isPending}
-              className="bg-surface-elevated text-text hover:bg-surface rounded-full p-2 transition-colors"
-            >
-              <X size={16} />
-            </button>
-          </div>
-          {maxLength && (
-            <div className="text-text-muted mt-1 text-right text-xs">
-              {tempValue.length}/{maxLength}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <button
-        onClick={() => setEditingField(field)}
-        className="hover:bg-surface-elevated -mx-2 w-full rounded-lg px-2 py-4 text-left transition-colors"
-      >
-        <div className="text-text-secondary mb-1 text-sm">{label}</div>
-        <div className="text-text flex items-center justify-between text-base">
-          <span>
-            {value || <span className="text-text-muted italic">Add {label.toLowerCase()}</span>}
-          </span>
-          <Edit3 size={16} className="text-text-muted" />
-        </div>
-      </button>
-    );
   };
 
   if (profileLoading) {
@@ -398,7 +271,7 @@ const ManageProfilePage = () => {
   return (
     <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-md">
-        {/* Header */}
+        {/* Simplified Header */}
         <div className="bg-primary text-background flex items-center gap-4 px-4 py-4">
           <button
             onClick={() => router.back()}
@@ -407,13 +280,33 @@ const ManageProfilePage = () => {
             <ArrowLeft size={20} />
           </button>
           <h1 className="text-lg font-medium">Profile</h1>
-          <div className="ml-auto">
-            <button
-              onClick={toggleEditMode}
-              className="hover:bg-primary/20 rounded-full p-2 transition-colors"
-            >
-              {isEditMode ? <Check size={20} /> : <Edit3 size={20} />}
-            </button>
+
+          {/* Simplified action buttons */}
+          <div className="ml-auto flex gap-2">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={handleCancelEdit}
+                  className="hover:bg-primary/20 rounded-full px-3 py-1 text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={!hasChanges || isPending}
+                  className="text-primary rounded-full bg-white px-3 py-1 text-sm font-medium transition-colors hover:bg-gray-100 disabled:opacity-50"
+                >
+                  {isPending ? 'Saving...' : 'Save'}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="hover:bg-primary/20 rounded-full p-2 transition-colors"
+              >
+                <Edit3 size={20} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -433,25 +326,13 @@ const ManageProfilePage = () => {
               <div className="from-primary to-secondary h-full w-full bg-gradient-to-br"></div>
             )}
 
-            {isEditMode && (
-              <div className="absolute right-4 bottom-4 flex gap-2">
-                {bannerFile && (
-                  <button
-                    onClick={() => handleImageUpdate('banner')}
-                    disabled={isPending}
-                    className="bg-primary text-background hover:bg-primary/90 rounded-full p-2 shadow-lg transition-colors disabled:opacity-50"
-                  >
-                    <Check size={16} />
-                  </button>
-                )}
-                <button
-                  onClick={() => bannerInputRef.current?.click()}
-                  disabled={isPending}
-                  className="rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-                >
-                  <Camera size={16} />
-                </button>
-              </div>
+            {isEditing && (
+              <button
+                onClick={() => bannerInputRef.current?.click()}
+                className="absolute right-4 bottom-4 rounded-full bg-black/50 p-3 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
+              >
+                <Camera size={18} />
+              </button>
             )}
 
             <input
@@ -482,25 +363,13 @@ const ManageProfilePage = () => {
                 )}
               </div>
 
-              {isEditMode && (
-                <div className="absolute right-2 bottom-2 flex gap-1">
-                  {avatarFile && (
-                    <button
-                      onClick={() => handleImageUpdate('avatar')}
-                      disabled={isPending}
-                      className="bg-primary text-background hover:bg-primary/90 rounded-full p-1.5 shadow-lg transition-colors disabled:opacity-50"
-                    >
-                      <Check size={14} />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => avatarInputRef.current?.click()}
-                    disabled={isPending}
-                    className="bg-surface text-text hover:bg-surface-elevated border-border rounded-full border p-1.5 shadow-lg transition-colors"
-                  >
-                    <Camera size={14} />
-                  </button>
-                </div>
+              {isEditing && (
+                <button
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="bg-surface text-text hover:bg-surface-elevated border-border absolute right-2 bottom-2 rounded-full border p-2 shadow-lg transition-colors"
+                >
+                  <Camera size={16} />
+                </button>
               )}
 
               <input
@@ -517,50 +386,78 @@ const ManageProfilePage = () => {
         {/* Profile Information */}
         <div className="bg-surface mt-16 px-6 pb-6">
           {/* Basic Info */}
-          <div className="border-border-subtle border-b pb-6">
-            <EditableField
-              label="Name"
-              value={displayName}
-              field="displayName"
-              placeholder="Enter your display name"
-              maxLength={50}
-            />
-
-            <EditableField
-              label="Headline"
-              value={headline}
-              field="headline"
-              placeholder="What do you do?"
-              maxLength={100}
-            />
-
-            <EditableField
-              label="About"
-              value={about}
-              field="about"
-              placeholder="Tell others about yourself"
-              maxLength={500}
-              multiline={true}
-            />
-
-            {/* Static Fields */}
-            <div className="py-4">
-              <div className="text-text-secondary mb-1 text-sm">Username</div>
-              <div className="text-text text-base">@{profile.username}</div>
+          <div className="border-border-subtle space-y-4 border-b pb-6">
+            {/* Name Field */}
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">Name</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Enter your display name"
+                  maxLength={50}
+                  className="focus:ring-primary w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
+                />
+              ) : (
+                <p className="text-text">{displayName || 'Not set'}</p>
+              )}
             </div>
 
-            <div className="py-4">
-              <div className="text-text-secondary mb-1 text-sm">Member since</div>
-              <div className="text-text flex items-center gap-2 text-base">
+            {/* Headline Field */}
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">Headline</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={headline}
+                  onChange={(e) => setHeadline(e.target.value)}
+                  placeholder="What do you do?"
+                  maxLength={100}
+                  className="focus:ring-primary w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
+                />
+              ) : (
+                <p className="text-text">{headline || 'Not set'}</p>
+              )}
+            </div>
+
+            {/* About Field */}
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">About</label>
+              {isEditing ? (
+                <textarea
+                  value={about}
+                  onChange={(e) => setAbout(e.target.value)}
+                  placeholder="Tell others about yourself"
+                  maxLength={500}
+                  rows={3}
+                  className="focus:ring-primary w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
+                />
+              ) : (
+                <p className="text-text">{about || 'Not set'}</p>
+              )}
+            </div>
+
+            {/* Static Fields */}
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">Username</label>
+              <p className="text-text">@{profile.username}</p>
+            </div>
+
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">
+                Member since
+              </label>
+              <div className="text-text flex items-center gap-2">
                 <Calendar size={16} />
                 {formatDate(profile.created_at)}
               </div>
             </div>
 
             {profile.is_email_verified && (
-              <div className="py-4">
-                <div className="text-text-secondary mb-1 text-sm">Email</div>
-                <div className="text-text flex items-center gap-2 text-base">
+              <div>
+                <label className="text-text-secondary mb-2 block text-sm font-medium">Email</label>
+                <div className="text-text flex items-center gap-2">
                   <Mail size={16} />
                   Verified
                 </div>
@@ -570,34 +467,45 @@ const ManageProfilePage = () => {
 
           {/* Social Links */}
           <div className="pt-6">
-            <div className="text-text mb-4 text-lg font-medium">Social Links</div>
-
-            {Object.entries(socialLinks).map(([platform, value]) => (
-              <div key={platform} className="flex items-center gap-4">
-                <div className="text-text-secondary flex h-10 w-10 items-center justify-center">
-                  {getSocialIcon(platform as keyof SocialLinks)}
+            <h3 className="text-text mb-4 text-lg font-medium">Social Links</h3>
+            <div className="space-y-4">
+              {Object.entries(socialLinks).map(([platform, value]) => (
+                <div key={platform} className="flex items-center gap-4">
+                  <div className="text-text-secondary flex h-10 w-10 items-center justify-center">
+                    {getSocialIcon(platform as keyof SocialLinks)}
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-text-secondary mb-1 block text-sm font-medium">
+                      {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={value || ''}
+                        onChange={(e) =>
+                          handleSocialLinkChange(platform as keyof SocialLinks, e.target.value)
+                        }
+                        placeholder={`${platform === 'substack' ? 'URL' : 'Username'}`}
+                        maxLength={100}
+                        className="focus:ring-primary w-full rounded border border-gray-300 px-3 py-1 focus:border-transparent focus:ring-2"
+                      />
+                    ) : (
+                      <p className="text-text">{value || 'Not set'}</p>
+                    )}
+                  </div>
+                  {value && !isEditing && (
+                    <a
+                      href={formatSocialUrl(platform as keyof SocialLinks, value)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-primary/80 p-2"
+                    >
+                      <Globe size={16} />
+                    </a>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <EditableField
-                    label={platform.charAt(0).toUpperCase() + platform.slice(1)}
-                    value={value || ''}
-                    field={`social-${platform}`}
-                    placeholder={`${platform === 'substack' ? 'URL' : 'Username'}`}
-                    maxLength={100}
-                  />
-                </div>
-                {value && !isEditMode && (
-                  <a
-                    href={formatSocialUrl(platform as keyof SocialLinks, value)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:text-primary/80 p-2"
-                  >
-                    <Globe size={16} />
-                  </a>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>

@@ -1608,6 +1608,13 @@ Optional fields:
 - is_duration_based: Whether service has time limit (default: False)
 - status: Service status (default: active)
 - attachments: List of files to attach to the service
+- max_messages_a_day: For DM services, max messages per day
+- reply_time: For DM services, reply time in days
+
+Service creation limits:
+- dm, live_chat, audio_call, video_call: Only one of each type per community per
+  creator
+- custom: Multiple custom services allowed per community per creator
  * @summary Create Service
  */
 export const keyopollsChatsApiServicesCreateService = (
