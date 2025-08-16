@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ServiceAttachmentSchema } from './serviceAttachmentSchema';
+import type { ServiceItemSchemaCanEdit } from './serviceItemSchemaCanEdit';
 import type { ServiceItemSchemaMaxMessagesADay } from './serviceItemSchemaMaxMessagesADay';
 import type { ServiceItemSchemaPreviewImage } from './serviceItemSchemaPreviewImage';
 import type { ServiceItemSchemaReplyTime } from './serviceItemSchemaReplyTime';
@@ -36,4 +37,5 @@ export interface ServiceItemSchema {
   attachments_required?: boolean;
   max_messages_a_day?: ServiceItemSchemaMaxMessagesADay;
   reply_time?: ServiceItemSchemaReplyTime;
+  can_edit?: ServiceItemSchemaCanEdit;
 }

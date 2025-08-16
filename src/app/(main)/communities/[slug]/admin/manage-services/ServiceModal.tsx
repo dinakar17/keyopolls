@@ -11,17 +11,25 @@ import {
   useKeyopollsChatsApiServicesUpdateService,
 } from '@/api/default/default';
 import { ServiceAttachmentSchema, ServiceItemSchema, ServiceTypeEnum } from '@/api/schemas';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from '@/components/ui/toast';
 
 const SERVICE_LABELS = {
   [ServiceTypeEnum.dm]: 'Direct Message',
-  [ServiceTypeEnum.live_chat]: 'Live Chat',
-  [ServiceTypeEnum.audio_call]: 'Audio Call',
-  [ServiceTypeEnum.video_call]: 'Video Call',
   [ServiceTypeEnum.custom]: 'Custom Service',
-  [ServiceTypeEnum.group_chat]: 'Group Chat',
-  [ServiceTypeEnum.group_audio_call]: 'Group Audio Call',
-  [ServiceTypeEnum.group_video_call]: 'Group Video Call',
+  [ServiceTypeEnum.live_chat]: '1 vs 1 Live Chat',
+  [ServiceTypeEnum.audio_call]: '1 vs 1 Audio Call',
+  [ServiceTypeEnum.video_call]: '1 vs 1 Video Call',
+  [ServiceTypeEnum.community_post]: 'Community Post',
+  // [ServiceTypeEnum.group_chat]: 'Group Chat',
+  // [ServiceTypeEnum.group_audio_call]: 'Group Audio Call',
+  // [ServiceTypeEnum.group_video_call]: 'Group Video Call',
 };
 
 interface ServiceModalProps {
@@ -52,7 +60,7 @@ const ServiceModal = ({
     status: 'active',
     max_messages_a_day: 10,
     reply_time: 1,
-    attachments_required: false,
+    attachments_required: true, // Default true for custom services
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [existingAttachments, setExistingAttachments] = useState<ServiceAttachmentSchema[]>([]);
@@ -78,18 +86,14 @@ const ServiceModal = ({
     });
 
   // Check if service will be auto-broadcasted
-  const willBeBroadcasted = useCallback((serviceType: string, attachmentsRequired: boolean) => {
-    const broadcastableTypes = ['group_chat', 'group_audio_call', 'group_video_call'];
-
-    if (broadcastableTypes.includes(serviceType)) {
-      return true;
-    }
-
-    if (serviceType === 'custom' && !attachmentsRequired) {
-      return true;
-    }
-
-    return false;
+  const willBeBroadcasted = useCallback((serviceType: string) => {
+    const broadcastableTypes = [
+      'group_chat',
+      'group_audio_call',
+      'group_video_call',
+      'community_post',
+    ];
+    return broadcastableTypes.includes(serviceType);
   }, []);
 
   const resetForm = useCallback(() => {
@@ -103,7 +107,7 @@ const ServiceModal = ({
       status: 'active',
       max_messages_a_day: 10,
       reply_time: 1,
-      attachments_required: false,
+      attachments_required: true,
     });
     setSelectedFiles([]);
     setExistingAttachments([]);
@@ -123,7 +127,9 @@ const ServiceModal = ({
         status: editingService.status,
         max_messages_a_day: editingService.max_messages_a_day || 10,
         reply_time: editingService.reply_time || 1,
-        attachments_required: editingService.attachments_required || false,
+        attachments_required:
+          editingService.attachments_required ||
+          (editingService.service_type === 'custom' ? true : false),
       });
 
       // Load existing attachments
@@ -132,6 +138,15 @@ const ServiceModal = ({
       resetForm();
     }
   }, [editingService, resetForm]);
+
+  // Update attachments_required when service type changes
+  useEffect(() => {
+    if (formData.service_type === 'custom') {
+      setFormData((prev) => ({ ...prev, attachments_required: true }));
+    } else if (formData.service_type === 'community_post') {
+      setFormData((prev) => ({ ...prev, attachments_required: false }));
+    }
+  }, [formData.service_type]);
 
   const handleInputChange = useCallback(
     (field: keyof typeof formData, value: string | number | boolean) => {
@@ -216,13 +231,14 @@ const ServiceModal = ({
       duration_minutes: formData.duration_minutes,
       is_duration_based: formData.is_duration_based,
       status: formData.status,
-      is_broadcasted: willBeBroadcasted(formData.service_type, formData.attachments_required),
       ...(formData.service_type === 'dm' && {
         max_messages_a_day: formData.max_messages_a_day,
         reply_time: formData.reply_time,
       }),
       ...(formData.service_type === 'custom' && {
         attachments_required: formData.attachments_required,
+        max_messages_a_day: formData.max_messages_a_day,
+        reply_time: formData.reply_time,
       }),
     };
 
@@ -264,9 +280,10 @@ const ServiceModal = ({
         max_messages_a_day: formData.max_messages_a_day,
         reply_time: formData.reply_time,
       }),
-      is_broadcasted: willBeBroadcasted(formData.service_type, formData.attachments_required),
       ...(formData.service_type === 'custom' && {
         attachments_required: formData.attachments_required,
+        max_messages_a_day: formData.max_messages_a_day,
+        reply_time: formData.reply_time,
       }),
     };
 
@@ -308,9 +325,103 @@ const ServiceModal = ({
     }
   }, []);
 
+  const renderAttachmentPreview = useCallback(
+    (file: File, index: number) => {
+      const fileType = file.type.split('/')[0];
+
+      return (
+        <div key={index} className="bg-surface-elevated flex items-center gap-2 rounded-md p-2">
+          {/* Attachment preview */}
+          <div className="flex-shrink-0">
+            {fileType === 'image' ? (
+              <div className="relative">
+                <Image
+                  src={URL.createObjectURL(file)}
+                  alt={file.name}
+                  className="h-8 w-8 rounded object-cover"
+                  width={32}
+                  height={32}
+                />
+              </div>
+            ) : fileType === 'video' ? (
+              <div className="relative flex h-8 w-8 items-center justify-center rounded bg-gray-100">
+                <Play className="h-3 w-3 text-gray-600" />
+              </div>
+            ) : (
+              <div className="text-primary">{getAttachmentIcon(fileType)}</div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-text truncate text-xs">{file.name}</p>
+            <p className="text-text-muted text-xs">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+          </div>
+
+          <button
+            onClick={() => {
+              setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+            }}
+            className="text-text-muted hover:text-error transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      );
+    },
+    [getAttachmentIcon]
+  );
+
+  const renderExistingAttachmentPreview = useCallback(
+    (attachment: ServiceAttachmentSchema) => {
+      return (
+        <div
+          key={attachment.id}
+          className="bg-surface-elevated flex items-center gap-2 rounded-md p-2"
+        >
+          {/* Existing attachment preview */}
+          <div className="flex-shrink-0">
+            {attachment.attachment_type === 'image' ? (
+              <div className="relative">
+                <Image
+                  src={attachment.file_url}
+                  alt={attachment.file_name}
+                  className="h-8 w-8 rounded object-cover"
+                  width={32}
+                  height={32}
+                />
+              </div>
+            ) : attachment.attachment_type === 'video' ? (
+              <div className="relative flex h-8 w-8 items-center justify-center rounded bg-gray-100">
+                <Play className="h-3 w-3 text-gray-600" />
+              </div>
+            ) : (
+              <div className="text-primary">{getAttachmentIcon(attachment.attachment_type)}</div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-text truncate text-xs">{attachment.file_name}</p>
+            <p className="text-text-muted text-xs">
+              {(attachment.file_size / 1024 / 1024).toFixed(1)} MB
+            </p>
+          </div>
+
+          <button
+            onClick={() => removeExistingAttachment(attachment.id)}
+            className="text-text-muted hover:text-error transition-colors"
+            title="Remove attachment"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      );
+    },
+    [getAttachmentIcon, removeExistingAttachment]
+  );
+
   if (!isOpen) return null;
 
-  const isBroadcastable = willBeBroadcasted(formData.service_type, formData.attachments_required);
+  const isBroadcastable = willBeBroadcasted(formData.service_type);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -333,18 +444,22 @@ const ServiceModal = ({
           {/* Service Type */}
           <div>
             <label className="text-text mb-1 block text-sm font-medium">Service Type</label>
-            <select
+            <Select
               value={formData.service_type}
-              onChange={(e) => handleInputChange('service_type', e.target.value)}
+              onValueChange={(value) => handleInputChange('service_type', value)}
               disabled={!!editingService}
-              className="border-border focus:border-primary bg-background text-text focus:ring-primary/20 w-full rounded-md border px-3 py-2 text-sm focus:ring-1 focus:outline-none disabled:opacity-50"
             >
-              {Object.entries(SERVICE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select service type" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(SERVICE_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Broadcast Information */}
@@ -411,28 +526,61 @@ const ServiceModal = ({
             <div className="border-border space-y-4 border-t pt-4">
               <h3 className="text-text text-sm font-medium">Custom Service Settings</h3>
 
-              {/* Attachments Required */}
+              {/* Attachments Required - Always checked and disabled for custom services */}
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="attachments_required"
-                  checked={formData.attachments_required}
-                  onChange={(e) => handleInputChange('attachments_required', e.target.checked)}
-                  className="border-border text-primary focus:ring-primary/20 h-4 w-4 rounded"
+                  checked={true}
+                  disabled={true}
+                  className="border-border text-primary focus:ring-primary/20 h-4 w-4 rounded opacity-50"
                 />
                 <label htmlFor="attachments_required" className="text-text text-sm">
                   Require file attachments from users
                 </label>
               </div>
               <p className="text-text-muted ml-6 text-xs">
-                When enabled, users must provide file attachments (PDF, images, videos, etc.) along
-                with their message when purchasing this service.
-                {formData.attachments_required && (
-                  <span className="text-warning mt-1 block">
-                    Note: Services requiring attachments will not be automatically broadcasted.
-                  </span>
-                )}
+                Custom services always require file attachments (PDF, images, videos, etc.) from
+                users when purchasing this service.
               </p>
+
+              {/* Max Messages per Day */}
+              <div>
+                <label className="text-text mb-1 block text-sm font-medium">
+                  Max Messages per Day
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.max_messages_a_day}
+                  onChange={(e) =>
+                    handleInputChange('max_messages_a_day', parseInt(e.target.value) || 1)
+                  }
+                  placeholder="10"
+                  className="border-border focus:border-primary bg-background text-text placeholder-text-muted focus:ring-primary/20 w-full rounded-md border px-3 py-2 text-sm focus:ring-1 focus:outline-none"
+                />
+                <p className="text-text-muted mt-1 text-xs">
+                  Maximum number of custom service requests you want to accept per day
+                </p>
+              </div>
+
+              {/* Reply Time */}
+              <div>
+                <label className="text-text mb-1 block text-sm font-medium">
+                  Reply Time (Days)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.reply_time}
+                  onChange={(e) => handleInputChange('reply_time', parseInt(e.target.value) || 1)}
+                  placeholder="1"
+                  className="border-border focus:border-primary bg-background text-text placeholder-text-muted focus:ring-primary/20 w-full rounded-md border px-3 py-2 text-sm focus:ring-1 focus:outline-none"
+                />
+                <p className="text-text-muted mt-1 text-xs">
+                  Expected delivery time in days for custom service requests
+                </p>
+              </div>
             </div>
           )}
 
@@ -517,15 +665,19 @@ const ServiceModal = ({
           {/* Status */}
           <div>
             <label className="text-text mb-1 block text-sm font-medium">Status</label>
-            <select
+            <Select
               value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value)}
-              className="border-border focus:border-primary bg-background text-text focus:ring-primary/20 w-full rounded-md border px-3 py-2 text-sm focus:ring-1 focus:outline-none"
+              onValueChange={(value) => handleInputChange('status', value)}
             >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="draft">Draft</option>
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Preview Image */}
@@ -620,29 +772,9 @@ const ServiceModal = ({
               <div className="mt-2">
                 <p className="text-text mb-2 text-xs font-medium">Current attachments:</p>
                 <div className="space-y-1">
-                  {existingAttachments.map((attachment) => (
-                    <div
-                      key={attachment.id}
-                      className="bg-surface-elevated flex items-center gap-2 rounded-md p-2"
-                    >
-                      <div className="text-primary">
-                        {getAttachmentIcon(attachment.attachment_type)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-text truncate text-xs">{attachment.file_name}</p>
-                        <p className="text-text-muted text-xs">
-                          {(attachment.file_size / 1024 / 1024).toFixed(1)} MB
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => removeExistingAttachment(attachment.id)}
-                        className="text-text-muted hover:text-error transition-colors"
-                        title="Remove attachment"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
+                  {existingAttachments.map((attachment) =>
+                    renderExistingAttachmentPreview(attachment)
+                  )}
                 </div>
               </div>
             )}
@@ -650,28 +782,7 @@ const ServiceModal = ({
             {/* Selected Files Preview */}
             {selectedFiles.length > 0 && (
               <div className="mt-2 space-y-1">
-                {selectedFiles.map((file, index) => (
-                  <div
-                    key={index}
-                    className="bg-surface-elevated flex items-center gap-2 rounded-md p-2"
-                  >
-                    <div className="text-primary">{getAttachmentIcon(file.type.split('/')[0])}</div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-text truncate text-xs">{file.name}</p>
-                      <p className="text-text-muted text-xs">
-                        {(file.size / 1024 / 1024).toFixed(1)} MB
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-                      }}
-                      className="text-text-muted hover:text-error transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+                {selectedFiles.map((file, index) => renderAttachmentPreview(file, index))}
               </div>
             )}
           </div>

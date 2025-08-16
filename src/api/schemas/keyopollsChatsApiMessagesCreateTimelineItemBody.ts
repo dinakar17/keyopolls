@@ -8,6 +8,6 @@
 import type { CreateTimelineItemSchema } from './createTimelineItemSchema';
 
 export type KeyopollsChatsApiMessagesCreateTimelineItemBody = {
-  file?: Blob;
+  attachments?: Blob[];
   data: CreateTimelineItemSchema;
 };

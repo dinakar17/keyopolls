@@ -12,6 +12,8 @@ export type KeyopollsChatsApiServicesGetServicesParams = {
   community_slug?: string | null;
   creator_id?: number | null;
   service_type?: string | null;
+  service_types?: string | null;
+  attachments_required?: boolean | null;
   status?: string | null;
   is_broadcasted?: boolean | null;
   page?: number;

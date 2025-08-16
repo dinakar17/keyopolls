@@ -17,6 +17,7 @@ export interface CreateServiceSchema {
   duration_minutes?: number;
   is_duration_based?: boolean;
   status?: string;
+  is_broadcasted?: boolean;
   attachments_required?: boolean;
   max_messages_a_day?: CreateServiceSchemaMaxMessagesADay;
   reply_time?: CreateServiceSchemaReplyTime;

@@ -5,12 +5,14 @@
  * API for Keyo Polls app
  * OpenAPI spec version: 1.0.0
  */
+import type { ServiceFiltersSchemaAttachmentsRequired } from './serviceFiltersSchemaAttachmentsRequired';
 import type { ServiceFiltersSchemaCommunityId } from './serviceFiltersSchemaCommunityId';
 import type { ServiceFiltersSchemaCommunitySlug } from './serviceFiltersSchemaCommunitySlug';
 import type { ServiceFiltersSchemaCreatorId } from './serviceFiltersSchemaCreatorId';
 import type { ServiceFiltersSchemaIsBroadcasted } from './serviceFiltersSchemaIsBroadcasted';
 import type { ServiceFiltersSchemaSearch } from './serviceFiltersSchemaSearch';
 import type { ServiceFiltersSchemaServiceType } from './serviceFiltersSchemaServiceType';
+import type { ServiceFiltersSchemaServiceTypes } from './serviceFiltersSchemaServiceTypes';
 import type { ServiceFiltersSchemaStatus } from './serviceFiltersSchemaStatus';
 
 export interface ServiceFiltersSchema {
@@ -19,6 +21,8 @@ export interface ServiceFiltersSchema {
   community_slug?: ServiceFiltersSchemaCommunitySlug;
   creator_id?: ServiceFiltersSchemaCreatorId;
   service_type?: ServiceFiltersSchemaServiceType;
+  service_types?: ServiceFiltersSchemaServiceTypes;
+  attachments_required?: ServiceFiltersSchemaAttachmentsRequired;
   status?: ServiceFiltersSchemaStatus;
   is_broadcasted?: ServiceFiltersSchemaIsBroadcasted;
   page?: number;

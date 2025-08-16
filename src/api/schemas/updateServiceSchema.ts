@@ -9,6 +9,7 @@ import type { UpdateServiceSchemaAttachmentsRequired } from './updateServiceSche
 import type { UpdateServiceSchemaDescription } from './updateServiceSchemaDescription';
 import type { UpdateServiceSchemaDurationMinutes } from './updateServiceSchemaDurationMinutes';
 import type { UpdateServiceSchemaIsAvailable } from './updateServiceSchemaIsAvailable';
+import type { UpdateServiceSchemaIsBroadcasted } from './updateServiceSchemaIsBroadcasted';
 import type { UpdateServiceSchemaIsDurationBased } from './updateServiceSchemaIsDurationBased';
 import type { UpdateServiceSchemaMaxMessagesADay } from './updateServiceSchemaMaxMessagesADay';
 import type { UpdateServiceSchemaName } from './updateServiceSchemaName';
@@ -24,6 +25,7 @@ export interface UpdateServiceSchema {
   is_duration_based?: UpdateServiceSchemaIsDurationBased;
   status?: UpdateServiceSchemaStatus;
   is_available?: UpdateServiceSchemaIsAvailable;
+  is_broadcasted?: UpdateServiceSchemaIsBroadcasted;
   attachments_required?: UpdateServiceSchemaAttachmentsRequired;
   max_messages_a_day?: UpdateServiceSchemaMaxMessagesADay;
   reply_time?: UpdateServiceSchemaReplyTime;

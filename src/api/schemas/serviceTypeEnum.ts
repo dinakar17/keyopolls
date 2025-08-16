@@ -18,4 +18,5 @@ export const ServiceTypeEnum = {
   group_audio_call: 'group_audio_call',
   group_video_call: 'group_video_call',
   custom: 'custom',
+  community_post: 'community_post',
 } as const;

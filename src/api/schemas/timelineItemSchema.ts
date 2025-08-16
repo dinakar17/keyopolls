@@ -6,15 +6,13 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { MentorDetailsSchema } from './mentorDetailsSchema';
+import type { TimelineItemAttachmentSchema } from './timelineItemAttachmentSchema';
 import type { TimelineItemSchemaCallDuration } from './timelineItemSchemaCallDuration';
 import type { TimelineItemSchemaCallStatus } from './timelineItemSchemaCallStatus';
 import type { TimelineItemSchemaChatId } from './timelineItemSchemaChatId';
 import type { TimelineItemSchemaCommunityId } from './timelineItemSchemaCommunityId';
 import type { TimelineItemSchemaContent } from './timelineItemSchemaContent';
 import type { TimelineItemSchemaDeliveredAt } from './timelineItemSchemaDeliveredAt';
-import type { TimelineItemSchemaFileName } from './timelineItemSchemaFileName';
-import type { TimelineItemSchemaFileSize } from './timelineItemSchemaFileSize';
-import type { TimelineItemSchemaFileUrl } from './timelineItemSchemaFileUrl';
 import type { TimelineItemSchemaReadAt } from './timelineItemSchemaReadAt';
 import type { TimelineItemSchemaServiceItem } from './timelineItemSchemaServiceItem';
 
@@ -26,9 +24,7 @@ export interface TimelineItemSchema {
   service_item?: TimelineItemSchemaServiceItem;
   item_type: string;
   content?: TimelineItemSchemaContent;
-  file_url?: TimelineItemSchemaFileUrl;
-  file_name?: TimelineItemSchemaFileName;
-  file_size?: TimelineItemSchemaFileSize;
+  attachments?: TimelineItemAttachmentSchema[];
   call_duration?: TimelineItemSchemaCallDuration;
   call_status?: TimelineItemSchemaCallStatus;
   is_delivered: boolean;

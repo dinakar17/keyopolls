@@ -9,15 +9,17 @@ import type { CreateTimelineItemSchemaCallDuration } from './createTimelineItemS
 import type { CreateTimelineItemSchemaCallStatus } from './createTimelineItemSchemaCallStatus';
 import type { CreateTimelineItemSchemaChatId } from './createTimelineItemSchemaChatId';
 import type { CreateTimelineItemSchemaCommunityId } from './createTimelineItemSchemaCommunityId';
+import type { CreateTimelineItemSchemaCommunitySlug } from './createTimelineItemSchemaCommunitySlug';
 import type { CreateTimelineItemSchemaContent } from './createTimelineItemSchemaContent';
 import type { CreateTimelineItemSchemaServiceItemId } from './createTimelineItemSchemaServiceItemId';
 
 export interface CreateTimelineItemSchema {
   chat_id?: CreateTimelineItemSchemaChatId;
   community_id?: CreateTimelineItemSchemaCommunityId;
+  community_slug?: CreateTimelineItemSchemaCommunitySlug;
+  service_item_id?: CreateTimelineItemSchemaServiceItemId;
   item_type: string;
   content?: CreateTimelineItemSchemaContent;
-  service_item_id?: CreateTimelineItemSchemaServiceItemId;
   call_duration?: CreateTimelineItemSchemaCallDuration;
   call_status?: CreateTimelineItemSchemaCallStatus;
 }

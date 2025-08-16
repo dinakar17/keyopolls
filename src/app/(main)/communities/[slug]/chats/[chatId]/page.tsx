@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
@@ -24,27 +24,31 @@ const ChatDetailPage = () => {
   const [showMentorInfo, setShowMentorInfo] = useState(false);
   const [showComingSoonPopup, setShowComingSoonPopup] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allTimelineItems, setAllTimelineItems] = useState<any[]>([]);
 
   // Get mentor details for header
-  const { data: mentorData } = useKeyopollsChatsApiMessagesGetMentorDetails(String(chatId), {
-    request: {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    },
-    query: {
-      enabled: !!accessToken && !!chatId,
-    },
-  });
+  const { data: mentorData, isLoading: mentorLoading } =
+    useKeyopollsChatsApiMessagesGetMentorDetails(String(chatId), {
+      request: {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+      query: {
+        enabled: !!accessToken && !!chatId,
+      },
+    });
 
   // Get timeline items (messages)
   const {
     data: timelineData,
-    isLoading,
+    isLoading: timelineLoading,
     refetch,
+    isFetching,
   } = useKeyopollsChatsApiMessagesGetTimelineItems(
     {
       chat_id: String(chatId),
-      page: 1,
-      per_page: 100,
+      page: currentPage,
+      per_page: 50,
       include_broadcasts: true,
     },
     {
@@ -53,10 +57,36 @@ const ChatDetailPage = () => {
       },
       query: {
         enabled: !!accessToken && !!chatId,
-        refetchInterval: 5000,
       },
     }
   );
+
+  // Handle timeline data updates
+  React.useEffect(() => {
+    if (timelineData?.data?.timeline_items) {
+      if (currentPage === 1) {
+        // Reset for new data
+        setAllTimelineItems(timelineData.data.timeline_items);
+      } else {
+        // Append new data for pagination
+        setAllTimelineItems((prev) => [...prev, ...timelineData.data.timeline_items]);
+      }
+    }
+  }, [timelineData, currentPage]);
+
+  // Load more messages
+  const handleLoadMore = useCallback(() => {
+    if (timelineData?.data?.has_next && !isFetching) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  }, [timelineData?.data?.has_next, isFetching]);
+
+  // Refresh messages (reset to page 1)
+  const handleRefresh = useCallback(() => {
+    setCurrentPage(1);
+    setAllTimelineItems([]);
+    refetch();
+  }, [refetch]);
 
   const getLastSeenText = (lastSeen: string | null | undefined): string => {
     if (!lastSeen) return '';
@@ -93,16 +123,10 @@ const ChatDetailPage = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="bg-background flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-          <div className="text-lg font-medium">Loading conversation...</div>
-        </div>
-      </div>
-    );
-  }
+  const displayItems =
+    currentPage === 1 ? timelineData?.data?.timeline_items || [] : allTimelineItems;
+
+  const isInitialLoading = timelineLoading && currentPage === 1;
 
   return (
     <div className="bg-background flex h-screen flex-col">
@@ -119,9 +143,14 @@ const ChatDetailPage = () => {
           <button
             onClick={() => setShowMentorInfo(true)}
             className="hover:bg-surface-elevated flex items-center gap-3 rounded-lg p-2 transition-colors"
+            disabled={mentorLoading}
           >
             <div className="relative">
-              {mentorData?.data?.avatar ? (
+              {mentorLoading ? (
+                <div className="bg-surface-elevated flex h-10 w-10 items-center justify-center rounded-full">
+                  <div className="border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
+                </div>
+              ) : mentorData?.data?.avatar ? (
                 <Image
                   src={mentorData.data.avatar}
                   alt={mentorData.data.display_name}
@@ -136,23 +165,34 @@ const ChatDetailPage = () => {
                   </span>
                 </div>
               )}
-              {mentorData?.data?.is_online && (
+              {!mentorLoading && mentorData?.data?.is_online && (
                 <div className="bg-success border-surface absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2" />
               )}
-              <div className="bg-warning border-surface absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2">
-                <Crown className="h-2.5 w-2.5 text-white" />
-              </div>
+              {!mentorLoading && (
+                <div className="bg-warning border-surface absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2">
+                  <Crown className="h-2.5 w-2.5 text-white" />
+                </div>
+              )}
             </div>
 
             <div className="text-left">
-              <h3 className="text-text text-sm font-semibold">
-                {mentorData?.data?.display_name || 'Mentor'}
-              </h3>
-              <p className="text-text-secondary text-xs">
-                {mentorData?.data?.is_online
-                  ? 'Online'
-                  : getLastSeenText(mentorData?.data?.last_seen)}
-              </p>
+              {mentorLoading ? (
+                <div className="space-y-1">
+                  <div className="bg-surface-elevated h-4 w-20 animate-pulse rounded" />
+                  <div className="bg-surface-elevated h-3 w-16 animate-pulse rounded" />
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-text text-sm font-semibold">
+                    {mentorData?.data?.display_name || 'Mentor'}
+                  </h3>
+                  <p className="text-text-secondary text-xs">
+                    {mentorData?.data?.is_online
+                      ? 'Online'
+                      : getLastSeenText(mentorData?.data?.last_seen)}
+                  </p>
+                </>
+              )}
             </div>
           </button>
         </div>
@@ -160,37 +200,61 @@ const ChatDetailPage = () => {
         <div className="flex items-center gap-1">
           <button
             onClick={() => handleFeatureClick('voice')}
-            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors"
+            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors disabled:opacity-50"
+            disabled={mentorLoading}
           >
             <Phone className="h-5 w-5" />
           </button>
           <button
             onClick={() => handleFeatureClick('video')}
-            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors"
+            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors disabled:opacity-50"
+            disabled={mentorLoading}
           >
             <Video className="h-5 w-5" />
           </button>
           <button
             onClick={() => handleFeatureClick('live-chat')}
-            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors"
+            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors disabled:opacity-50"
+            disabled={mentorLoading}
           >
             <MessageSquare className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      {/* Messages List */}
-      <MessageList
-        timelineItems={timelineData?.data?.timeline_items || []}
-        mentorData={mentorData?.data}
-        onRefresh={refetch}
-      />
+      {/* Messages List with loading state */}
+      <div className="relative flex flex-1 flex-col">
+        {isInitialLoading && (
+          <div className="bg-background/50 absolute inset-0 z-10 flex items-center justify-center backdrop-blur-sm">
+            <div className="bg-surface border-border rounded-lg border p-6 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+                <span className="text-text font-medium">Loading conversation...</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <MessageList
+          timelineItems={displayItems}
+          mentorData={mentorData?.data}
+          onRefresh={handleRefresh}
+          onLoadMore={handleLoadMore}
+          hasMore={timelineData?.data?.has_next || false}
+          isLoadingMore={isFetching && currentPage > 1}
+        />
+      </div>
 
       {/* Message Input */}
-      <MessageInput chatId={String(chatId)} onMessageSent={refetch} />
+      <MessageInput
+        chatId={String(chatId)}
+        onMessageSent={handleRefresh}
+        mentorData={mentorData?.data}
+        // disabled={isInitialLoading}
+      />
 
       {/* Mentor Info Modal */}
-      {showMentorInfo && (
+      {showMentorInfo && !mentorLoading && (
         <div className="bg-background/80 fixed inset-0 z-50 flex items-end justify-center backdrop-blur-sm">
           <div className="bg-surface border-border max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-xl border-t shadow-xl">
             {/* Header */}

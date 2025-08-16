@@ -201,6 +201,8 @@ Features:
 - Filter by item type, sender, etc.
 - Includes mentor details for each message
 - Mixed timeline of chat + broadcast messages ordered by time
+- Multiple attachments support per message
+- Consistent service data using ServiceItemSchema
 
 Query Parameters:
 - chat_id: Get messages for specific chat
@@ -378,9 +380,10 @@ Required fields:
 Optional fields:
 - chat_id: For chat messages
 - community_id: For broadcast messages
+- community_slug: For community messages
 - content: Text content
 - service_item_id: For service-related messages
-- file: File attachment
+- attachments: File attachments (multiple files supported)
 - call_duration: For call messages
 - call_status: For call messages
  * @summary Create Timeline Item
@@ -391,8 +394,10 @@ export const keyopollsChatsApiMessagesCreateTimelineItem = (
   signal?: AbortSignal
 ) => {
   const formData = new FormData();
-  if (keyopollsChatsApiMessagesCreateTimelineItemBody.file !== undefined) {
-    formData.append(`file`, keyopollsChatsApiMessagesCreateTimelineItemBody.file);
+  if (keyopollsChatsApiMessagesCreateTimelineItemBody.attachments !== undefined) {
+    keyopollsChatsApiMessagesCreateTimelineItemBody.attachments.forEach((value) =>
+      formData.append(`attachments`, value)
+    );
   }
   formData.append(`data`, JSON.stringify(keyopollsChatsApiMessagesCreateTimelineItemBody.data));
 

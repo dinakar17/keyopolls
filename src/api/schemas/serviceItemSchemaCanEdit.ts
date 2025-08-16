@@ -5,6 +5,5 @@
  * API for Keyo Polls app
  * OpenAPI spec version: 1.0.0
  */
-import type { ServiceItemSchema } from './serviceItemSchema';
 
-export type TimelineItemSchemaServiceItem = ServiceItemSchema | null;
+export type ServiceItemSchemaCanEdit = boolean | null;
