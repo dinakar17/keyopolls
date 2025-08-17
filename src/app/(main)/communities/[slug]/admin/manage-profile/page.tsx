@@ -9,9 +9,7 @@ import {
   ArrowLeft,
   Calendar,
   Camera,
-  Edit3,
   FileText,
-  Globe,
   Instagram,
   Linkedin,
   Mail,
@@ -37,8 +35,7 @@ const ManageProfilePage = () => {
   const { accessToken, profileData, setProfileData } = useProfileStore();
   const router = useRouter();
 
-  // Single edit mode state - much simpler
-  const [isEditing, setIsEditing] = useState(false);
+  // Always start in edit mode since this is an edit page
   const [hasChanges, setHasChanges] = useState(false);
 
   // Form state
@@ -154,7 +151,7 @@ const ManageProfilePage = () => {
     },
   });
 
-  // Save all changes at once - much simpler flow
+  // Save all changes
   const handleSaveChanges = () => {
     editProfile(
       {
@@ -179,9 +176,10 @@ const ManageProfilePage = () => {
           setProfileData(response.data);
           setAvatarFile(null);
           setBannerFile(null);
-          setIsEditing(false);
           setHasChanges(false);
           refetchProfile();
+          // Navigate back after successful save
+          router.back();
         },
         onError: (error) => {
           const errorMessage = error.response?.data?.message || 'Failed to update profile';
@@ -191,26 +189,9 @@ const ManageProfilePage = () => {
     );
   };
 
-  // Cancel editing - reset to original values
-  const handleCancelEdit = () => {
-    if (profile) {
-      setDisplayName(profile.display_name || '');
-      setHeadline(profile.headline || '');
-      setAbout(profile.about || '');
-      setSocialLinks({
-        linkedin: profile.linkedin || '',
-        twitter: profile.twitter || '',
-        substack: profile.substack || '',
-        instagram: profile.instagram || '',
-        youtube: profile.youtube || '',
-      });
-      setAvatarPreview(profile.avatar || null);
-      setBannerPreview(profile.banner || null);
-      setAvatarFile(null);
-      setBannerFile(null);
-    }
-    setIsEditing(false);
-    setHasChanges(false);
+  // Cancel editing - navigate back without saving
+  const handleCancel = () => {
+    router.back();
   };
 
   // Get social link icon
@@ -223,20 +204,6 @@ const ManageProfilePage = () => {
       youtube: <Youtube size={20} />,
     };
     return icons[platform];
-  };
-
-  // Format social link URL
-  const formatSocialUrl = (platform: keyof SocialLinks, value: string) => {
-    if (!value) return '';
-    const baseUrls = {
-      linkedin: 'https://linkedin.com/in/',
-      twitter: 'https://twitter.com/',
-      substack: 'https://',
-      instagram: 'https://instagram.com/',
-      youtube: 'https://youtube.com/@',
-    };
-    if (value.startsWith('http')) return value;
-    return baseUrls[platform] + value;
   };
 
   if (profileLoading) {
@@ -271,42 +238,31 @@ const ManageProfilePage = () => {
   return (
     <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-md">
-        {/* Simplified Header */}
+        {/* Header - Always in edit mode */}
         <div className="bg-primary text-background flex items-center gap-4 px-4 py-4">
           <button
-            onClick={() => router.back()}
+            onClick={handleCancel}
             className="hover:bg-primary/20 rounded-full p-2 transition-colors"
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-lg font-medium">Profile</h1>
+          <h1 className="text-lg font-medium">Edit Profile</h1>
 
-          {/* Simplified action buttons */}
+          {/* Save and Cancel buttons */}
           <div className="ml-auto flex gap-2">
-            {isEditing ? (
-              <>
-                <button
-                  onClick={handleCancelEdit}
-                  className="hover:bg-primary/20 rounded-full px-3 py-1 text-sm transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveChanges}
-                  disabled={!hasChanges || isPending}
-                  className="text-primary rounded-full bg-white px-3 py-1 text-sm font-medium transition-colors hover:bg-gray-100 disabled:opacity-50"
-                >
-                  {isPending ? 'Saving...' : 'Save'}
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="hover:bg-primary/20 rounded-full p-2 transition-colors"
-              >
-                <Edit3 size={20} />
-              </button>
-            )}
+            <button
+              onClick={handleCancel}
+              className="hover:bg-primary/20 rounded-full px-3 py-1 text-sm transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveChanges}
+              disabled={!hasChanges || isPending}
+              className="text-primary rounded-full bg-white px-3 py-1 text-sm font-medium transition-colors hover:bg-gray-100 disabled:opacity-50"
+            >
+              {isPending ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </div>
 
@@ -326,14 +282,12 @@ const ManageProfilePage = () => {
               <div className="from-primary to-secondary h-full w-full bg-gradient-to-br"></div>
             )}
 
-            {isEditing && (
-              <button
-                onClick={() => bannerInputRef.current?.click()}
-                className="absolute right-4 bottom-4 rounded-full bg-black/50 p-3 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-              >
-                <Camera size={18} />
-              </button>
-            )}
+            <button
+              onClick={() => bannerInputRef.current?.click()}
+              className="absolute right-4 bottom-4 rounded-full bg-black/50 p-3 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
+            >
+              <Camera size={18} />
+            </button>
 
             <input
               ref={bannerInputRef}
@@ -363,14 +317,12 @@ const ManageProfilePage = () => {
                 )}
               </div>
 
-              {isEditing && (
-                <button
-                  onClick={() => avatarInputRef.current?.click()}
-                  className="bg-surface text-text hover:bg-surface-elevated border-border absolute right-2 bottom-2 rounded-full border p-2 shadow-lg transition-colors"
-                >
-                  <Camera size={16} />
-                </button>
-              )}
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                className="bg-surface text-text hover:bg-surface-elevated border-border absolute right-2 bottom-2 rounded-full border p-2 shadow-lg transition-colors"
+              >
+                <Camera size={16} />
+              </button>
 
               <input
                 ref={avatarInputRef}
@@ -383,62 +335,50 @@ const ManageProfilePage = () => {
           </div>
         </div>
 
-        {/* Profile Information */}
+        {/* Profile Information - Always in edit mode */}
         <div className="bg-surface mt-16 px-6 pb-6">
           {/* Basic Info */}
           <div className="border-border-subtle space-y-4 border-b pb-6">
             {/* Name Field */}
             <div>
               <label className="text-text-secondary mb-2 block text-sm font-medium">Name</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your display name"
-                  maxLength={50}
-                  className="focus:ring-primary w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
-                />
-              ) : (
-                <p className="text-text">{displayName || 'Not set'}</p>
-              )}
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Enter your display name"
+                maxLength={50}
+                className="focus:ring-primary w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
+              />
             </div>
 
             {/* Headline Field */}
             <div>
               <label className="text-text-secondary mb-2 block text-sm font-medium">Headline</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={headline}
-                  onChange={(e) => setHeadline(e.target.value)}
-                  placeholder="What do you do?"
-                  maxLength={100}
-                  className="focus:ring-primary w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
-                />
-              ) : (
-                <p className="text-text">{headline || 'Not set'}</p>
-              )}
+              <input
+                type="text"
+                value={headline}
+                onChange={(e) => setHeadline(e.target.value)}
+                placeholder="What do you do?"
+                maxLength={100}
+                className="focus:ring-primary w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
+              />
             </div>
 
             {/* About Field */}
             <div>
               <label className="text-text-secondary mb-2 block text-sm font-medium">About</label>
-              {isEditing ? (
-                <textarea
-                  value={about}
-                  onChange={(e) => setAbout(e.target.value)}
-                  placeholder="Tell others about yourself"
-                  maxLength={500}
-                  rows={3}
-                  className="focus:ring-primary w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
-                />
-              ) : (
-                <p className="text-text">{about || 'Not set'}</p>
-              )}
+              <textarea
+                value={about}
+                onChange={(e) => setAbout(e.target.value)}
+                placeholder="Tell others about yourself"
+                maxLength={500}
+                rows={3}
+                className="focus:ring-primary w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
+              />
             </div>
 
-            {/* Static Fields */}
+            {/* Static Fields - Read only */}
             <div>
               <label className="text-text-secondary mb-2 block text-sm font-medium">Username</label>
               <p className="text-text">@{profile.username}</p>
@@ -478,31 +418,17 @@ const ManageProfilePage = () => {
                     <label className="text-text-secondary mb-1 block text-sm font-medium">
                       {platform.charAt(0).toUpperCase() + platform.slice(1)}
                     </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={value || ''}
-                        onChange={(e) =>
-                          handleSocialLinkChange(platform as keyof SocialLinks, e.target.value)
-                        }
-                        placeholder={`${platform === 'substack' ? 'URL' : 'Username'}`}
-                        maxLength={100}
-                        className="focus:ring-primary w-full rounded border border-gray-300 px-3 py-1 focus:border-transparent focus:ring-2"
-                      />
-                    ) : (
-                      <p className="text-text">{value || 'Not set'}</p>
-                    )}
+                    <input
+                      type="text"
+                      value={value || ''}
+                      onChange={(e) =>
+                        handleSocialLinkChange(platform as keyof SocialLinks, e.target.value)
+                      }
+                      placeholder={`${platform === 'substack' ? 'URL' : 'Username'}`}
+                      maxLength={100}
+                      className="focus:ring-primary w-full rounded border border-gray-300 px-3 py-1 focus:border-transparent focus:ring-2"
+                    />
                   </div>
-                  {value && !isEditing && (
-                    <a
-                      href={formatSocialUrl(platform as keyof SocialLinks, value)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:text-primary/80 p-2"
-                    >
-                      <Globe size={16} />
-                    </a>
-                  )}
                 </div>
               ))}
             </div>

@@ -1601,7 +1601,8 @@ export function useKeyopollsChatsApiServicesGetServices<
 
 Required fields:
 - community_slug: Slug of the community
-- service_type: Type of service (dm, live_chat, audio_call, video_call, custom, community_post, group_*)
+- service_type: Type of service (dm, live_chat, audio_call, video_call, custom,
+community_post, group_*)
 - name: Service name
 - description: Service description
 - price: Price in credits (minimum 0.00, 0 for free services)
@@ -1613,10 +1614,12 @@ Optional fields:
 - attachments: List of files to attach to the service
 - max_messages_a_day: For DM and custom services, max messages per day
 - reply_time: For DM and custom services, reply time in days
-- attachments_required: For custom services (always True), for community_post (always False)
+- attachments_required: For custom services (always True), for community_post
+(always False)
 
 Service creation limits:
-- dm, live_chat, audio_call, video_call, group_*: Only one of each type per community per creator
+- dm, live_chat, audio_call, video_call, group_*: Only one of each type per
+community per creator
 - custom, community_post: Multiple services allowed per community per creator
 
 Auto-broadcast rules:
@@ -1978,7 +1981,8 @@ Optional fields (only provided fields will be updated):
 - max_messages_a_day: For DM and custom services
 - reply_time: For DM and custom services
 - attachments: List of files to attach to the service
-- replace_attachments: If True, replace all existing attachments. If False, add to existing ones.
+- replace_attachments: If True, replace all existing attachments. If False,
+add to existing ones.
  * @summary Update Service
  */
 export const keyopollsChatsApiServicesUpdateService = (

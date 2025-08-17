@@ -1,370 +1,193 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 
-import { BarChart3, Calendar, Edit3, Mail, Star, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  FileText,
+  Instagram,
+  Linkedin,
+  MessageCircle,
+  Phone,
+  Share2,
+  Twitter,
+  UserPlus,
+  Video,
+  Youtube,
+} from 'lucide-react';
 
-import { useKeyopollsPollsApiGeneralListPolls } from '@/api/polls/polls';
+import { useKeyopollsChatsApiServicesGetServices } from '@/api/default/default';
 import { useKeyopollsProfileApiGeneralGetProfileInfo } from '@/api/profile-general/profile-general';
-import { CommentSearchResultOut, PollDetails } from '@/api/schemas';
-import { useKeyopollsCommentsApiSearchSearchComments } from '@/api/search-comments/search-comments';
-import BottomNavigation from '@/components/common/BottomNavigation';
-import Poll from '@/components/common/Poll';
-import { useProfileStore } from '@/stores/useProfileStore';
-import { formatDate, formatNumber } from '@/utils';
+import { ServiceItemSchema } from '@/api/schemas';
+import toast from '@/components/ui/toast';
+import { formatDate } from '@/utils';
 
-type TabType = 'polls' | 'comments';
+interface SocialLinks {
+  linkedin?: string;
+  twitter?: string;
+  substack?: string;
+  instagram?: string;
+  youtube?: string;
+}
 
-const ProfilePage = () => {
+const PublicProfilePage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { accessToken } = useProfileStore();
   const router = useRouter();
-
-  // State management
-  const [activeTab, setActiveTab] = useState<TabType>('polls');
-  const [polls, setPolls] = useState<PollDetails[]>([]);
-  const [comments, setComments] = useState<CommentSearchResultOut[]>([]);
-  const [pollsPage, setPollsPage] = useState(1);
-  const [commentsPage, setCommentsPage] = useState(1);
-  const [hasNextPollsPage, setHasNextPollsPage] = useState(true);
-  const [hasNextCommentsPage, setHasNextCommentsPage] = useState(true);
-  const [profileId, setProfileId] = useState<number | null>(null);
-
-  // Refs for infinite scrolling
-  const pollsObserver = useRef<IntersectionObserver | null>(null);
-  const commentsObserver = useRef<IntersectionObserver | null>(null);
 
   // Fetch profile info
   const {
-    data: profileData,
+    data: profileInfo,
     isLoading: profileLoading,
     error: profileError,
   } = useKeyopollsProfileApiGeneralGetProfileInfo(slug, {
-    request: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
-  });
-
-  const profile = profileData?.data;
-  const isOwner = profileData?.data?.is_owner;
-
-  // Update profile ID when profile data loads
-  useEffect(() => {
-    if (profile?.id) {
-      setProfileId(profile.id);
-    }
-  }, [profile]);
-
-  // Fetch polls with different parameters based on ownership
-  const pollsQueryParams = {
-    author_id: profileId,
-    page: pollsPage,
-    page_size: 20,
-    sort: 'newest',
-    my_polls: !!isOwner, // Convert to boolean
-    // Don't set status parameter when viewing own polls (backend will handle all statuses),
-    // or set it to include all relevant statuses for other users
-    ...(isOwner ? {} : { status: ['active', 'closed'] }), // Show active and closed polls for other users
-  };
-
-  const {
-    data: pollsData,
-    isLoading: pollsLoading,
-    error: pollsError,
-  } = useKeyopollsPollsApiGeneralListPolls(pollsQueryParams, {
-    request: {
-      headers: accessToken
-        ? {
-            Authorization: `Bearer ${accessToken}`,
-          }
-        : {},
-    },
     query: {
-      enabled: !!profileId && activeTab === 'polls',
-      refetchOnWindowFocus: false,
+      enabled: !!slug,
     },
   });
 
-  // Fetch comments
-  const {
-    data: commentsData,
-    isLoading: commentsLoading,
-    error: commentsError,
-  } = useKeyopollsCommentsApiSearchSearchComments(
-    {
-      profile_id: profileId,
-      page: commentsPage,
-      page_size: 20,
-      sort: 'newest',
-      include_poll_content: true,
-    },
-    {
-      request: {
-        headers: accessToken
-          ? {
-              Authorization: `Bearer ${accessToken}`,
-            }
-          : {},
-      },
-      query: {
-        enabled: !!profileId && activeTab === 'comments',
-        refetchOnWindowFocus: false,
-      },
-    }
-  );
+  const profile = profileInfo?.data;
 
-  // Handle polls data
-  useEffect(() => {
-    if (pollsData?.data.items) {
-      if (pollsPage === 1) {
-        setPolls(pollsData.data.items);
-      } else {
-        setPolls((prevPolls) => {
-          const existingIds = new Set(prevPolls.map((poll) => poll.id));
-          const newPolls = pollsData.data.items.filter((poll) => !existingIds.has(poll.id));
-          return [...prevPolls, ...newPolls];
-        });
+  // Fetch user's services
+  const { data: servicesData, isLoading: servicesLoading } =
+    useKeyopollsChatsApiServicesGetServices(
+      {
+        creator_id: profile?.id,
+        status: 'active',
+        per_page: 50,
+      },
+      {
+        query: {
+          enabled: !!profile?.id,
+        },
       }
-      setHasNextPollsPage(pollsData.data.has_next || false);
-    }
-  }, [pollsData, pollsPage]);
+    );
 
-  // Handle comments data
-  useEffect(() => {
-    if (commentsData?.data.items) {
-      if (commentsPage === 1) {
-        setComments(commentsData.data.items);
-      } else {
-        setComments((prevComments) => {
-          const existingIds = new Set(prevComments.map((comment) => comment.id));
-          const newComments = commentsData.data.items.filter(
-            (comment) => !existingIds.has(comment.id)
-          );
-          return [...prevComments, ...newComments];
-        });
-      }
-      setHasNextCommentsPage(commentsData.data.has_next || false);
-    }
-  }, [commentsData, commentsPage]);
+  const services = servicesData?.data?.services || [];
 
-  // Infinite scroll callback for polls
-  const lastPollElementRef = useCallback(
-    (node: HTMLElement | null) => {
-      if (pollsLoading) return;
-      if (pollsObserver.current) pollsObserver.current.disconnect();
-      pollsObserver.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasNextPollsPage) {
-          setPollsPage((prevPage) => prevPage + 1);
-        }
-      });
-      if (node) pollsObserver.current.observe(node);
-    },
-    [pollsLoading, hasNextPollsPage]
-  );
-
-  // Infinite scroll callback for comments
-  const lastCommentElementRef = useCallback(
-    (node: HTMLElement | null) => {
-      if (commentsLoading) return;
-      if (commentsObserver.current) commentsObserver.current.disconnect();
-      commentsObserver.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasNextCommentsPage) {
-          setCommentsPage((prevPage) => prevPage + 1);
-        }
-      });
-      if (node) commentsObserver.current.observe(node);
-    },
-    [commentsLoading, hasNextCommentsPage]
-  );
-
-  // Handle tab change
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
-    if (tab === 'polls') {
-      setPollsPage(1);
-    } else {
-      setCommentsPage(1);
-    }
-  };
-
-  // Handle poll deletion
-  const handlePollDelete = (pollId: number) => {
-    setPolls((prevPolls) => prevPolls.filter((poll) => poll.id !== pollId));
-  };
-
-  // Helper function to get poll status badge
-  const getPollStatusBadge = (poll: PollDetails) => {
-    if (!isOwner) return null; // Only show status badges to poll owner
-
-    const status = poll.status || 'active';
-
-    if (status === 'active') return null; // Don't show badge for active polls
-
-    const statusConfig = {
-      pending_moderation: {
-        text: 'Pending Review',
-        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      },
-      rejected: {
-        text: 'Rejected',
-        className: 'bg-red-100 text-red-800 border-red-200',
-      },
-      closed: {
-        text: 'Closed',
-        className: 'bg-gray-100 text-gray-800 border-gray-200',
-      },
-      draft: {
-        text: 'Draft',
-        className: 'bg-blue-100 text-blue-800 border-blue-200',
-      },
-      archived: {
-        text: 'Archived',
-        className: 'bg-gray-100 text-gray-600 border-gray-200',
-      },
+  // Organize services by type - only the specified types
+  const organizedServices = useMemo(() => {
+    type ServiceItem = (typeof services)[number];
+    const result: {
+      dm: ServiceItem | null;
+      audio_call: ServiceItem | null;
+      video_call: ServiceItem | null;
+      live_chat: ServiceItem | null;
+      custom: ServiceItem[];
+    } = {
+      dm: null,
+      audio_call: null,
+      video_call: null,
+      live_chat: null,
+      custom: [],
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig];
-    if (!config) return null;
+    services.forEach((service) => {
+      switch (service.service_type) {
+        case 'dm':
+        case 'audio_call':
+        case 'video_call':
+        case 'live_chat':
+          result[service.service_type] = service;
+          break;
+        case 'custom':
+          result.custom.push(service);
+          break;
+        // Ignore community_post, group_chat, group_audio_call, group_video_call
+      }
+    });
 
-    return (
-      <span
-        className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium ${config.className}`}
-      >
-        {config.text}
-      </span>
-    );
+    return result;
+  }, [services]);
+
+  const hasMainServices =
+    organizedServices.dm ||
+    organizedServices.audio_call ||
+    organizedServices.video_call ||
+    organizedServices.live_chat;
+  const hasCustomServices = organizedServices.custom.length > 0;
+
+  // Get social link icon
+  const getSocialIcon = (platform: keyof SocialLinks) => {
+    const icons = {
+      linkedin: <Linkedin size={18} />,
+      twitter: <Twitter size={18} />,
+      substack: <FileText size={18} />,
+      instagram: <Instagram size={18} />,
+      youtube: <Youtube size={18} />,
+    };
+    return icons[platform];
   };
 
-  // Enhanced Poll component wrapper to show status
-  const PollWithStatus = ({
-    poll,
-    isLastPoll,
-    lastPollElementCallback,
-    onDelete,
-  }: {
-    poll: PollDetails;
-    isLastPoll: boolean;
-    lastPollElementCallback?: (node: HTMLElement | null) => void;
-    onDelete: (pollId: number) => void;
-  }) => {
-    const statusBadge = getPollStatusBadge(poll);
-
-    return (
-      <div ref={isLastPoll ? lastPollElementCallback : null} className="relative">
-        {statusBadge && <div className="absolute top-2 right-2 z-10">{statusBadge}</div>}
-        <Poll poll={poll} isLastPoll={isLastPoll} onDelete={onDelete} />
-      </div>
-    );
+  // Format social link URL
+  const formatSocialUrl = (platform: keyof SocialLinks, value: string) => {
+    if (!value) return '';
+    const baseUrls = {
+      linkedin: 'https://linkedin.com/in/',
+      twitter: 'https://twitter.com/',
+      substack: 'https://',
+      instagram: 'https://instagram.com/',
+      youtube: 'https://youtube.com/@',
+    };
+    if (value.startsWith('http')) return value;
+    return baseUrls[platform] + value;
   };
 
-  // Loading skeleton components
-  const ProfileSkeleton = () => (
-    <div className="animate-pulse">
-      <div className="bg-surface-elevated h-32"></div>
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="bg-surface-elevated h-20 w-20 rounded-full"></div>
-          <div className="flex-1">
-            <div className="bg-surface-elevated mb-2 h-5 w-32 rounded"></div>
-            <div className="bg-surface-elevated mb-3 h-4 w-24 rounded"></div>
-            <div className="bg-surface-elevated h-4 w-20 rounded"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // Handle service actions
+  const handleServiceAction = (service: ServiceItemSchema | null, actionType: string) => {
+    // TODO: Implement service action logic
+    console.log('Service action:', actionType, service);
+  };
 
-  const PollSkeleton = () => (
-    <div className="border-border-subtle animate-pulse border-b p-4">
-      <div className="flex space-x-3">
-        <div className="bg-surface-elevated h-10 w-10 flex-shrink-0 rounded-full"></div>
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="bg-surface-elevated h-4 w-24 rounded"></div>
-            <div className="bg-surface-elevated h-4 w-16 rounded"></div>
-          </div>
-          <div className="bg-surface-elevated mb-2 h-5 w-3/4 rounded"></div>
-          <div className="space-y-2">
-            <div className="bg-surface-elevated h-10 rounded"></div>
-            <div className="bg-surface-elevated h-10 rounded"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const handleFollow = () => {
+    toast.info('Follow feature coming soon!');
+    // TODO: Implement follow logic
+    console.log('Follow user');
+  };
 
-  const CommentSkeleton = () => (
-    <div className="border-border-subtle animate-pulse border-b p-4">
-      <div className="flex space-x-3">
-        <div className="bg-surface-elevated h-8 w-8 flex-shrink-0 rounded-full"></div>
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="bg-surface-elevated h-4 w-20 rounded"></div>
-            <div className="bg-surface-elevated h-4 w-12 rounded"></div>
-          </div>
-          <div className="bg-surface-elevated mb-2 h-4 w-full rounded"></div>
-          <div className="bg-surface-elevated h-4 w-2/3 rounded"></div>
-        </div>
-      </div>
-    </div>
-  );
+  // const handleSubscribe = () => {
+  //   // TODO: Implement subscribe logic (coming soon)
+  //   console.log('Subscribe to user - Coming soon');
+  // };
 
-  // Comment component
-  const CommentItem = ({
-    comment,
-    isLast,
-  }: {
-    comment: CommentSearchResultOut;
-    isLast: boolean;
-  }) => (
-    <div
-      ref={isLast ? lastCommentElementRef : null}
-      className="border-border-subtle hover:bg-surface-elevated/50 border-b p-4 transition-colors"
-    >
-      <div className="flex space-x-3">
-        <div className="bg-primary text-background flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-medium">
-          {comment.author_info.display_name.charAt(0).toUpperCase()}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
-            <span className="text-text font-medium">{comment.author_info.display_name}</span>
-            <span className="text-text-secondary text-sm">@{comment.author_info.username}</span>
-            <span className="text-text-muted">·</span>
-            <span className="text-text-secondary text-sm">{formatDate(comment.created_at)}</span>
-          </div>
-          <p className="text-text mb-2 leading-relaxed">{comment.content}</p>
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${profile?.display_name || profile?.username}'s Profile`,
+          text:
+            profile?.headline ||
+            `Check out ${profile?.display_name || profile?.username}'s profile`,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href);
+      // TODO: Show toast notification
+    }
+  };
 
-          {/* Show poll context if available */}
-          {comment.poll_content && (
-            <div className="border-border bg-surface mt-2 rounded-md border p-3">
-              <div className="text-text-secondary mb-1 text-xs">Commented on poll:</div>
-              <div className="text-text text-sm font-medium">{comment.poll_content.title}</div>
-              <div className="text-text-secondary text-xs">
-                by @{comment.poll_content.author_info.username} • {comment.poll_content.total_votes}{' '}
-                votes
+  if (profileLoading || servicesLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto max-w-md">
+          <div className="animate-pulse">
+            <div className="mb-2 h-16 bg-green-600"></div>
+            <div className="bg-white">
+              <div className="h-48 bg-gray-200"></div>
+              <div className="p-6">
+                <div className="mb-4 h-6 rounded bg-gray-200"></div>
+                <div className="mb-2 h-4 rounded bg-gray-200"></div>
+                <div className="h-4 rounded bg-gray-200"></div>
               </div>
             </div>
-          )}
-
-          <div className="text-text-muted mt-2 flex items-center gap-4 text-xs">
-            <span>{comment.like_count} likes</span>
-            <span>{comment.reply_count} replies</span>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (profileLoading) {
-    return (
-      <div className="bg-background min-h-screen">
-        <div className="mx-auto max-w-2xl">
-          <ProfileSkeleton />
         </div>
       </div>
     );
@@ -372,277 +195,299 @@ const ProfilePage = () => {
 
   if (profileError || !profile) {
     return (
-      <div className="bg-background flex min-h-screen items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h2 className="text-text mb-2 text-xl font-bold">Profile not found</h2>
-          <p className="text-text-secondary">The profile you're looking for doesn't exist.</p>
+          <h2 className="mb-2 text-xl font-bold text-gray-900">Profile not found</h2>
+          <p className="text-gray-600">The profile you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
 
+  const socialLinks: SocialLinks = {
+    linkedin: profile.linkedin ?? undefined,
+    twitter: profile.twitter ?? undefined,
+    substack: profile.substack ?? undefined,
+    instagram: profile.instagram ?? undefined,
+    youtube: profile.youtube ?? undefined,
+  };
+
   return (
-    <div className="bg-background min-h-screen">
-      <div className="mx-auto max-w-2xl">
-        {/* Banner */}
-        <div className="from-primary to-secondary h-32 overflow-hidden bg-gradient-to-r">
-          {profile.banner && (
-            <Image
-              src={profile.banner}
-              alt="Profile banner"
-              className="h-full w-full object-cover"
-              width={800}
-              height={128}
-            />
-          )}
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-md">
+        {/* WhatsApp-style Header */}
+        <div className="flex items-center gap-4 bg-green-600 px-4 py-4 text-white shadow-sm">
+          <button
+            onClick={() => router.back()}
+            className="rounded-full p-2 transition-colors hover:bg-white/10"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-lg font-medium">{profile.display_name || profile.username}</h1>
+            <p className="text-sm opacity-90">@{profile.username}</p>
+          </div>
+          <button
+            onClick={handleShare}
+            className="rounded-full p-2 transition-colors hover:bg-white/10"
+          >
+            <Share2 size={20} />
+          </button>
         </div>
 
-        {/* Profile Info */}
-        <div className="p-4 pb-0">
-          {/* Avatar and Edit Button Row */}
-          <div className="mb-4 flex items-start justify-between">
+        {/* Profile Card */}
+        <div className="mx-2 mt-2 rounded-lg bg-white shadow-sm">
+          {/* Banner */}
+          <div className="relative h-40 overflow-hidden rounded-t-lg">
+            {profile.banner ? (
+              <Image
+                src={profile.banner}
+                alt="Banner"
+                className="h-full w-full object-cover"
+                width={400}
+                height={160}
+              />
+            ) : (
+              <div className="h-full w-full bg-gradient-to-br from-green-400 to-blue-500"></div>
+            )}
+          </div>
+
+          {/* Profile Info */}
+          <div className="relative px-4 pb-6">
             {/* Avatar */}
-            <div className="relative -mt-10">
-              <div className="bg-background border-background h-20 w-20 rounded-full border-2 p-1">
+            <div className="absolute -top-24 left-4">
+              <div className="h-24 w-24 rounded-full border-4 border-white bg-white">
                 {profile.avatar ? (
                   <Image
                     src={profile.avatar}
                     alt={profile.display_name}
                     className="h-full w-full rounded-full object-cover"
-                    width={80}
-                    height={80}
+                    width={96}
+                    height={96}
                   />
                 ) : (
-                  <div className="from-primary to-secondary text-background flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br text-xl font-bold">
-                    {profile.display_name.charAt(0).toUpperCase()}
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-blue-500 text-2xl font-bold text-white">
+                    {(profile.display_name || profile.username).charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Edit Button for Owner */}
-            {isOwner && (
-              <button
-                onClick={() => router.push('/account/edit-profile')}
-                className="border-border bg-surface text-text hover:bg-surface-elevated flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
-              >
-                <Edit3 size={14} />
-                <span className="hidden sm:inline">Edit Profile</span>
-                <span className="sm:hidden">Edit</span>
-              </button>
-            )}
-          </div>
-
-          {/* Profile Details */}
-          <div className="mb-4">
-            <h1 className="text-text mb-1 text-xl font-bold">{profile.display_name}</h1>
-            <p className="text-text-secondary mb-3">@{profile.username}</p>
-
-            <div className="text-text-muted mb-4 flex items-center gap-2 text-xs">
-              <Calendar size={14} />
-              <span>Joined {formatDate(profile.created_at)}</span>
-              {profile.is_email_verified && (
-                <>
-                  <span>•</span>
-                  <Mail size={14} />
-                  <span>Verified</span>
-                </>
-              )}
-            </div>
-
-            {/* Aura Stats */}
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1">
-                <Star size={14} className="text-warning" />
-                <span className="font-medium">{formatNumber(profile.total_aura)}</span>
-                <span className="text-text-secondary">Total Aura</span>
+            {/* Profile Details */}
+            <div className="mt-16">
+              <div className="mb-3">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {profile.display_name || profile.username}
+                </h2>
+                <p className="text-gray-600">@{profile.username}</p>
               </div>
 
-              {/* Only show detailed aura breakdown to owner */}
-              {isOwner && (
-                <>
-                  <div className="flex items-center gap-1">
-                    <BarChart3 size={14} className="text-primary" />
-                    <span className="font-medium">{formatNumber(profile.aura_polls)}</span>
-                    <span className="text-text-secondary">Poll Aura</span>
+              {profile.headline && (
+                <div className="mb-3">
+                  <p className="font-medium text-gray-800">{profile.headline}</p>
+                </div>
+              )}
+
+              {profile.about && (
+                <div className="mb-3">
+                  <p className="text-sm leading-relaxed text-gray-700">{profile.about}</p>
+                </div>
+              )}
+
+              {/* Member since */}
+              <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+                <Calendar size={14} />
+                <span>Member since {formatDate(profile.created_at)}</span>
+              </div>
+
+              {/* Social Links */}
+              {Object.entries(socialLinks).some(([, value]) => value) && (
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(socialLinks).map(([platform, value]) => {
+                      if (!value) return null;
+                      return (
+                        <a
+                          key={platform}
+                          href={formatSocialUrl(platform as keyof SocialLinks, value)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 rounded-full border border-green-200 px-3 py-1.5 text-green-600 transition-colors hover:bg-green-50"
+                        >
+                          {getSocialIcon(platform as keyof SocialLinks)}
+                          <span className="text-sm font-medium capitalize">{platform}</span>
+                        </a>
+                      );
+                    })}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Users size={14} className="text-success" />
-                    <span className="font-medium">{formatNumber(profile.aura_comments)}</span>
-                    <span className="text-text-secondary">Comment Aura</span>
-                  </div>
-                </>
+                </div>
               )}
             </div>
           </div>
+        </div>
 
-          {/* Tabs */}
-          <div className="border-border-subtle border-b">
-            <nav className="flex space-x-8">
-              <button
-                onClick={() => handleTabChange('polls')}
-                className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'polls'
-                    ? 'border-primary text-primary'
-                    : 'text-text-secondary hover:border-border hover:text-text border-transparent'
-                }`}
-              >
-                Polls
-              </button>
-              <button
-                onClick={() => handleTabChange('comments')}
-                className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'comments'
-                    ? 'border-primary text-primary'
-                    : 'text-text-secondary hover:border-border hover:text-text border-transparent'
-                }`}
-              >
-                Comments
-              </button>
-            </nav>
+        {/* Follow, Subscribe and Share Row - Only show when hasMainServices */}
+        {hasMainServices && (
+          <div className="mx-2 mt-2 grid grid-cols-2 gap-2">
+            <button
+              onClick={handleFollow}
+              className="flex items-center justify-center gap-2 rounded-lg bg-green-600 py-3 text-white transition-colors hover:bg-green-700"
+            >
+              <UserPlus size={18} />
+              <span className="font-medium">Follow</span>
+            </button>
+            {/* <button
+              onClick={handleSubscribe}
+              className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-white transition-colors hover:bg-blue-700"
+            >
+              <Bell size={18} />
+              <span className="font-medium">Subscribe</span>
+            </button> */}
+            <button
+              onClick={handleShare}
+              className="flex items-center justify-center gap-2 rounded-lg bg-gray-100 py-3 text-gray-700 transition-colors hover:bg-gray-200"
+            >
+              <Share2 size={18} />
+              <span className="font-medium">Share</span>
+            </button>
           </div>
-        </div>
+        )}
 
-        {/* Tab Content */}
-        <div className="min-h-[400px]">
-          {activeTab === 'polls' && (
-            <div>
-              {/* Error State */}
-              {pollsError && !pollsLoading && (
-                <div className="p-6 text-center">
-                  <p className="text-error">Error loading polls. Please try again.</p>
-                </div>
-              )}
-
-              {/* Empty State */}
-              {!pollsError &&
-                !pollsLoading &&
-                polls.length === 0 &&
-                pollsPage === 1 &&
-                pollsData && (
-                  <div className="p-12 text-center">
-                    <div className="text-text-muted mb-4">
-                      <BarChart3 size={48} className="mx-auto" />
-                    </div>
-                    <h3 className="text-text mb-2 text-base font-medium">No polls yet</h3>
-                    <p className="text-text-secondary text-sm">
-                      {isOwner
-                        ? "You haven't created any polls yet."
-                        : `${profile.display_name} hasn't created any polls yet.`}
-                    </p>
+        {/* Main Services Row (DM, Audio, Video, Live Chat) */}
+        {hasMainServices && (
+          <div className="mx-2 mt-2 rounded-lg bg-white p-4 shadow-sm">
+            <div className="grid grid-cols-2 gap-3">
+              {/* DM */}
+              {organizedServices.dm && (
+                <button
+                  onClick={() => handleServiceAction(organizedServices.dm, 'dm')}
+                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50"
+                >
+                  <div className="rounded-full bg-blue-100 p-2 text-blue-600">
+                    <MessageCircle size={20} />
                   </div>
-                )}
-
-              {/* Polls List */}
-              {polls.length > 0 && (
-                <div>
-                  {polls.map((poll, index) => (
-                    <PollWithStatus
-                      key={poll.id}
-                      poll={poll}
-                      isLastPoll={index === polls.length - 1}
-                      lastPollElementCallback={
-                        index === polls.length - 1 ? lastPollElementRef : undefined
-                      }
-                      onDelete={handlePollDelete}
-                    />
-                  ))}
-                </div>
+                  <span className="text-sm font-medium text-gray-900">Message</span>
+                  <span className="text-xs font-medium text-green-600">
+                    {organizedServices.dm.price === 0
+                      ? 'Free'
+                      : `${organizedServices.dm.price} credits`}
+                  </span>
+                </button>
               )}
 
-              {/* Loading States */}
-              {pollsLoading && pollsPage === 1 && polls.length === 0 && (
-                <div>
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <PollSkeleton key={index} />
-                  ))}
-                </div>
+              {/* Audio Call */}
+              {organizedServices.audio_call && (
+                <button
+                  onClick={() => handleServiceAction(organizedServices.audio_call, 'audio')}
+                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50"
+                >
+                  <div className="rounded-full bg-green-100 p-2 text-green-600">
+                    <Phone size={20} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">Audio Call</span>
+                  <span className="text-xs font-medium text-green-600">
+                    {organizedServices.audio_call.price === 0
+                      ? 'Free'
+                      : `${organizedServices.audio_call.price} credits`}
+                  </span>
+                </button>
               )}
 
-              {pollsLoading && pollsPage > 1 && (
-                <div className="py-4">
-                  <PollSkeleton />
-                </div>
+              {/* Video Call */}
+              {organizedServices.video_call && (
+                <button
+                  onClick={() => handleServiceAction(organizedServices.video_call, 'video')}
+                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50"
+                >
+                  <div className="rounded-full bg-purple-100 p-2 text-purple-600">
+                    <Video size={20} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">Video Call</span>
+                  <span className="text-xs font-medium text-green-600">
+                    {organizedServices.video_call.price === 0
+                      ? 'Free'
+                      : `${organizedServices.video_call.price} credits`}
+                  </span>
+                </button>
               )}
 
-              {/* End of Results */}
-              {!hasNextPollsPage && polls.length > 0 && (
-                <div className="text-text-muted py-8 text-center">
-                  <p className="text-sm">You've seen all polls! 🎉</p>
-                </div>
+              {/* Live Chat */}
+              {organizedServices.live_chat && (
+                <button
+                  onClick={() => handleServiceAction(organizedServices.live_chat, 'live_chat')}
+                  className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50"
+                >
+                  <div className="rounded-full bg-orange-100 p-2 text-orange-600">
+                    <MessageCircle size={20} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">Live Chat</span>
+                  <span className="text-xs font-medium text-green-600">
+                    {organizedServices.live_chat.price === 0
+                      ? 'Free'
+                      : `${organizedServices.live_chat.price} credits`}
+                  </span>
+                </button>
               )}
             </div>
-          )}
+          </div>
+        )}
 
-          {activeTab === 'comments' && (
-            <div>
-              {/* Error State */}
-              {commentsError && !commentsLoading && (
-                <div className="p-6 text-center">
-                  <p className="text-error">Error loading comments. Please try again.</p>
-                </div>
-              )}
-
-              {/* Empty State */}
-              {!commentsError &&
-                !commentsLoading &&
-                comments.length === 0 &&
-                commentsPage === 1 &&
-                commentsData && (
-                  <div className="p-12 text-center">
-                    <div className="text-text-muted mb-4">
-                      <Users size={48} className="mx-auto" />
+        {/* Custom Services List */}
+        {hasCustomServices && (
+          <div className="mx-2 mt-2 rounded-lg bg-white p-4 shadow-sm">
+            <h3 className="mb-3 font-semibold text-gray-900">Custom Services</h3>
+            <div className="space-y-3">
+              {organizedServices.custom.map((service) => (
+                <button
+                  key={service.id}
+                  onClick={() => handleServiceAction(service, 'custom')}
+                  className="w-full rounded-lg border border-gray-200 p-3 text-left transition-colors hover:bg-gray-50"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 rounded-full bg-gray-100 p-2 text-gray-600">
+                      <FileText size={18} />
                     </div>
-                    <h3 className="text-text mb-2 text-base font-medium">No comments yet</h3>
-                    <p className="text-text-secondary text-sm">
-                      {isOwner
-                        ? "You haven't commented on any polls yet."
-                        : `${profile.display_name} hasn't commented on any polls yet.`}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-medium text-gray-900">{service.name}</h4>
+                      <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-gray-600">
+                        {service.description}
+                      </p>
+                      <div className="mt-2 flex items-center gap-3 text-xs">
+                        <span className="font-medium text-green-600">
+                          {service.price === 0 ? 'Free' : `${service.price} credits`}
+                        </span>
+                        {service.max_messages_a_day && (
+                          <span className="text-gray-500">
+                            Max {service.max_messages_a_day}/day
+                          </span>
+                        )}
+                        {service.reply_time && (
+                          <span className="text-gray-500">{service.reply_time}d delivery</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-
-              {/* Comments List */}
-              {comments.length > 0 && (
-                <div>
-                  {comments.map((comment, index) => (
-                    <CommentItem
-                      key={comment.id}
-                      comment={comment}
-                      isLast={index === comments.length - 1}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Loading States */}
-              {commentsLoading && commentsPage === 1 && comments.length === 0 && (
-                <div>
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <CommentSkeleton key={index} />
-                  ))}
-                </div>
-              )}
-
-              {commentsLoading && commentsPage > 1 && (
-                <div className="py-4">
-                  <CommentSkeleton />
-                </div>
-              )}
-
-              {/* End of Results */}
-              {!hasNextCommentsPage && comments.length > 0 && (
-                <div className="text-text-muted py-8 text-center">
-                  <p className="text-sm">You've seen all comments! 🎉</p>
-                </div>
-              )}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* No Services Message */}
+        {!hasMainServices && !hasCustomServices && (
+          <div className="mx-2 mt-2 rounded-lg bg-white p-6 text-center shadow-sm">
+            <div className="mb-2 text-gray-400">
+              <MessageCircle size={32} className="mx-auto" />
+            </div>
+            <p className="text-sm text-gray-600">No services available yet</p>
+          </div>
+        )}
+
+        {/* Bottom spacing */}
+        <div className="h-4"></div>
       </div>
-      <BottomNavigation />
     </div>
   );
 };
 
-export default ProfilePage;
+export default PublicProfilePage;

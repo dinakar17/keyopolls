@@ -13,6 +13,8 @@ import type { ProfileDetailsSchemaInstagram } from './profileDetailsSchemaInstag
 import type { ProfileDetailsSchemaIsOwner } from './profileDetailsSchemaIsOwner';
 import type { ProfileDetailsSchemaLinkedin } from './profileDetailsSchemaLinkedin';
 import type { ProfileDetailsSchemaSubstack } from './profileDetailsSchemaSubstack';
+import type { ProfileDetailsSchemaTotalCredits } from './profileDetailsSchemaTotalCredits';
+import type { ProfileDetailsSchemaTotalEarned } from './profileDetailsSchemaTotalEarned';
 import type { ProfileDetailsSchemaTwitter } from './profileDetailsSchemaTwitter';
 import type { ProfileDetailsSchemaYoutube } from './profileDetailsSchemaYoutube';
 
@@ -35,5 +37,7 @@ export interface ProfileDetailsSchema {
   total_aura: number;
   is_email_verified: boolean;
   created_at: string;
+  total_credits?: ProfileDetailsSchemaTotalCredits;
+  total_earned?: ProfileDetailsSchemaTotalEarned;
   is_owner?: ProfileDetailsSchemaIsOwner;
 }

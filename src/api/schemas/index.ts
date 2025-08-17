@@ -402,6 +402,8 @@ export * from './profileDetailsSchemaInstagram';
 export * from './profileDetailsSchemaIsOwner';
 export * from './profileDetailsSchemaLinkedin';
 export * from './profileDetailsSchemaSubstack';
+export * from './profileDetailsSchemaTotalCredits';
+export * from './profileDetailsSchemaTotalEarned';
 export * from './profileDetailsSchemaTwitter';
 export * from './profileDetailsSchemaYoutube';
 export * from './profileUpdateSchema';

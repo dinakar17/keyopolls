@@ -19,9 +19,8 @@ import MessageList from './MessageList';
 const ChatDetailPage = () => {
   const { chatId } = useParams();
   const router = useRouter();
-  const { accessToken } = useProfileStore();
+  const { accessToken, profileData } = useProfileStore();
 
-  const [showMentorInfo, setShowMentorInfo] = useState(false);
   const [showComingSoonPopup, setShowComingSoonPopup] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -61,6 +60,9 @@ const ChatDetailPage = () => {
     }
   );
 
+  // Check if current user is a mentor
+  const isMentor = profileData?.id === mentorData?.data?.id;
+
   // Handle timeline data updates
   React.useEffect(() => {
     if (timelineData?.data?.timeline_items) {
@@ -87,6 +89,13 @@ const ChatDetailPage = () => {
     setAllTimelineItems([]);
     refetch();
   }, [refetch]);
+
+  // Navigate to profile page
+  const handleProfileClick = useCallback(() => {
+    if (mentorData?.data?.username) {
+      router.push(`/profiles/${mentorData.data.username}`);
+    }
+  }, [mentorData?.data?.username, router]);
 
   const getLastSeenText = (lastSeen: string | null | undefined): string => {
     if (!lastSeen) return '';
@@ -141,7 +150,7 @@ const ChatDetailPage = () => {
           </button>
 
           <button
-            onClick={() => setShowMentorInfo(true)}
+            onClick={handleProfileClick}
             className="hover:bg-surface-elevated flex items-center gap-3 rounded-lg p-2 transition-colors"
             disabled={mentorLoading}
           >
@@ -197,29 +206,32 @@ const ChatDetailPage = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => handleFeatureClick('voice')}
-            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors disabled:opacity-50"
-            disabled={mentorLoading}
-          >
-            <Phone className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => handleFeatureClick('video')}
-            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors disabled:opacity-50"
-            disabled={mentorLoading}
-          >
-            <Video className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => handleFeatureClick('live-chat')}
-            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors disabled:opacity-50"
-            disabled={mentorLoading}
-          >
-            <MessageSquare className="h-5 w-5" />
-          </button>
-        </div>
+        {/* Action buttons - only show for non-mentors */}
+        {!isMentor && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => handleFeatureClick('voice')}
+              className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors disabled:opacity-50"
+              disabled={mentorLoading}
+            >
+              <Phone className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => handleFeatureClick('video')}
+              className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors disabled:opacity-50"
+              disabled={mentorLoading}
+            >
+              <Video className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => handleFeatureClick('live-chat')}
+              className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-2 transition-colors disabled:opacity-50"
+              disabled={mentorLoading}
+            >
+              <MessageSquare className="h-5 w-5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Messages List with loading state */}
@@ -252,118 +264,6 @@ const ChatDetailPage = () => {
         mentorData={mentorData?.data}
         // disabled={isInitialLoading}
       />
-
-      {/* Mentor Info Modal */}
-      {showMentorInfo && !mentorLoading && (
-        <div className="bg-background/80 fixed inset-0 z-50 flex items-end justify-center backdrop-blur-sm">
-          <div className="bg-surface border-border max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-xl border-t shadow-xl">
-            {/* Header */}
-            <div className="border-border flex items-center justify-between border-b p-4">
-              <h2 className="text-text text-lg font-semibold">Mentor Info</h2>
-              <button
-                onClick={() => setShowMentorInfo(false)}
-                className="text-text-muted hover:text-text hover:bg-surface-elevated rounded-full p-1.5 transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Mentor Info Content */}
-            <div className="p-6">
-              {/* Avatar and Name */}
-              <div className="mb-6 text-center">
-                <div className="relative mx-auto mb-4 w-24">
-                  {mentorData?.data?.avatar ? (
-                    <Image
-                      src={mentorData.data.avatar}
-                      alt={mentorData.data.display_name}
-                      className="h-24 w-24 rounded-full object-cover"
-                      width={96}
-                      height={96}
-                    />
-                  ) : (
-                    <div className="bg-surface-elevated flex h-24 w-24 items-center justify-center rounded-full">
-                      <span className="text-text text-2xl font-medium">
-                        {mentorData?.data?.display_name?.charAt(0)?.toUpperCase() || 'M'}
-                      </span>
-                    </div>
-                  )}
-                  <div className="bg-warning border-surface absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2">
-                    <Crown className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-
-                <h3 className="text-text mb-1 text-xl font-semibold">
-                  {mentorData?.data?.display_name || 'Mentor'}
-                </h3>
-                <p className="text-text-secondary text-sm">
-                  @{mentorData?.data?.username || 'mentor'}
-                </p>
-
-                <div className="bg-warning/10 text-warning mt-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium">
-                  <Crown className="h-4 w-4" />
-                  Mentor
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="mb-6">
-                <h4 className="text-text mb-2 text-sm font-semibold">Status</h4>
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`h-2 w-2 rounded-full ${
-                      mentorData?.data?.is_online ? 'bg-success' : 'bg-text-secondary'
-                    }`}
-                  />
-                  <span className="text-text-secondary text-sm">
-                    {mentorData?.data?.is_online
-                      ? 'Online'
-                      : getLastSeenText(mentorData?.data?.last_seen)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="space-y-3">
-                <h4 className="text-text text-sm font-semibold">Quick Actions</h4>
-
-                <button
-                  onClick={() => {
-                    handleFeatureClick('voice');
-                    setShowMentorInfo(false);
-                  }}
-                  className="border-border bg-surface hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg border p-3 transition-colors"
-                >
-                  <Phone className="text-primary h-5 w-5" />
-                  <span className="text-text text-sm font-medium">Voice Call</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    handleFeatureClick('video');
-                    setShowMentorInfo(false);
-                  }}
-                  className="border-border bg-surface hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg border p-3 transition-colors"
-                >
-                  <Video className="text-primary h-5 w-5" />
-                  <span className="text-text text-sm font-medium">Video Call</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    handleFeatureClick('live-chat');
-                    setShowMentorInfo(false);
-                  }}
-                  className="border-border bg-surface hover:bg-surface-elevated flex w-full items-center gap-3 rounded-lg border p-3 transition-colors"
-                >
-                  <MessageSquare className="text-primary h-5 w-5" />
-                  <span className="text-text text-sm font-medium">Live Chat</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Coming Soon Popup */}
       {showComingSoonPopup && (

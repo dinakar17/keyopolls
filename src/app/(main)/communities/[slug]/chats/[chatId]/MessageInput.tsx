@@ -3,7 +3,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 
 import {
+  AlertCircle,
   Camera,
+  ChevronDown,
+  ChevronUp,
   Clock,
   FileText,
   Image as ImageIcon,
@@ -34,17 +37,20 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
   const { slug } = useParams<{ slug: string }>();
 
   const isMentor = profileData?.id === mentorData?.id;
+  const userCredits = profileData?.total_credits || 0;
 
   const [messageInput, setMessageInput] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
 
   // Scroll behavior state
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Service section collapse state
+  const [isServicesCollapsed, setIsServicesCollapsed] = useState(false);
 
   // Service selection states
   const [selectedService, setSelectedService] = useState<ServiceItemSchema | null>(null);
@@ -53,7 +59,6 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
   const messageInputRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch mentor's services (only for non-mentors)
   const { data: servicesData, isLoading: isLoadingServices } =
@@ -141,7 +146,10 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
         },
         onError: (error) => {
           console.error('Failed to send message:', error);
-          alert('Failed to send message. Please try again.');
+          // Extract error message from API response
+          const errorMessage =
+            error?.response?.data?.message || 'Failed to send message. Please try again.';
+          alert(errorMessage);
         },
       },
     });
@@ -153,27 +161,6 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
       messageInputRef.current.style.height = `${messageInputRef.current.scrollHeight}px`;
     }
   }, [messageInput]);
-
-  // Handle typing indicator
-  useEffect(() => {
-    if (messageInput.trim() && !isTyping) {
-      setIsTyping(true);
-    }
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-    }, 1000);
-
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, [messageInput, isTyping]);
 
   // Recording timer
   useEffect(() => {
@@ -218,10 +205,39 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
     return 'document';
   }, []);
 
+  // Check if user has enough credits for selected service
+  const hasEnoughCredits = useCallback(() => {
+    if (isMentor || !selectedService || selectedService.price === 0) {
+      return true;
+    }
+    return userCredits >= selectedService.price;
+  }, [isMentor, selectedService, userCredits]);
+
+  // Check if message can be sent
+  const canSendMessage = useCallback(() => {
+    if (isCreating) return false;
+    if (!messageInput.trim() && selectedFiles.length === 0) return false;
+    if (!isMentor && !hasEnoughCredits()) return false;
+    return true;
+  }, [isCreating, messageInput, selectedFiles, isMentor, hasEnoughCredits]);
+
   const handleSendMessage = useCallback(
     async (type: 'text' | 'image' | 'video' | 'audio', duration?: number) => {
-      if ((!messageInput.trim() && selectedFiles.length === 0 && type !== 'audio') || isCreating)
+      if (!canSendMessage() && type !== 'audio') return;
+
+      // Additional check for audio messages
+      if (
+        type === 'audio' &&
+        !isMentor &&
+        selectedService &&
+        selectedService.price > 0 &&
+        !hasEnoughCredits()
+      ) {
+        alert(
+          `Insufficient credits. You need ${selectedService.price} credits but only have ${userCredits}.`
+        );
         return;
+      }
 
       try {
         let messageData: CreateTimelineItemSchema;
@@ -266,11 +282,13 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
       selectedFiles,
       chatId,
       createTimelineItem,
-      isCreating,
+      canSendMessage,
       getFileType,
       formatAudioDuration,
       isMentor,
       selectedService,
+      hasEnoughCredits,
+      userCredits,
     ]
   );
 
@@ -278,10 +296,12 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        handleSendMessage('text');
+        if (canSendMessage()) {
+          handleSendMessage('text');
+        }
       }
     },
-    [handleSendMessage]
+    [handleSendMessage, canSendMessage]
   );
 
   const handleAttachment = useCallback(
@@ -376,6 +396,10 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
     }
   }, [selectedService]);
 
+  const toggleServicesCollapse = useCallback(() => {
+    setIsServicesCollapsed((prev) => !prev);
+  }, []);
+
   // Loading skeleton component for service cards
   const ServiceSkeleton = () => (
     <div
@@ -400,60 +424,117 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
       >
         {/* Service Selection (only for non-mentors) */}
         {!isMentor && (isLoadingServices || availableServices.length > 0) && (
-          <div className="border-border bg-surface-elevated border-t p-4">
-            <h4 className="text-text mb-3 text-sm font-medium">
-              {isLoadingServices ? (
-                <div className="h-4 w-24 animate-pulse rounded bg-gray-300"></div>
-              ) : (
-                'Select Service'
-              )}
-            </h4>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {isLoadingServices ? (
-                // Show 3 skeleton cards while loading
-                <>
-                  <ServiceSkeleton />
-                  <ServiceSkeleton />
-                  <ServiceSkeleton />
-                </>
-              ) : (
-                availableServices.map((service) => (
-                  <button
-                    key={service.id}
-                    onClick={() => handleServiceSelect(service)}
-                    className={`flex-shrink-0 rounded-lg border px-3 py-2 text-left transition-colors ${
-                      selectedService?.id === service.id
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-surface hover:bg-surface-elevated text-text'
-                    }`}
-                    style={{ minWidth: '200px', maxWidth: '240px' }}
-                  >
-                    <div className="mb-1 flex items-center gap-2">
-                      <span className="truncate text-sm font-medium">{service.name}</span>
-                      {service.service_type === 'dm' && (
-                        <MessageCircle className="h-3 w-3 flex-shrink-0" />
-                      )}
-                      {service.service_type === 'custom' && service.attachments_required && (
-                        <Upload className="h-3 w-3 flex-shrink-0" />
-                      )}
-                    </div>
-                    <div className="text-text-secondary flex items-center gap-3 text-xs">
-                      <div className="flex items-center gap-1">
-                        <span>{service.price === 0 ? 'Free' : `${service.price} credits`}</span>
-                      </div>
-                      {service.service_type === 'dm' && service.reply_time && (
-                        <div className="flex items-center gap-1">
-                          <Reply className="h-3 w-3" />
-                          <span>{service.reply_time}d</span>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                ))
-              )}
+          <div className="border-border bg-surface-elevated border-t">
+            {/* Services Header - Always visible */}
+            <div className="flex items-center justify-between p-4 pb-2">
+              <div className="flex items-center gap-2">
+                <h4 className="text-text text-sm font-medium">
+                  {isLoadingServices ? (
+                    <div className="h-4 w-24 animate-pulse rounded bg-gray-300"></div>
+                  ) : (
+                    'Select Service'
+                  )}
+                </h4>
+                {!isLoadingServices && selectedService && (
+                  <span className="text-text-secondary text-xs">({selectedService.name})</span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {!isLoadingServices && (
+                  <div className="text-text-secondary text-xs">Credits: {userCredits}</div>
+                )}
+                <button
+                  onClick={toggleServicesCollapse}
+                  className="text-text-secondary hover:text-text rounded-full p-1 transition-colors"
+                  aria-label={isServicesCollapsed ? 'Expand services' : 'Collapse services'}
+                >
+                  {isServicesCollapsed ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronUp className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Collapsible Services Content */}
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                isServicesCollapsed ? 'max-h-0' : 'max-h-96'
+              }`}
+            >
+              <div className="px-4 pb-4">
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {isLoadingServices ? (
+                    // Show 3 skeleton cards while loading
+                    <>
+                      <ServiceSkeleton />
+                      <ServiceSkeleton />
+                      <ServiceSkeleton />
+                    </>
+                  ) : (
+                    availableServices.map((service) => {
+                      const canAfford = userCredits >= service.price || service.price === 0;
+                      return (
+                        <button
+                          key={service.id}
+                          onClick={() => handleServiceSelect(service)}
+                          className={`flex-shrink-0 rounded-lg border px-3 py-2 text-left transition-colors ${
+                            selectedService?.id === service.id
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : canAfford
+                                ? 'border-border bg-surface hover:bg-surface-elevated text-text'
+                                : 'border-border bg-surface hover:bg-surface-elevated text-text-muted opacity-75'
+                          }`}
+                          style={{ minWidth: '200px', maxWidth: '240px' }}
+                        >
+                          <div className="mb-1 flex items-center gap-2">
+                            <span className="truncate text-sm font-medium">{service.name}</span>
+                            {service.service_type === 'dm' && (
+                              <MessageCircle className="h-3 w-3 flex-shrink-0" />
+                            )}
+                            {service.service_type === 'custom' && service.attachments_required && (
+                              <Upload className="h-3 w-3 flex-shrink-0" />
+                            )}
+                            {!canAfford && (
+                              <AlertCircle className="text-error h-3 w-3 flex-shrink-0" />
+                            )}
+                          </div>
+                          <div className="text-text-secondary flex items-center gap-3 text-xs">
+                            <div className="flex items-center gap-1">
+                              <span className={!canAfford ? 'text-error font-medium' : ''}>
+                                {service.price === 0 ? 'Free' : `${service.price} credits`}
+                              </span>
+                            </div>
+                            {service.service_type === 'dm' && service.reply_time && (
+                              <div className="flex items-center gap-1">
+                                <Reply className="h-3 w-3" />
+                                <span>{service.reply_time}d</span>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}
+
+        {/* Credit warning for non-mentors */}
+        {/* {!isMentor && selectedService && selectedService.price > 0 && !hasEnoughCredits() && (
+          <div className="border-error/20 bg-error/10 border-t p-3">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="text-error h-4 w-4 flex-shrink-0" />
+              <span className="text-error text-sm">
+                Insufficient credits. You need {selectedService.price} credits but only have{' '}
+                {userCredits}.
+              </span>
+            </div>
+          </div>
+        )} */}
 
         <div className="border-border bg-surface border-t p-4">
           {/* File previews */}
@@ -551,8 +632,12 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
             {messageInput.trim() || selectedFiles.length > 0 ? (
               <button
                 onClick={() => handleSendMessage('text')}
-                disabled={isCreating}
-                className="bg-primary hover:bg-primary/90 flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors disabled:opacity-50"
+                disabled={!canSendMessage()}
+                className={`flex h-11 w-11 items-center justify-center rounded-full text-white transition-colors ${
+                  canSendMessage()
+                    ? 'bg-primary hover:bg-primary/90'
+                    : 'cursor-not-allowed bg-gray-400'
+                }`}
               >
                 {isCreating ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -603,9 +688,6 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
               </div>
             </div>
           )}
-
-          {/* Typing indicator */}
-          {isTyping && <div className="text-text-secondary mt-2 text-xs">You are typing...</div>}
         </div>
       </div>
 
@@ -667,6 +749,19 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
                     </p>
                   </div>
                 )}
+
+              {/* Insufficient credits warning */}
+              {!isMentor && selectedService.price > 0 && userCredits < selectedService.price && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <p className="text-sm text-red-800">
+                      Insufficient credits. You need {selectedService.price} credits but only have{' '}
+                      {userCredits}.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="border-border flex justify-end gap-2 border-t px-4 py-3">
