@@ -76,6 +76,7 @@ export * from './changeRoleRequestSchema';
 export * from './chatUserItemSchema';
 export * from './chatUserItemSchemaAvatar';
 export * from './chatUserItemSchemaChatId';
+export * from './chatUserItemSchemaHeadline';
 export * from './chatUserItemSchemaLastMessage';
 export * from './chatUserItemSchemaLastSeen';
 export * from './chatUsersFiltersSchema';

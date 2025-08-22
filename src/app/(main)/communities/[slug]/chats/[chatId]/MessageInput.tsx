@@ -50,7 +50,7 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
   const [lastScrollY, setLastScrollY] = useState(0);
 
   // Service section collapse state
-  const [isServicesCollapsed, setIsServicesCollapsed] = useState(false);
+  const [isServicesCollapsed, setIsServicesCollapsed] = useState(true);
 
   // Service selection states
   const [selectedService, setSelectedService] = useState<ServiceItemSchema | null>(null);
@@ -59,6 +59,9 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
   const messageInputRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Constants
+  const DM_CHARACTER_LIMIT = 280;
 
   // Fetch mentor's services (only for non-mentors)
   const { data: servicesData, isLoading: isLoadingServices } =
@@ -94,6 +97,14 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
       }
     }
   }, [availableServices, selectedService]);
+
+  // Check if current service is DM
+  const isDMService = selectedService?.service_type === 'dm';
+
+  // Get character count and remaining characters for DM
+  const characterCount = messageInput.length;
+  const remainingCharacters = isDMService ? DM_CHARACTER_LIMIT - characterCount : null;
+  const isOverLimit = isDMService && characterCount > DM_CHARACTER_LIMIT;
 
   // Scroll behavior effect
   useEffect(() => {
@@ -217,9 +228,31 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
   const canSendMessage = useCallback(() => {
     if (isCreating) return false;
     if (!messageInput.trim() && selectedFiles.length === 0) return false;
-    if (!isMentor && !hasEnoughCredits()) return false;
+
+    // For non-mentors, check credits and service availability
+    if (!isMentor) {
+      // If there are services available, ensure one is selected and affordable
+      if (availableServices.length > 0) {
+        if (!selectedService) return false;
+        if (!hasEnoughCredits()) return false;
+      }
+      // If no services available, allow basic messaging without service requirements
+    }
+
+    // Check character limit for DM services
+    if (isDMService && isOverLimit) return false;
     return true;
-  }, [isCreating, messageInput, selectedFiles, isMentor, hasEnoughCredits]);
+  }, [
+    isCreating,
+    messageInput,
+    selectedFiles,
+    isMentor,
+    availableServices,
+    selectedService,
+    hasEnoughCredits,
+    isDMService,
+    isOverLimit,
+  ]);
 
   const handleSendMessage = useCallback(
     async (type: 'text' | 'image' | 'video' | 'audio', duration?: number) => {
@@ -236,6 +269,12 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
         alert(
           `Insufficient credits. You need ${selectedService.price} credits but only have ${userCredits}.`
         );
+        return;
+      }
+
+      // Check character limit for DM services before sending
+      if (type !== 'audio' && isDMService && messageInput.length > DM_CHARACTER_LIMIT) {
+        alert(`Message is too long. DM messages cannot exceed ${DM_CHARACTER_LIMIT} characters.`);
         return;
       }
 
@@ -289,6 +328,7 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
       selectedService,
       hasEnoughCredits,
       userCredits,
+      isDMService,
     ]
   );
 
@@ -302,6 +342,23 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
       }
     },
     [handleSendMessage, canSendMessage]
+  );
+
+  // Handle message input change with character limit validation
+  const handleMessageInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value;
+
+      // For DM services, prevent typing beyond the limit
+      if (isDMService && value.length > DM_CHARACTER_LIMIT) {
+        // Optionally truncate or just return without updating
+        // This version prevents typing beyond the limit
+        return;
+      }
+
+      setMessageInput(value);
+    },
+    [isDMService]
   );
 
   const handleAttachment = useCallback(
@@ -412,7 +469,9 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
   const attachmentsAllowed =
     isMentor ||
     (selectedService?.service_type === 'custom' && selectedService?.attachments_required);
-  const audioAllowed = isMentor || selectedService?.service_type !== 'dm';
+
+  // For basic messaging when no services are available, allow attachments for mentors only
+  const audioAllowed = isMentor || (selectedService && selectedService?.service_type !== 'dm');
 
   return (
     <>
@@ -422,7 +481,7 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
           isVisible ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
-        {/* Service Selection (only for non-mentors) */}
+        {/* Service Selection (only for non-mentors with available services) */}
         {!isMentor && (isLoadingServices || availableServices.length > 0) && (
           <div className="border-border bg-surface-elevated border-t">
             {/* Services Header - Always visible */}
@@ -523,19 +582,6 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
           </div>
         )}
 
-        {/* Credit warning for non-mentors */}
-        {/* {!isMentor && selectedService && selectedService.price > 0 && !hasEnoughCredits() && (
-          <div className="border-error/20 bg-error/10 border-t p-3">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="text-error h-4 w-4 flex-shrink-0" />
-              <span className="text-error text-sm">
-                Insufficient credits. You need {selectedService.price} credits but only have{' '}
-                {userCredits}.
-              </span>
-            </div>
-          </div>
-        )} */}
-
         <div className="border-border bg-surface border-t p-4">
           {/* File previews */}
           {selectedFiles.length > 0 && (
@@ -615,10 +661,16 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
               <textarea
                 ref={messageInputRef}
                 value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
+                onChange={handleMessageInputChange}
                 onKeyPress={handleKeyPress}
-                placeholder="Type a message..."
-                className="text-text placeholder-text-muted w-full resize-none bg-transparent px-4 py-3 text-sm focus:outline-none"
+                placeholder={
+                  isDMService
+                    ? `Type a message... (${remainingCharacters} characters remaining)`
+                    : 'Type a message...'
+                }
+                className={`text-text placeholder-text-muted w-full resize-none bg-transparent px-4 py-3 text-sm focus:outline-none ${
+                  isOverLimit ? 'text-red-500' : ''
+                }`}
                 rows={1}
                 style={{
                   minHeight: '44px',
@@ -662,6 +714,24 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
               </div>
             )}
           </div>
+
+          {/* Character count indicator for DM services */}
+          {isDMService && messageInput.length > 0 && (
+            <div className="mt-2 flex justify-end">
+              <span
+                className={`text-xs ${
+                  isOverLimit
+                    ? 'font-medium text-red-500'
+                    : remainingCharacters !== null && remainingCharacters < 20
+                      ? 'font-medium text-yellow-600'
+                      : 'text-text-secondary'
+                }`}
+              >
+                {characterCount}/{DM_CHARACTER_LIMIT}
+                {isOverLimit && ' (over limit)'}
+              </span>
+            </div>
+          )}
 
           {/* Recording indicator */}
           {isRecording && (
@@ -735,7 +805,8 @@ const MessageInput = ({ chatId, onMessageSent, mentorData }: MessageInputProps) 
               {selectedService.service_type === 'dm' && (
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
                   <p className="text-sm text-blue-800">
-                    This is a direct message service. You can send text messages only.
+                    This is a direct message service. You can send text messages only (max 280
+                    characters).
                   </p>
                 </div>
               )}

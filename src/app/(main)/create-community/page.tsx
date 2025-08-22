@@ -23,10 +23,7 @@ import { useProfileStore } from '@/stores/useProfileStore';
 
 const communitySchema = z.object({
   name: z.string().min(1, 'Community name is required'),
-  description: z
-    .string()
-    .min(10, 'Description must be at least 10 characters')
-    .max(300, 'Description cannot exceed 300 characters'),
+  description: z.string().min(10, 'Description must be at least 10 characters'),
   community_type: z.enum(['public', 'private', 'restricted']),
   avatar: z.any().refine((file) => file !== null, 'Community avatar is required'),
   banner: z.any().optional(),
@@ -71,7 +68,7 @@ const CommunityCreateForm = () => {
       mutation: {
         onSuccess: (response) => {
           toast.success('Congratulations! Your community has been created successfully.');
-          router.push(`/communities/${response.data.slug}`);
+          router.push(`/communities/${response.data.slug}/chats`);
         },
         onError: (error) => {
           console.error('Error creating community:', error);

@@ -7,6 +7,7 @@
  */
 import type { ChatUserItemSchemaAvatar } from './chatUserItemSchemaAvatar';
 import type { ChatUserItemSchemaChatId } from './chatUserItemSchemaChatId';
+import type { ChatUserItemSchemaHeadline } from './chatUserItemSchemaHeadline';
 import type { ChatUserItemSchemaLastMessage } from './chatUserItemSchemaLastMessage';
 import type { ChatUserItemSchemaLastSeen } from './chatUserItemSchemaLastSeen';
 
@@ -14,6 +15,7 @@ export interface ChatUserItemSchema {
   user_id: number;
   username: string;
   display_name: string;
+  headline?: ChatUserItemSchemaHeadline;
   avatar?: ChatUserItemSchemaAvatar;
   is_online: boolean;
   last_seen?: ChatUserItemSchemaLastSeen;

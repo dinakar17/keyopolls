@@ -45,7 +45,8 @@ const AttachmentGallery = ({
   const [attachments, setAttachments] = useState<AttachmentData[]>([]);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Extract all attachments from timeline items
   const extractAttachments = useCallback(() => {
@@ -103,7 +104,7 @@ const AttachmentGallery = ({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (!isOpen) return;
+      if (!isOpen || isTransitioning) return;
 
       switch (e.key) {
         case 'Escape':
@@ -120,20 +121,22 @@ const AttachmentGallery = ({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isOpen, onClose]);
+  }, [isOpen, isTransitioning]);
 
   // Touch handlers for swipe
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (isTransitioning) return;
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (isTransitioning) return;
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    if (!touchStart || !touchEnd || isTransitioning) return;
 
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
@@ -147,11 +150,19 @@ const AttachmentGallery = ({
   };
 
   const goToPrevious = () => {
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
+    if (currentIndex > 0 && !isTransitioning) {
+      setIsTransitioning(true);
+      setCurrentIndex((prev) => prev - 1);
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
   };
 
   const goToNext = () => {
-    setCurrentIndex((prev) => Math.min(attachments.length - 1, prev + 1));
+    if (currentIndex < attachments.length - 1 && !isTransitioning) {
+      setIsTransitioning(true);
+      setCurrentIndex((prev) => prev + 1);
+      setTimeout(() => setIsTransitioning(false), 300);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -170,12 +181,63 @@ const AttachmentGallery = ({
     }
   };
 
+  const renderAttachmentContent = (attachment: AttachmentData, index: number) => {
+    const isImage = attachment.attachment_type === 'image';
+    const isVideo = attachment.attachment_type === 'video';
+    const isDocument = attachment.attachment_type === 'document';
+
+    return (
+      <div
+        key={attachment.id}
+        className="absolute inset-0 flex items-center justify-center p-4 pt-20 pb-20"
+        style={{
+          transform: `translateX(${(index - currentIndex) * 100}%)`,
+          transition: isTransitioning ? 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+        }}
+      >
+        {isImage && (
+          <Image
+            src={attachment.file_url}
+            alt={attachment.file_name}
+            className="max-h-full max-w-full object-contain"
+            width={800}
+            height={600}
+            priority={Math.abs(index - currentIndex) <= 1}
+          />
+        )}
+
+        {isVideo && (
+          <video
+            src={attachment.file_url}
+            className="max-h-full max-w-full"
+            controls
+            autoPlay={false}
+            preload={Math.abs(index - currentIndex) <= 1 ? 'metadata' : 'none'}
+          />
+        )}
+
+        {isDocument && (
+          <div className="flex max-w-md flex-col items-center rounded-lg bg-white/10 p-8 text-center">
+            <FileText className="mb-4 h-16 w-16 text-white" />
+            <h3 className="mb-2 text-lg font-medium text-white">{attachment.file_name}</h3>
+            <p className="mb-4 text-sm text-white/70">{formatFileSize(attachment.file_size)}</p>
+            <a
+              href={attachment.file_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-white/20 px-4 py-2 text-sm text-white transition-colors hover:bg-white/30"
+            >
+              Open Document
+            </a>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (!isOpen || attachments.length === 0) return null;
 
   const currentAttachment = attachments[currentIndex];
-  const isImage = currentAttachment?.attachment_type === 'image';
-  const isVideo = currentAttachment?.attachment_type === 'video';
-  const isDocument = currentAttachment?.attachment_type === 'document';
 
   return (
     <div className="fixed inset-0 z-50 bg-black">
@@ -218,9 +280,10 @@ const AttachmentGallery = ({
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Main content container */}
       <div
-        className="flex h-full items-center justify-center"
+        ref={containerRef}
+        className="relative h-full w-full overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -229,7 +292,8 @@ const AttachmentGallery = ({
         {currentIndex > 0 && (
           <button
             onClick={goToPrevious}
-            className="absolute left-4 z-10 rounded-full bg-black/50 p-3 text-white transition-colors hover:bg-black/70"
+            disabled={isTransitioning}
+            className="absolute top-1/2 left-4 z-20 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white transition-colors hover:bg-black/70 disabled:opacity-50"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
@@ -239,61 +303,32 @@ const AttachmentGallery = ({
         {currentIndex < attachments.length - 1 && (
           <button
             onClick={goToNext}
-            className="absolute right-4 z-10 rounded-full bg-black/50 p-3 text-white transition-colors hover:bg-black/70"
+            disabled={isTransitioning}
+            className="absolute top-1/2 right-4 z-20 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white transition-colors hover:bg-black/70 disabled:opacity-50"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
         )}
 
-        {/* Content based on type */}
-        <div className="flex h-full w-full items-center justify-center p-4 pt-20 pb-20">
-          {isImage && (
-            <Image
-              src={currentAttachment.file_url}
-              alt={currentAttachment.file_name}
-              className="max-h-full max-w-full object-contain"
-              width={800}
-              height={600}
-              priority
-            />
-          )}
+        {/* Render current and adjacent attachments for smooth sliding */}
+        {attachments.map((attachment, index) => {
+          // Only render current and adjacent items for performance
+          if (Math.abs(index - currentIndex) > 1) return null;
+          return renderAttachmentContent(attachment, index);
+        })}
+      </div>
 
-          {isVideo && (
-            <video
-              ref={videoRef}
-              src={currentAttachment.file_url}
-              className="max-h-full max-w-full"
-              controls
-              autoPlay={false}
-              preload="metadata"
-            />
-          )}
-
-          {isDocument && (
-            <div className="flex max-w-md flex-col items-center rounded-lg bg-white/10 p-8 text-center">
-              <FileText className="mb-4 h-16 w-16 text-white" />
-              <h3 className="mb-2 text-lg font-medium text-white">{currentAttachment.file_name}</h3>
-              <p className="mb-4 text-sm text-white/70">
-                {formatFileSize(currentAttachment.file_size)}
-              </p>
-              <a
-                href={currentAttachment.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg bg-white/20 px-4 py-2 text-sm text-white transition-colors hover:bg-white/30"
-              >
-                Open Document
-              </a>
-            </div>
-          )}
-        </div>
-        {/* Description */}
-        <div className="absolute right-0 bottom-20 left-0 z-20 flex justify-center">
-          <div className="max-w-2xl rounded-lg bg-black/70 px-6 py-4">
-            <p className="text-sm break-words text-white/70">
-              {currentAttachment.messageContent || 'No description available.'}
-            </p>
-          </div>
+      {/* Description */}
+      <div className="absolute right-0 bottom-20 left-0 z-20 flex justify-center">
+        <div
+          className="max-w-2xl rounded-lg bg-black/70 px-6 py-4 transition-opacity duration-300"
+          style={{
+            opacity: isTransitioning ? 0.5 : 1,
+          }}
+        >
+          <p className="text-sm break-words text-white/70">
+            {currentAttachment.messageContent || 'No description available.'}
+          </p>
         </div>
       </div>
 
@@ -306,7 +341,7 @@ const AttachmentGallery = ({
               return (
                 <div
                   key={actualIndex}
-                  className={`h-1 w-8 rounded-full transition-colors ${
+                  className={`h-1 w-8 rounded-full transition-all duration-300 ${
                     actualIndex === currentIndex ? 'bg-white' : 'bg-white/30'
                   }`}
                 />

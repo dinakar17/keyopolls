@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { Menu, MessageSquare, Mic, Target, Users, Video, Wallet, X } from 'lucide-react';
+import { Camera, FileText, Menu, MessageSquare, Mic, Target, Users, Wallet, X } from 'lucide-react';
 
 import { useKeyopollsTransactionsApiGetCreditsSummary } from '@/api/transactions/transactions';
 import SideBar from '@/components/common/SideBar';
@@ -97,6 +97,11 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
     router.push('/account/credits');
   };
 
+  // Handle referrals click
+  // const handleReferralsClick = () => {
+  //   router.push('/account/referrals');
+  // };
+
   return (
     <>
       {/* Combined Header */}
@@ -144,43 +149,56 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
                 onClick={handleOpenInfoModal}
               >
                 <div className="flex items-start space-x-3">
-                  <Image src="/logo.svg" alt="Pulse Logo" width={24} height={24} priority />
-                  <span className="text-primary text-lg font-bold">Pulse</span>
+                  <Image src="/logo.svg" alt="Apex Logo" width={24} height={24} priority />
+                  <span className="text-primary text-lg font-bold">Apex</span>
                 </div>
                 <p className="text-text-muted text-xs font-medium">
-                  A place you've always been looking for
+                  Learn from those who've lived it
                 </p>
               </div>
 
-              {/* Right side - Credits or Login */}
-              <div className="flex items-center">
+              {/* Right side - Referrals, Credits or Login */}
+              <div className="flex items-center space-x-3">
                 {userIsAuthenticated ? (
-                  // Show credits summary when authenticated
-                  <div
-                    className="flex cursor-pointer flex-col items-end text-right transition-opacity hover:opacity-80"
-                    onClick={handleCreditsClick}
-                  >
-                    {summaryLoading ? (
-                      <div className="h-4 w-12 animate-pulse rounded bg-gray-200" />
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-1">
-                          <Wallet className="text-text-secondary h-3 w-3" />
-                          {creditsSummary?.total_credits !== undefined && (
-                            <span className="text-text text-xs font-medium">
-                              {formatCredits(creditsSummary?.total_credits)} credits
-                            </span>
-                          )}
-                        </div>
-                        {creditsSummary?.total_earned !== undefined &&
-                          Number(creditsSummary.total_earned) > 0 && (
-                            <div className="text-text-secondary text-xs">
-                              Earned: {formatCredits(creditsSummary.total_earned)} credits
-                            </div>
-                          )}
-                      </>
-                    )}
-                  </div>
+                  <>
+                    {/* Referrals */}
+                    {/* <div
+                      className="flex cursor-pointer flex-col items-center text-center transition-opacity hover:opacity-80"
+                      onClick={handleReferralsClick}
+                    >
+                      <div className="flex items-center gap-1">
+                        <Gift className="text-text-secondary h-3 w-3" />
+                        <span className="text-text text-xs font-medium">Refer</span>
+                      </div>
+                    </div> */}
+
+                    {/* Credits */}
+                    <div
+                      className="flex cursor-pointer flex-col items-end text-right transition-opacity hover:opacity-80"
+                      onClick={handleCreditsClick}
+                    >
+                      {summaryLoading ? (
+                        <div className="h-4 w-12 animate-pulse rounded bg-gray-200" />
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-1">
+                            <Wallet className="text-text-secondary h-3 w-3" />
+                            {creditsSummary?.total_credits !== undefined && (
+                              <span className="text-text text-xs font-medium">
+                                {formatCredits(creditsSummary?.total_credits)} credits
+                              </span>
+                            )}
+                          </div>
+                          {creditsSummary?.total_earned !== undefined &&
+                            Number(creditsSummary.total_earned) > 0 && (
+                              <div className="text-text-secondary text-xs">
+                                Earned: {formatCredits(creditsSummary.total_earned)} credits
+                              </div>
+                            )}
+                        </>
+                      )}
+                    </div>
+                  </>
                 ) : (
                   // Show login link for unauthenticated users
                   <Link href="/auth">
@@ -195,13 +213,13 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
         </div>
       </header>
 
-      {/* Info Modal - Updated with new platform description */}
+      {/* Info Modal - Updated with Apex platform description */}
       {isInfoModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-background border-border w-full max-w-sm rounded-lg border shadow-lg">
             {/* Modal Header */}
             <div className="border-border-subtle flex items-center justify-between border-b p-4">
-              <h2 className="text-text text-lg font-semibold">Welcome to Pulse</h2>
+              <h2 className="text-text text-lg font-semibold">Welcome to Apex</h2>
               <button
                 onClick={handleCloseInfoModal}
                 className="text-text-muted hover:text-text rounded-full p-1 transition-colors"
@@ -212,16 +230,16 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
 
             {/* Modal Content - Updated platform description */}
             <div className="space-y-3 p-4">
-              {/* What is Pulse */}
+              {/* What is Apex */}
               <div className="mb-4 text-center">
                 <div className="bg-primary/10 mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full">
                   <Users size={16} className="text-primary" />
                 </div>
                 <h3 className="text-text text-sm font-medium">
-                  Connect with experienced professionals
+                  Connect with people who have real experience
                 </h3>
                 <p className="text-text-secondary text-xs">
-                  Guaranteed interaction with people who've been there and done that
+                  Get personalized advice and insights from those who've actually been there
                 </p>
               </div>
 
@@ -229,22 +247,32 @@ const CombinedHeader: React.FC<CombinedHeaderProps> = () => {
               <div className="space-y-2">
                 <div className="flex items-center space-x-3">
                   <MessageSquare size={14} className="flex-shrink-0 text-blue-600" />
-                  <span className="text-text-secondary text-xs">DMs & live chat with experts</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Mic size={14} className="flex-shrink-0 text-green-600" />
-                  <span className="text-text-secondary text-xs">1-on-1 audio & video calls</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Video size={14} className="flex-shrink-0 text-purple-600" />
                   <span className="text-text-secondary text-xs">
-                    Join webinars & group sessions
+                    1-on-1 DMs for personalized advice
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Target size={14} className="flex-shrink-0 text-orange-600" />
+                  <Mic size={14} className="flex-shrink-0 text-green-600" />
                   <span className="text-text-secondary text-xs">
-                    Find relevant people in your field
+                    Voice & video calls with real people
+                  </span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <FileText size={14} className="flex-shrink-0 text-purple-600" />
+                  <span className="text-text-secondary text-xs">
+                    Guides, articles, and shared experiences
+                  </span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Camera size={14} className="flex-shrink-0 text-orange-600" />
+                  <span className="text-text-secondary text-xs">
+                    Photos, videos, and real-world examples
+                  </span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Target size={14} className="flex-shrink-0 text-pink-600" />
+                  <span className="text-text-secondary text-xs">
+                    Find people with relevant experience
                   </span>
                 </div>
               </div>

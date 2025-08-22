@@ -5,18 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-import {
-  Check,
-  CheckCheck,
-  Info,
-  MessageCircle,
-  Phone,
-  Search,
-  User,
-  Users,
-  Video,
-  X,
-} from 'lucide-react';
+import { Check, CheckCheck, Info, MessageCircle, Search, User, Users, X } from 'lucide-react';
 
 import { useKeyopollsChatsApiGetChatUsers } from '@/api/chats/chats';
 import { ChatUserItemSchema } from '@/api/schemas';
@@ -220,9 +209,9 @@ const ChatsList = ({ communityId, communitySlug }: ChatsListProps) => {
   const handleInfoFromModal = useCallback(() => {
     if (selectedUser) {
       setShowAvatarModal(false);
-      router.push(`/communities/${communitySlug}/moderators/${selectedUser.username}`);
+      router.push(`/profiles/${selectedUser.username}`);
     }
-  }, [selectedUser, communitySlug, router]);
+  }, [selectedUser, router]);
 
   // Helper functions
   const formatTime = useCallback((date: Date | null) => {
@@ -244,7 +233,7 @@ const ChatsList = ({ communityId, communitySlug }: ChatsListProps) => {
 
   const getLastMessageText = useCallback(
     (user: ChatUserItemSchema) => {
-      if (!user.last_message) return 'Start a conversation';
+      if (!user.last_message) return user.headline ? `${user.headline}` : 'Start a conversation';
 
       const lastMessage = user.last_message;
       const prefix = lastMessage.sender_id !== user.user_id ? 'You: ' : '';
@@ -317,6 +306,8 @@ const ChatsList = ({ communityId, communitySlug }: ChatsListProps) => {
             <div className="mb-4 text-center">
               <h3 className="text-text text-lg font-semibold">{selectedUser.display_name}</h3>
               <p className="text-text-secondary text-sm">@{selectedUser.username}</p>
+              {/* Display the headline */}
+              <p className="text-text-secondary text-sm">{selectedUser.headline}</p>
             </div>
 
             {/* Action Buttons */}
@@ -428,7 +419,7 @@ const ChatsList = ({ communityId, communitySlug }: ChatsListProps) => {
                 ? `No conversations match "${searchQuery}".`
                 : activeFilter === 'unread'
                   ? 'All caught up! No unread messages.'
-                  : 'Start chatting with mentors and community members.'}
+                  : 'Soon you will be chatting with people who have been through what you want to.'}
             </p>
           </div>
         ) : (
@@ -470,7 +461,7 @@ const ChatsList = ({ communityId, communitySlug }: ChatsListProps) => {
                 >
                   <div className="mb-1 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-text truncate font-semibold">{user.username}</h3>
+                      <h3 className="text-text truncate font-semibold">{user.display_name}</h3>
                     </div>
                     <div className="flex items-center gap-1">
                       {getMessageStatusIcon(user)}
@@ -487,32 +478,8 @@ const ChatsList = ({ communityId, communitySlug }: ChatsListProps) => {
                       {getLastMessageText(user)}
                     </p>
                     <div className="flex items-center gap-2">
-                      {/* Quick action buttons */}
-                      {user.is_mentor && (
-                        <>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Handle voice call
-                            }}
-                            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-1.5 transition-colors"
-                          >
-                            <Phone className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Handle video call
-                            }}
-                            className="text-text-secondary hover:text-primary hover:bg-surface-elevated rounded-full p-1.5 transition-colors"
-                          >
-                            <Video className="h-4 w-4" />
-                          </button>
-                        </>
-                      )}
-
                       {/* Unread count */}
-                      {user.unread_count && user.unread_count > 0 && (
+                      {user.unread_count !== undefined && user.unread_count > 0 && (
                         <div className="bg-primary text-background flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium">
                           {user.unread_count > 99 ? '99+' : user.unread_count}
                         </div>

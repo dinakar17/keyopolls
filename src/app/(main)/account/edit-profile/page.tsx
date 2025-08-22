@@ -5,74 +5,120 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-import { Camera, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  Camera,
+  FileText,
+  Instagram,
+  Linkedin,
+  Mail,
+  Twitter,
+  Youtube,
+} from 'lucide-react';
 
+import { useKeyopollsProfileApiGeneralGetProfileInfo } from '@/api/profile-general/profile-general';
 import { useKeyopollsProfileApiGeneralEditProfileInfo } from '@/api/profile-general/profile-general';
 import toast from '@/components/ui/toast';
 import { useProfileStore } from '@/stores/useProfileStore';
+import { formatDate } from '@/utils';
 
-const EditProfile = () => {
+interface SocialLinks {
+  linkedin?: string;
+  twitter?: string;
+  substack?: string;
+  instagram?: string;
+  youtube?: string;
+}
+
+const ManageProfilePage = () => {
   const { accessToken, profileData, setProfileData } = useProfileStore();
   const router = useRouter();
 
+  // Always start in edit mode since this is an edit page
+  const [hasChanges, setHasChanges] = useState(false);
+
   // Form state
   const [displayName, setDisplayName] = useState('');
+  const [headline, setHeadline] = useState('');
   const [about, setAbout] = useState('');
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
   // Refs
-  const displayNameRef = useRef<HTMLTextAreaElement>(null);
-  const aboutRef = useRef<HTMLTextAreaElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch profile info
+  const {
+    data: profileInfo,
+    isLoading: profileLoading,
+    error: profileError,
+    refetch: refetchProfile,
+  } = useKeyopollsProfileApiGeneralGetProfileInfo(profileData?.username || '', {
+    request: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  });
+
+  const profile = profileInfo?.data;
+
   // Initialize form with profile data
   useEffect(() => {
-    if (profileData) {
-      setDisplayName(profileData.display_name || '');
-      setAbout(profileData.about || '');
-      setAvatarPreview(profileData.avatar || null);
-      setBannerPreview(profileData.banner || null);
+    if (profile) {
+      setDisplayName(profile.display_name || '');
+      setHeadline(profile.headline || '');
+      setAbout(profile.about || '');
+      setSocialLinks({
+        linkedin: profile.linkedin || '',
+        twitter: profile.twitter || '',
+        substack: profile.substack || '',
+        instagram: profile.instagram || '',
+        youtube: profile.youtube || '',
+      });
+      setAvatarPreview(profile.avatar || null);
+      setBannerPreview(profile.banner || null);
     }
-  }, [profileData]);
+  }, [profile]);
 
-  // Auto-resize textarea function
-  const autoResize = (element: HTMLTextAreaElement) => {
-    element.style.height = 'auto';
-    element.style.height = `${element.scrollHeight}px`;
-  };
-
-  // Handle textarea changes with auto-resize
-  const handleDisplayNameChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDisplayName(e.target.value);
-    autoResize(e.target);
-  };
-
-  const handleAboutChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setAbout(e.target.value);
-    autoResize(e.target);
-  };
-
-  // Auto-resize on content load
+  // Track changes to enable/disable save
   useEffect(() => {
-    if (displayNameRef.current) {
-      autoResize(displayNameRef.current);
-    }
-    if (aboutRef.current) {
-      autoResize(aboutRef.current);
-    }
-  }, [displayName, about]);
+    if (!profile) return;
 
-  // Handle file uploads
+    const hasTextChanges =
+      displayName !== (profile.display_name || '') ||
+      headline !== (profile.headline || '') ||
+      about !== (profile.about || '') ||
+      socialLinks.linkedin !== (profile.linkedin || '') ||
+      socialLinks.twitter !== (profile.twitter || '') ||
+      socialLinks.substack !== (profile.substack || '') ||
+      socialLinks.instagram !== (profile.instagram || '') ||
+      socialLinks.youtube !== (profile.youtube || '');
+
+    const hasImageChanges = !!(avatarFile || bannerFile);
+
+    setHasChanges(hasTextChanges || hasImageChanges);
+  }, [profile, displayName, headline, about, socialLinks, avatarFile, bannerFile]);
+
+  // Handle social links changes
+  const handleSocialLinkChange = (platform: keyof SocialLinks, value: string) => {
+    setSocialLinks((prev) => ({
+      ...prev,
+      [platform]: value,
+    }));
+  };
+
+  // Handle file uploads with immediate preview
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        // 5MB limit
-        toast.error('Avatar file size must be less than 5MB');
+        toast.error('Image must be less than 5MB');
         return;
       }
       setAvatarFile(file);
@@ -86,8 +132,7 @@ const EditProfile = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        // 10MB limit
-        toast.error('Banner file size must be less than 10MB');
+        toast.error('Image must be less than 10MB');
         return;
       }
       setBannerFile(file);
@@ -97,23 +142,7 @@ const EditProfile = () => {
     }
   };
 
-  // Remove image previews
-  const removeAvatar = () => {
-    setAvatarFile(null);
-    setAvatarPreview(null);
-    if (avatarInputRef.current) {
-      avatarInputRef.current.value = '';
-    }
-  };
-
-  const removeBanner = () => {
-    setBannerFile(null);
-    setBannerPreview(null);
-    if (bannerInputRef.current) {
-      bannerInputRef.current.value = '';
-    }
-  };
-
+  // Edit profile mutation
   const { mutate: editProfile, isPending } = useKeyopollsProfileApiGeneralEditProfileInfo({
     request: {
       headers: {
@@ -122,291 +151,292 @@ const EditProfile = () => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!displayName.trim()) {
-      toast.error('Display name is required');
-      return;
-    }
-
-    // Check if any changes were made
-    const hasChanges =
-      displayName.trim() !== (profileData?.display_name || '') ||
-      about.trim() !== (profileData?.about || '') ||
-      avatarFile !== null ||
-      bannerFile !== null;
-
-    if (!hasChanges) {
-      toast.info('No changes made');
-      return;
-    }
-
+  // Save all changes
+  const handleSaveChanges = () => {
     editProfile(
       {
         data: {
-          data: { display_name: displayName.trim(), about: about.trim() },
-          avatar: avatarFile || undefined,
-          banner: bannerFile || undefined,
+          data: {
+            display_name: displayName,
+            headline: headline,
+            about: about,
+            linkedin: socialLinks.linkedin,
+            twitter: socialLinks.twitter,
+            substack: socialLinks.substack,
+            instagram: socialLinks.instagram,
+            youtube: socialLinks.youtube,
+          },
+          ...(avatarFile && { avatar: avatarFile }),
+          ...(bannerFile && { banner: bannerFile }),
         },
       },
       {
         onSuccess: (response) => {
           toast.success('Profile updated successfully');
           setProfileData(response.data);
-          router.push(`/profiles/${profileData?.username}`);
+          setAvatarFile(null);
+          setBannerFile(null);
+          setHasChanges(false);
+          refetchProfile();
+          // Navigate back after successful save
+          router.back();
         },
         onError: (error) => {
-          console.error('Error updating profile:', error);
-          const errorMessage =
-            error.response?.data?.message || error.message || 'Failed to update profile';
+          const errorMessage = error.response?.data?.message || 'Failed to update profile';
           toast.error(errorMessage);
         },
       }
     );
   };
 
+  // Cancel editing - navigate back without saving
   const handleCancel = () => {
-    router.push(`/profile/${profileData?.username}`);
+    router.back();
   };
 
-  if (!profileData) {
+  // Get social link icon
+  const getSocialIcon = (platform: keyof SocialLinks) => {
+    const icons = {
+      linkedin: <Linkedin size={20} />,
+      twitter: <Twitter size={20} />,
+      substack: <FileText size={20} />,
+      instagram: <Instagram size={20} />,
+      youtube: <Youtube size={20} />,
+    };
+    return icons[platform];
+  };
+
+  if (profileLoading) {
+    return (
+      <div className="bg-background min-h-screen">
+        <div className="mx-auto max-w-md">
+          <div className="animate-pulse">
+            <div className="bg-surface-elevated mb-4 h-16"></div>
+            <div className="bg-surface-elevated h-64 rounded-t-xl"></div>
+            <div className="bg-surface rounded-b-xl p-6">
+              <div className="bg-surface-elevated mb-4 h-6 rounded"></div>
+              <div className="bg-surface-elevated mb-2 h-4 rounded"></div>
+              <div className="bg-surface-elevated h-4 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (profileError || !profile) {
     return (
       <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-text-secondary">Loading profile...</p>
+          <h2 className="text-text mb-2 text-xl font-bold">Profile not found</h2>
+          <p className="text-text-secondary">The profile you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-background min-h-screen py-8">
-      <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl">
-          {/* Header */}
-          <div className="border-border border-b px-8 py-6">
-            <h1 className="text-text text-2xl font-semibold">Edit Profile</h1>
-            <p className="text-text-secondary mt-1 text-sm">
-              Update your profile information and personalize your presence
-            </p>
+    <div className="bg-background min-h-screen">
+      <div className="mx-auto max-w-md">
+        {/* Header - Always in edit mode */}
+        <div className="bg-primary text-background flex items-center gap-4 px-4 py-4">
+          <button
+            onClick={handleCancel}
+            className="hover:bg-primary/20 rounded-full p-2 transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-lg font-medium">Edit Profile</h1>
+
+          {/* Save and Cancel buttons */}
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={handleCancel}
+              className="hover:bg-primary/20 rounded-full px-3 py-1 text-sm transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveChanges}
+              disabled={!hasChanges || isPending}
+              className="text-primary rounded-full bg-white px-3 py-1 text-sm font-medium transition-colors hover:bg-gray-100 disabled:opacity-50"
+            >
+              {isPending ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
+
+        {/* Profile Photo Section */}
+        <div className="bg-surface-elevated relative">
+          {/* Banner */}
+          <div className="relative h-48 overflow-hidden">
+            {bannerPreview ? (
+              <Image
+                src={bannerPreview}
+                alt="Banner"
+                className="h-full w-full object-cover"
+                width={400}
+                height={192}
+              />
+            ) : (
+              <div className="from-primary to-secondary h-full w-full bg-gradient-to-br"></div>
+            )}
+
+            <button
+              onClick={() => bannerInputRef.current?.click()}
+              className="absolute right-4 bottom-4 rounded-full bg-black/50 p-3 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
+            >
+              <Camera size={18} />
+            </button>
+
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleBannerChange}
+              className="hidden"
+            />
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-8">
-            <div className="space-y-8">
-              {/* Banner Upload */}
-              <div className="group">
-                <label className="text-text mb-3 block text-sm font-medium">
-                  Banner Image
-                  <span className="text-text-secondary ml-2 text-xs font-normal">(Optional)</span>
-                </label>
-                <div className="relative">
-                  <div className="border-border bg-surface-elevated hover:border-border-subtle relative h-32 w-full overflow-hidden rounded-xl border-2 border-dashed transition-all duration-200">
-                    {bannerPreview ? (
-                      <>
-                        <Image
-                          src={bannerPreview}
-                          alt="Banner preview"
-                          className="h-full w-full object-cover"
-                          width={800}
-                          height={128}
-                        />
-                        <button
-                          type="button"
-                          onClick={removeBanner}
-                          className="bg-text/50 text-background hover:bg-text/70 absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      </>
-                    ) : (
-                      <div className="flex h-full flex-col items-center justify-center">
-                        <Camera size={24} className="text-text-muted mb-2" />
-                        <p className="text-text-secondary text-sm">Click to upload banner</p>
-                        <p className="text-text-muted text-xs">Max 10MB</p>
-                      </div>
-                    )}
-                    <input
-                      ref={bannerInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBannerChange}
-                      disabled={isPending}
-                      className="absolute inset-0 cursor-pointer opacity-0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Avatar Upload */}
-              <div className="group">
-                <label className="text-text mb-3 block text-sm font-medium">
-                  Profile Picture
-                  <span className="text-text-secondary ml-2 text-xs font-normal">(Optional)</span>
-                </label>
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <div className="border-border bg-surface-elevated h-20 w-20 overflow-hidden rounded-full border-2">
-                      {avatarPreview ? (
-                        <Image
-                          src={avatarPreview}
-                          alt="Avatar preview"
-                          className="h-full w-full object-cover"
-                          width={80}
-                          height={80}
-                        />
-                      ) : (
-                        <div className="bg-primary text-background flex h-full w-full items-center justify-center text-xl font-bold">
-                          {displayName.charAt(0).toUpperCase() || 'U'}
-                        </div>
-                      )}
-                    </div>
-                    {avatarPreview && (
-                      <button
-                        type="button"
-                        onClick={removeAvatar}
-                        className="bg-error text-background absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full transition-colors hover:opacity-80"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                  <div>
-                    <input
-                      ref={avatarInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                      disabled={isPending}
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => avatarInputRef.current?.click()}
-                      disabled={isPending}
-                      className="border-border text-text hover:bg-surface-elevated flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <Camera size={16} />
-                      Change Picture
-                    </button>
-                    <p className="text-text-secondary mt-1 text-xs">Max 5MB</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Display Name Field */}
-              <div className="group">
-                <label className="text-text mb-3 block text-sm font-medium">
-                  Display Name <span className="text-error">*</span>
-                </label>
-                <div className="relative">
-                  <textarea
-                    ref={displayNameRef}
-                    value={displayName}
-                    onChange={handleDisplayNameChange}
-                    disabled={isPending}
-                    maxLength={50}
-                    rows={1}
-                    className="border-border text-text placeholder-text-muted focus:border-border disabled:bg-surface-elevated w-full resize-none border-0 border-b-2 bg-transparent px-0 py-3 text-lg font-medium transition-all duration-200 focus:ring-0 focus:outline-none disabled:cursor-not-allowed"
-                    placeholder="Enter your display name..."
-                    style={{
-                      lineHeight: '1.4',
-                      minHeight: '2.8rem',
-                      overflow: 'hidden',
-                    }}
-                    required
+          {/* Avatar */}
+          <div className="absolute -bottom-16 left-6">
+            <div className="relative">
+              <div className="bg-background border-background h-32 w-32 rounded-full border-4 p-1">
+                {avatarPreview ? (
+                  <Image
+                    src={avatarPreview}
+                    alt={profile.display_name}
+                    className="h-full w-full rounded-full object-cover"
+                    width={128}
+                    height={128}
                   />
-                  {/* Animated underline */}
-                  <div className="bg-primary absolute bottom-1.5 left-0 h-0.5 w-0 transition-all duration-300 group-focus-within:w-full"></div>
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="text-text-secondary text-xs">
-                    This is how others will see your name
-                  </div>
-                  <div
-                    className={`text-xs transition-colors ${
-                      displayName.length > 45 ? 'text-error' : 'text-text-muted'
-                    }`}
-                  >
-                    {displayName.length}/50
-                  </div>
-                </div>
-              </div>
-
-              {/* About Field */}
-              <div className="group">
-                <label className="text-text mb-3 block text-sm font-medium">
-                  About
-                  <span className="text-text-secondary ml-2 text-xs font-normal">(Optional)</span>
-                </label>
-                <div className="relative">
-                  <textarea
-                    ref={aboutRef}
-                    value={about}
-                    onChange={handleAboutChange}
-                    disabled={isPending}
-                    rows={4}
-                    maxLength={500}
-                    className="border-border text-text placeholder-text-muted focus:border-border disabled:bg-surface-elevated w-full resize-none border-0 border-b-2 bg-transparent px-0 py-3 text-base transition-all duration-200 focus:ring-0 focus:outline-none disabled:cursor-not-allowed"
-                    placeholder="Tell others about yourself..."
-                    style={{
-                      lineHeight: '1.5',
-                      minHeight: '6rem',
-                      overflow: 'hidden',
-                    }}
-                  />
-                  {/* Animated underline */}
-                  <div
-                    className="bg-primary absolute bottom-2 left-0 h-0.5 w-0 transition-all duration-300 group-focus-within:w-full"
-                    style={{ marginBottom: '-2px' }}
-                  ></div>
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="text-text-secondary text-xs">
-                    Share a bit about yourself with the community
-                  </div>
-                  <div
-                    className={`text-xs transition-colors ${
-                      about.length > 450 ? 'text-warning' : 'text-text-muted'
-                    }`}
-                  >
-                    {about.length}/500
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-10 flex gap-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={isPending}
-                className="border-border text-text hover:border-border-subtle hover:bg-surface-elevated flex-1 rounded-xl border-2 px-6 py-3 text-base font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isPending || !displayName.trim()}
-                className="bg-primary text-background focus:ring-primary/20 flex-1 rounded-xl px-6 py-3 text-base font-medium transition-all duration-200 hover:opacity-90 focus:ring-4 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isPending ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="border-background h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></div>
-                    Updating...
-                  </div>
                 ) : (
-                  'Update Profile'
+                  <div className="from-primary to-secondary text-background flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br text-3xl font-bold">
+                    {profile.display_name.charAt(0).toUpperCase()}
+                  </div>
                 )}
+              </div>
+
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                className="bg-surface text-text hover:bg-surface-elevated border-border absolute right-2 bottom-2 rounded-full border p-2 shadow-lg transition-colors"
+              >
+                <Camera size={16} />
               </button>
+
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
             </div>
-          </form>
+          </div>
+        </div>
+
+        {/* Profile Information - Always in edit mode */}
+        <div className="bg-surface mt-16 px-6 pb-6">
+          {/* Basic Info */}
+          <div className="border-border-subtle space-y-4 border-b pb-6">
+            {/* Name Field */}
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">Name</label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Enter your display name"
+                maxLength={50}
+                className="focus:ring-primary w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
+              />
+            </div>
+
+            {/* Headline Field */}
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">Headline</label>
+              <input
+                type="text"
+                value={headline}
+                onChange={(e) => setHeadline(e.target.value)}
+                placeholder="What do you do?"
+                maxLength={100}
+                className="focus:ring-primary w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
+              />
+            </div>
+
+            {/* About Field */}
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">About</label>
+              <textarea
+                value={about}
+                onChange={(e) => setAbout(e.target.value)}
+                placeholder="Tell others about yourself"
+                maxLength={500}
+                rows={3}
+                className="focus:ring-primary w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2"
+              />
+            </div>
+
+            {/* Static Fields - Read only */}
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">Username</label>
+              <p className="text-text">@{profile.username}</p>
+            </div>
+
+            <div>
+              <label className="text-text-secondary mb-2 block text-sm font-medium">
+                Member since
+              </label>
+              <div className="text-text flex items-center gap-2">
+                <Calendar size={16} />
+                {formatDate(profile.created_at)}
+              </div>
+            </div>
+
+            {profile.is_email_verified && (
+              <div>
+                <label className="text-text-secondary mb-2 block text-sm font-medium">Email</label>
+                <div className="text-text flex items-center gap-2">
+                  <Mail size={16} />
+                  Verified
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Social Links */}
+          <div className="pt-6">
+            <h3 className="text-text mb-4 text-lg font-medium">Social Links</h3>
+            <div className="space-y-4">
+              {Object.entries(socialLinks).map(([platform, value]) => (
+                <div key={platform} className="flex items-center gap-4">
+                  <div className="text-text-secondary flex h-10 w-10 items-center justify-center">
+                    {getSocialIcon(platform as keyof SocialLinks)}
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-text-secondary mb-1 block text-sm font-medium">
+                      {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                    </label>
+                    <input
+                      type="text"
+                      value={value || ''}
+                      onChange={(e) =>
+                        handleSocialLinkChange(platform as keyof SocialLinks, e.target.value)
+                      }
+                      placeholder={`${platform === 'substack' ? 'URL' : 'Username'}`}
+                      maxLength={100}
+                      className="focus:ring-primary w-full rounded border border-gray-300 px-3 py-1 focus:border-transparent focus:ring-2"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default EditProfile;
+export default ManageProfilePage;

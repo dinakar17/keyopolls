@@ -34,8 +34,10 @@ const NewChatPage = () => {
   // Create chat on component mount
   useEffect(() => {
     if (!userId || !communityId || !accessToken) {
-      toast.error('Missing required information to create chat');
-      router.back();
+      // inform to user to sign in with an action button
+      toast.error('Please sign in to start a chat');
+
+      router.push('/auth');
       return;
     }
 

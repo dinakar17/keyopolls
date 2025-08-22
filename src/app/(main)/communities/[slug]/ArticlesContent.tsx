@@ -240,7 +240,7 @@ const ArticlesContent = ({ community }: ArticlesContentProps) => {
 
                       <div className="text-text-secondary mt-1 flex items-center gap-2 text-sm">
                         <Link
-                          href={`/profile/${article.author_username}`}
+                          href={`/profiles/${article.author_username}`}
                           className="hover:text-primary transition-colors"
                         >
                           {article.author_display_name}
